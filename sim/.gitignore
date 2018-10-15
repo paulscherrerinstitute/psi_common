@@ -1,0 +1,14 @@
+#TCL controlled modelsim .Gitignore
+
+#Ignore all library files
+*/_info
+*.qdb
+*.qpg
+*.qtl
+*/_vmake
+*/_*/**/*
+*/@_opt/**/*
+
+#Ignore transcripts
+*.transcript
+*.wlf
