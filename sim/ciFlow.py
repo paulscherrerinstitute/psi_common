@@ -5,7 +5,7 @@
 ##############################################################################
 import os
 
-os.system("vsim -c -do ci.do")
+os.system("vsim -batch -do ci.do")
 
 with open("Transcript.transcript") as f:
 	content = f.read()
