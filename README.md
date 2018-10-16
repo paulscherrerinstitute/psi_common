@@ -3,9 +3,6 @@
 ## Maintainer
 Oliver Bründler [oliver.bruendler@psi.ch]
 
-## Authors
-Oliver Bründler [oliver.bruendler@psi.ch]
-
 ## License
 This library is published under [PSI HDL Library License](License.txt), which is [LGPL](LGPL2_1.txt) plus some additional exceptions to clarify the LGPL terms in the context of firmware development.
 
@@ -47,10 +44,10 @@ The required folder structure looks as given below (folder names must be matched
 
 Alternatively the repository [psi\_fpga\_all](https://github.com/paulscherrerinstitute/psi_fpga_all) can be used. This repo contains all FPGA related repositories as submodules in the correct folder structure.
 * TCL
-  * [PsiSim](https://github.com/paulscherrerinstitute/PsiSim) 
+  * [PsiSim](https://github.com/paulscherrerinstitute/PsiSim) (2.0.0 or higher)
 * VHDL
-  * [psi\_common](https://github.com/paulscherrerinstitute/psi_common)
-  * [psi\_tb](https://github.com/paulscherrerinstitute/psi_tb)
+  * [**psi\_common**](https://github.com/paulscherrerinstitute/psi_common)
+  * [psi\_tb](https://github.com/paulscherrerinstitute/psi_tb) (2.0.0 or higher)
 
 # Simulations and Testbenches
 
@@ -66,4 +63,9 @@ To run the regression test, execute the following command in modelsim from withi
 source ./run.tcl
 ``` 
 
+The regression tests can also be ran using GHDL. To do so, GHDL must be installed and added to the path and a TCL interpreter must be installed. In the TCL interpreter, execute the following command within the directory *sim*:
+
+```
+source ./runGhdl.tcl
+``` 
 
