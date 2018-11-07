@@ -21,6 +21,7 @@ run_suppress 8684,3479,3813,8009,3812
 add_sources $LibPath {
 	psi_tb/hdl/psi_tb_txt_util.vhd \
 	psi_tb/hdl/psi_tb_compare_pkg.vhd \
+	psi_tb/hdl/psi_tb_activity_pkg.vhd \
 } -tag lib
 
 # project sources
@@ -52,6 +53,7 @@ add_sources "../hdl" {
 	psi_common_tdm_mux.vhd \
 	psi_common_pulse_shaper.vhd \
 	psi_common_clk_meas.vhd \
+	psi_common_spi_master.vhd \
 } -tag src
 
 # testbenches
@@ -78,6 +80,7 @@ add_sources "../testbench" {
 	psi_common_tdm_mux_tb/psi_common_tdm_mux_tb.vhd \
 	psi_common_pulse_shaper_tb/psi_common_pulse_shaper_tb.vhd \
 	psi_common_clk_meas_tb/psi_common_clk_meas_tb.vhd \
+	psi_common_spi_master_tb/psi_common_spi_master_tb.vhd \
 } -tag tb
 	
 #TB Runs
@@ -189,6 +192,16 @@ create_tb_run "psi_common_pulse_shaper_tb"
 add_tb_run
 
 create_tb_run "psi_common_clk_meas_tb"
+add_tb_run
+
+create_tb_run "psi_common_spi_master_tb"
+tb_run_add_arguments \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=0 -gLsbFirst_g=false" \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=1 -gLsbFirst_g=false" \
+	"-gSpiCPOL_g=1 -gSpiCPHA_g=0 -gLsbFirst_g=false" \
+	"-gSpiCPOL_g=1 -gSpiCPHA_g=1 -gLsbFirst_g=false" \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=0 -gLsbFirst_g=true" \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=1 -gLsbFirst_g=true"
 add_tb_run
 
 
