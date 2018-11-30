@@ -38,35 +38,27 @@ end entity;
 ------------------------------------------------------------------------------
 architecture rtl of psi_common_strobe_divider is
 	signal str_dff_s	: std_logic;
-	signal str_s		: std_logic;
-	signal str_i_s		: std_logic;
 	signal counter_s	: integer range 0 to 2**length_g-1 := 0;
 begin
+	
+	-- *** Implementation ***
 	process(InClk)
 	begin
 		if rising_edge(InClk) then
 			if InRst = rst_pol_g then
 				counter_s		<= 0;
 				str_dff_s	<= '0';
-				str_s		<= '0';
-				str_i_s		<= '0';
 				OutVld		<= '0';
 			else
-				str_i_s   <= str_s;
 				str_dff_s <= InVld;
+				Outvld <= '0';
 				if str_dff_s <= '0' and InVld = '1' then
-					if counter_s = unsigned(InRatio) - 1 then
+					if (counter_s = unsigned(InRatio) - 1) or (unsigned(InRatio) = 0) then -- No division for illegal InRatio = 0 condition
 						counter_s <= 0;
-						str_s <= InVld;
+						OutVld <= '1';
 					else
-						counter_s <= counter_s + 1;
-						str_s <= '0';
+						counter_s <= counter_s + 1;						
 					end if;
-				end if;
-				if str_i_s = '0' and str_s = '1' then
-					OutVld <= '1';
-				else
-					OutVld <= '0';
 				end if;
 			end if;
 		end if;

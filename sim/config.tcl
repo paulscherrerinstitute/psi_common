@@ -129,6 +129,11 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_strobe_divider_tb"
+tb_run_add_arguments \
+	"-gRatio_g=6" \
+	"-gRatio_g=13" \
+	"-gRatio_g=1" \
+	"-gRatio_g=0"
 add_tb_run
 
 create_tb_run "psi_common_delay_tb"

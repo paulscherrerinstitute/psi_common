@@ -13,11 +13,16 @@ library ieee;
 
 library work;
 	use work.psi_tb_txt_util.all;
+	use work.psi_tb_compare_pkg.all;
+	use work.psi_common_math_pkg.all;
 
 ------------------------------------------------------------
 -- Entity Declaration
 ------------------------------------------------------------
 entity psi_common_strobe_divider_tb is
+	generic (
+		Ratio_g	: integer range 0 to 15	:= 6
+	);
 end entity;
 
 ------------------------------------------------------------
@@ -34,6 +39,7 @@ architecture sim of psi_common_strobe_divider_tb is
 	constant AllProcessesDone_c : std_logic_vector(0 to 1) := (others => '1');
 	constant TbProcNr_ctrl_c : integer := 0;
 	constant TbProcNr_countout_c : integer := 1;
+	constant AppliedRatio_g : integer := choose(Ratio_g=0,1,Ratio_g); -- Illegal condition Ratio=0 leads to no division
 
 	-- *** DUT Signals ***
 	signal InClk_sti 	: std_logic := '0';
@@ -112,7 +118,7 @@ begin
 
 		-- Apply Input strobes (with = 1 cycle)
 		print(">> Strobes");
-		InRatio_sti <= std_logic_vector(to_unsigned(6, length_g));
+		InRatio_sti <= std_logic_vector(to_unsigned(AppliedRatio_g, length_g));
 		wait until rising_edge(InClk_sti);
 		for i in 0 to 599 loop
 			wait until rising_edge(InClk_sti);
@@ -124,7 +130,7 @@ begin
 
 		-- Check
 		wait for 1 us;
-		assert OutStrbCnt = 100 report "###ERROR###: Received unexpected strobe count " & to_string(OutStrbCnt) severity error;
+		IntCompare(1*600/AppliedRatio_g, OutStrbCnt, "Received unexpected strobe count " & to_string(OutStrbCnt));
 
 		-- Apply Input Pulses (widht = 50%)
 		print(">> Pulses");
@@ -140,7 +146,7 @@ begin
 
 		-- Check
 		wait for 1 us;
-		assert OutStrbCnt = 200 report "###ERROR###: Received unexpected strobe count " & to_string(OutStrbCnt) severity error;
+		IntCompare(2*600/AppliedRatio_g, OutStrbCnt, "Received unexpected strobe count " & to_string(OutStrbCnt));
 
 		StimuliDone <= true;
 		-- end of process !DO NOT EDIT!
