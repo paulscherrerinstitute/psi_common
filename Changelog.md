@@ -1,3 +1,12 @@
+## 2.1.0
+* Added Features
+  * Added psi\_common\_spi\_master 
+  * Added FrequencyVld signals to psi\_common\_clk\_meas
+* Bugfixes 
+  * Fixed bug for psi\_common\_strobe\_divider Ratio\_g=1
+* Documentation
+  * Added power point presentation about the library
+
 ## 2.0.0
 * First open-source version (older versions not kept in history)
 * Added Features
