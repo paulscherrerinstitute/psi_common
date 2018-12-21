@@ -48,6 +48,7 @@ architecture sim of psi_common_clk_meas_tb is
 	signal ClkMaster : std_logic := '1';
 	signal Rst : std_logic := '1';
 	signal FrequencyHz : std_logic_vector(31 downto 0) := (others => '0');
+	signal FrequencyVld : std_logic := '0';
 	signal ClkTest : std_logic := '1';
 	
 	-- *** Handwritten ***
@@ -66,6 +67,7 @@ begin
 			ClkMaster => ClkMaster,
 			Rst => Rst,
 			FrequencyHz => FrequencyHz,
+			FrequencyVld => FrequencyVld,
 			ClkTest => ClkTest
 		);
 	
@@ -134,20 +136,20 @@ begin
 		-- Maximum 
 		MeasFrequency <= 400.0e3;
 		wait for 2 sec;
-		wait until rising_edge(ClkMaster);
+		wait until rising_edge(ClkMaster) and FrequencyVld = '1';
 		StdlvCompareInt (250_000, FrequencyHz, "Wrong Maximum", false, 50);		
 		
 		-- Minimum 
 		MeasFrequency <= 0.1;
 		wait for 2 sec;
-		wait until rising_edge(ClkMaster);
+		wait until rising_edge(ClkMaster) and FrequencyVld = '1';
 		StdlvCompareInt (0, FrequencyHz, "Wrong Minimum", false, 0);		
 		
 		-- Correct Frequency at End 
 		MeasFrequency <= 52.123e3;
 		wait until rising_edge(ClkTest);
 		wait for 2 sec;
-		wait until rising_edge(ClkMaster);
+		wait until rising_edge(ClkMaster) and FrequencyVld = '1';
 		StdlvCompareInt (52_123, FrequencyHz, "Correct Frequency at End", false, 50);						
 		
 		

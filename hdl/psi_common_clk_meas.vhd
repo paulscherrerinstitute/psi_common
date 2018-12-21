@@ -36,6 +36,7 @@ entity psi_common_clk_meas is
 		-- Test
 		----------------------------------------
 		FrequencyHz		: out	std_logic_vector(31 downto 0);	-- Synchronous to ClkMaster
+		FrequencyVld	: out	std_logic;						-- Pulse when frequency is valid
 		ClkTest			: in	std_logic						-- $$ type=clk; freq=101.35e6 $$
 	);
 end;
@@ -79,7 +80,11 @@ begin
 				AwaitResult_M 		<= '0';
 				FrequencyHz 		<= (others => '0');
 				ResultToggleSync_M 	<= (others => '0');
+				FrequencyVld		<= '0';
 			else
+				-- Default Value
+				FrequencyVld <= '0';
+			
 				-- Request new result
 				if Cntr1Hz_M = 0 then
 					Cntr1Hz_M 		<= MasterFrequency_g-1;
@@ -87,6 +92,7 @@ begin
 					AwaitResult_M 	<= '1';
 					if AwaitResult_M = '1' then
 						FrequencyHz <= (others => '0');
+						FrequencyVld	<= '1';
 					end if;
 				else
 					Cntr1Hz_M 	<= Cntr1Hz_M-1;
@@ -97,6 +103,7 @@ begin
 				if ResultToggleSync_M(2) /= ResultToggleSync_M(1) then
 					FrequencyHz <= std_logic_vector(to_unsigned(Result_T, 32));
 					AwaitResult_M 	<= '0';
+					FrequencyVld	<= '1';
 				end if;		
 			end if;
 		end if;
