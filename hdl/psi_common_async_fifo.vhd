@@ -33,7 +33,8 @@ entity psi_common_async_fifo is
 		AlmEmptyOn_g	: boolean		:= false;
 		AlmEmptyLevel_g	: natural		:= 4;
 		RamStyle_g		: string		:= "auto";
-		RamBehavior_g	: string		:= "RBW"	-- "RBW" = read-before-write, "WBR" = write-before-read
+		RamBehavior_g	: string		:= "RBW";	-- "RBW" = read-before-write, "WBR" = write-before-read
+		RdyRstState_g	: std_logic		:= '1'		-- Use '1' for minimal logic on Rdy path
 	);
 	port (
 		-- Control Ports
@@ -131,7 +132,7 @@ begin
 	--------------------------------------------------------------------------
 	-- Combinatorial Process
 	--------------------------------------------------------------------------
-	p_comb : process(InVld, OutRdy, ri, ro)
+	p_comb : process(InVld, OutRdy, ri, ro, RstInInt)
 		variable vi				: two_process_in_r;
 		variable vo				: two_process_out_r;
 		variable InLevel_v		: unsigned(log2ceil(Depth_g) downto 0);
@@ -163,6 +164,10 @@ begin
 				vi.WrAddr	:= ri.WrAddr + 1;
 				RamWr 		<= '1';
 			end if;
+		end if;
+		-- Artificially keep InRdy low during reset if required 
+		if (RdyRstState_g = '0') and (RstInInt = '1') then
+			InRdy <= '0';
 		end if;
 		
 		-- Status Detection

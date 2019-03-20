@@ -21,7 +21,8 @@ entity psi_common_sync_fifo_tb is
 		AlmFullOn_g				: boolean 	:= true;
 		AlmEmptyOn_g			: boolean 	:= true;
 		Depth_g					: natural	:= 32;
-		RamBehavior_g			: string	:= "RBW"
+		RamBehavior_g			: string	:= "RBW";
+		RdyRstState_g			: std_logic	:= '1'
 	);
 end entity psi_common_sync_fifo_tb;
 
@@ -74,7 +75,8 @@ begin
 			AlmFullLevel_g	=> AlmFullLevel_c,
 			AlmEmptyOn_g	=> AlmEmptyOn_g,
 			AlmEmptyLevel_g	=> AlmEmptyLevel_c,
-			RamBehavior_g	=> RamBehavior_g
+			RamBehavior_g	=> RamBehavior_g,
+			RdyRstState_g 	=> RdyRstState_g
 		)
 		port map (
 			Clk			=> Clk,
@@ -117,6 +119,9 @@ begin
 		print(">> Reset");
 		-- Reset
 		Rst <= '1';
+		wait until rising_edge(Clk);
+		-- check if ready state during reset is correct
+		assert InRdy = RdyRstState_g report "###ERROR###: InRdy reset state not according to generic" severity error;
 		wait for 1 us;
 	
 		-- Remove reset
@@ -125,7 +130,7 @@ begin
 	
 		-- Check Reset State
 		wait until rising_edge(Clk);
-		assert InRdy = '1' report "###ERROR###: InRdy reset state not '1'" severity error;
+		assert InRdy = '1' report "###ERROR###: InRdy after reset state not '1'" severity error;
 		assert OutVld = '0' report "###ERROR###: OutVld reset state not '0'" severity error;
 		assert Full = '0' report "###ERROR###: Full reset state not '0'" severity error;
 		assert Empty = '1' report "###ERROR###: Empty reset state not '1'" severity error;

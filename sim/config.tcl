@@ -102,14 +102,16 @@ add_tb_run
 
 create_tb_run "psi_common_sync_fifo_tb"
 tb_run_add_arguments \
-	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32" \
+	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32 -gRdyRstState_g=1" \
+	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32 -gRdyRstState_g=0" \
 	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=RBW" \
-	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=WBR"
+	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=WBR" \	
 add_tb_run
 
 create_tb_run "psi_common_async_fifo_tb"
 tb_run_add_arguments \
-	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32 -gRamBehavior_g=RBW" \
+	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32 -gRamBehavior_g=RBW -gRdyRstState_g=1" \
+	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32 -gRamBehavior_g=RBW -gRdyRstState_g=0" \
 	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=RBW" \
 	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=WBR"
 add_tb_run

@@ -32,7 +32,8 @@ entity psi_common_sync_fifo is
 		AlmEmptyOn_g	: boolean		:= false;
 		AlmEmptyLevel_g	: natural		:= 4;
 		RamStyle_g		: string		:= "auto";
-		RamBehavior_g	: string		:= "RBW"	-- "RBW" = read-before-write, "WBR" = write-before-read
+		RamBehavior_g	: string		:= "RBW";	-- "RBW" = read-before-write, "WBR" = write-before-read
+		RdyRstState_g	: std_logic		:= '1'		-- Use '1' for minimal logic on Rdy path
 	);
 	port (
 		-- Control Ports
@@ -85,7 +86,7 @@ begin
 	--------------------------------------------------------------------------
 	-- Combinatorial Process
 	--------------------------------------------------------------------------
-	p_comb : process(InVld, OutRdy, r)
+	p_comb : process(InVld, OutRdy, Rst, r)
 		variable v 			: two_process_r;
 	begin
 		-- hold variables stable
@@ -118,6 +119,10 @@ begin
 			InRdy	<= '1';
 			Full	<= '0';		
 		end if;	
+		-- Artificially keep InRdy low during reset if required 
+		if (RdyRstState_g = '0') and (Rst = '1') then
+			InRdy <= '0';
+		end if;
 		
 		if AlmFullOn_g and unsigned(r.WrLevel) >= AlmFullLevel_g then
 			AlmFull <= '1';
