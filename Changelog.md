@@ -1,3 +1,9 @@
+## 2.2.0
+* Added Features
+  * Added generic to control Rdy-behavior during reset
+* Bugfixes 
+  * None
+
 ## 2.1.0
 * Added Features
   * Added psi\_common\_spi\_master 
