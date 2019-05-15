@@ -1,2 +1,6 @@
 #Merge artifacts
 *.bak
+
+#Pycharm project files
+**/.idea
+*.pyc

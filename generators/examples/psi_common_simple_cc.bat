@@ -1,0 +1,1 @@
+py -3 ..\psi_common_simple_cc_X.py -postfix test -ports SomePort=3 OtherPort=1 LastPort=12
