@@ -157,6 +157,28 @@ package body psi_common_axi_master_simple_tb_case_simple_tf is
 		DbgPrint(DebugPrints, ">> Burst write [low latency]");
 		TestCase_v := 7;
 		ApplyCommand(16#00020000#, 12, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);	
+		wait for DelayBetweenTests;		
+
+		------------------------------------------------------------------
+		-- High Latency Reads
+		------------------------------------------------------------------		
+		-- *** Single word read [high latency, space available] ***
+		DbgPrint(DebugPrints, ">> Single word read [high latency, space available]");
+		TestCase_v := 8;
+		ApplyCommand(16#12345678#, 1, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+		wait for DelayBetweenTests;
+		
+		-- *** Burst read [high latency, space available] ***
+		DbgPrint(DebugPrints, ">> Burst read [high latency, space available]");
+		TestCase_v := 9;
+		ApplyCommand(16#00020000#, 12, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+		wait for DelayBetweenTests;		
+		
+		-- *** Single word read [high latency, wait for space] ***
+		
+		-- *** Burst read [high latency, wait for space] ***
+		
+
 		wait for DelayBetweenTests;			
 		
 	end procedure;
@@ -222,6 +244,18 @@ package body psi_common_axi_master_simple_tb_case_simple_tf is
 		WaitCase(7, Clk);
 		wait until rising_edge(Clk);
 		ApplyWrDataMulti(16#1000#, 1, 12, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	
+		
+		------------------------------------------------------------------
+		-- High Latency Reads
+		------------------------------------------------------------------		
+		-- *** Single word read [high latency, space available] ***
+		WaitCase(8, Clk);
+		CheckRdDataSingle(16#BEEF#,  RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);	
+		
+		-- *** Burst read [high latency, space available] ***
+		WaitCase(9, Clk);
+		CheckRdDataMulti(16#1000#,  1, 12, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);
+		
 	end procedure;
 	
 	procedure user_resp (
@@ -268,7 +302,18 @@ package body psi_common_axi_master_simple_tb_case_simple_tf is
 		
 		-- *** Burst wirte[low latency] ***
 		WaitCase(7, Clk);
-		WaitForCompletion(true, 1 us, Wr_Done, Wr_Error, Clk);			
+		WaitForCompletion(true, 1 us, Wr_Done, Wr_Error, Clk);	
+
+		------------------------------------------------------------------
+		-- High Latency Reads
+		------------------------------------------------------------------
+		-- *** Single word read [high latency, space available] ***		
+		WaitCase(8, Clk);
+		WaitForCompletion(true, 1 us, Rd_Done, Rd_Error, Clk);
+		
+		-- *** Burst read [high latency, space available] ***
+		WaitCase(9, Clk);
+		WaitForCompletion(false, 1 us, Rd_Done, Rd_Error, Clk);		
 		
 	end procedure;
 	
@@ -325,6 +370,17 @@ package body psi_common_axi_master_simple_tb_case_simple_tf is
 		-- *** Burst wirte[low latency] ***
 		WaitCase(7, Clk);
 		AxiCheckWrBurst(16#00020000#, 16#1000#, 1, 12, "10", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+		
+		------------------------------------------------------------------
+		-- High Latency Reads
+		------------------------------------------------------------------
+		-- *** Single word read [high latency, space available] ***	
+		WaitCase(8, Clk);
+		AxiCheckRdSingle(16#12345678#, 16#BEEF#, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+		
+		-- *** Burst read [high latency, space available] ***
+		WaitCase(9, Clk);
+		AxiCheckRdBurst(16#00020000#, 16#1000#, 1, 12, xRESP_DECERR_c, axi_ms, axi_sm, Clk);
 
 	end procedure;
 	

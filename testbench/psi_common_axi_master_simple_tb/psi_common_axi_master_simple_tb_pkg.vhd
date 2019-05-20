@@ -97,7 +97,22 @@ package psi_common_axi_master_simple_tb_pkg is
 							signal	WrDat_Vld	: out	std_logic;
 							signal	WrDat_Rdy	: in	std_logic;
 							signal	Clk			: in	std_logic;
-									VldLowCyc	: in	integer := 0);								
+									VldLowCyc	: in	integer := 0);		
+
+	procedure CheckRdDataSingle(	Data		: in	integer;
+							signal	RdDat_Data	: in	std_logic_vector(AxiDataWidth_g-1 downto 0);
+							signal	RdDat_Vld	: in	std_logic;
+							signal	RdDat_Rdy	: out	std_logic;
+							signal	Clk			: in	std_logic);		
+
+	procedure CheckRdDataMulti(			Start		: in	integer;
+										Incr		: in	integer;
+										Size		: in	integer;
+								signal	RdDat_Data	: in	std_logic_vector(AxiDataWidth_g-1 downto 0);
+								signal 	RdDat_Vld	: in	std_logic;
+								signal	RdDat_Rdy	: out	std_logic;
+								signal	Clk			: in	std_logic;
+										RdyLowCyc	: in	integer := 0);										
 
 	procedure WaitForCompletion(	Success		: in	boolean;
 									WaitTime	: in	time;
@@ -126,7 +141,25 @@ package psi_common_axi_master_simple_tb_pkg is
 							signal 	Clk 		: in std_logic;
 									SendResp	: in	boolean := true;
 									AwRdyDelay	: in	time := 0 ns;
-									WRdyLowCyc	: in	integer := 0);		
+									WRdyLowCyc	: in	integer := 0);
+
+	procedure AxiCheckRdSingle(		Addr		: in	integer;
+									Data		: in	integer;
+									Resp		: in	std_logic_vector;
+							signal 	axi_ms 		: in 	axi_ms_t;
+							signal 	axi_sm 		: out 	axi_sm_t;
+							signal 	Clk 		: in 	std_logic);		
+
+	procedure AxiCheckRdBurst(		Addr		: in	integer;
+									Start		: in	integer;
+									Incr		: in	integer;
+									Size		: in	integer;
+									Resp		: in	std_logic_vector;
+							signal 	axi_ms 		: in 	axi_ms_t;
+							signal 	axi_sm 		: out 	axi_sm_t;
+							signal 	Clk 		: in 	std_logic;
+									ArRdyDelay	: in	time := 0 ns;
+									RVldLowCyc	: in	integer := 0);							
 
 	procedure DbgPrint(	Enable 	: in boolean;
 						Str		: in string);
@@ -213,6 +246,44 @@ package body psi_common_axi_master_simple_tb_pkg is
 		end loop;
 		WrDat_Vld <= '0';	
 	end procedure;
+	
+	procedure CheckRdDataSingle(	Data		: in	integer;
+							signal	RdDat_Data	: in	std_logic_vector(AxiDataWidth_g-1 downto 0);
+							signal	RdDat_Vld	: in	std_logic;
+							signal	RdDat_Rdy	: out	std_logic;
+							signal	Clk			: in	std_logic) is
+	begin
+		RdDat_Rdy <= '1';
+		wait until rising_edge(Clk) and RdDat_Vld = '1';
+		StdlvCompareInt (Data, RdDat_Data, "Received wrong Read Data", false);
+		RdDat_Rdy <= '0';	
+	end procedure;	
+	
+	procedure CheckRdDataMulti(			Start		: in	integer;
+										Incr		: in	integer;
+										Size		: in	integer;
+								signal	RdDat_Data	: in	std_logic_vector(AxiDataWidth_g-1 downto 0);
+								signal 	RdDat_Vld	: in	std_logic;
+								signal	RdDat_Rdy	: out	std_logic;
+								signal	Clk			: in	std_logic;
+										RdyLowCyc	: in	integer := 0) is
+		variable DataCnt_v 	: integer := Start;
+		constant LastIdx_c 	: integer := Size-1;
+	begin
+		for i in 0 to Size-1 loop
+			RdDat_Rdy <= '1';
+			wait until rising_edge(Clk) and RdDat_Vld = '1';
+			StdlvCompareInt (DataCnt_v, RdDat_Data, "Received wrong Read Data in Burst", false);
+			DataCnt_v := (DataCnt_v + Incr) mod 2**AxiDataWidth_g;
+			if RdyLowCyc > 0 then
+				RdDat_Rdy <= '0';
+				for i in 0 to RdyLowCyc-1 loop
+					wait until rising_edge(Clk);
+				end loop;
+			end if;				
+		end loop;
+		RdDat_Rdy <= '0';	
+	end procedure;	
 								
 	
 	procedure WaitForCompletion(	Success		: in	boolean;
@@ -270,6 +341,37 @@ package body psi_common_axi_master_simple_tb_pkg is
 			axi_apply_bresp(Resp, axi_ms, axi_sm, Clk);
 		end if;
 	end procedure;	
+	
+	procedure AxiCheckRdSingle(		Addr		: in	integer;
+									Data		: in	integer;
+									Resp		: in	std_logic_vector;
+							signal 	axi_ms 		: in 	axi_ms_t;
+							signal 	axi_sm 		: out 	axi_sm_t;
+							signal 	Clk 		: in 	std_logic) is
+	begin	
+		axi_expect_ar(	Addr, AxSIZE_2_c, 1-1, xBURST_INCR_c, axi_ms, axi_sm, Clk);
+		axi_apply_rresp_single(std_logic_vector(to_unsigned(Data, AxiDataWidth_g)), Resp, axi_ms, axi_sm, Clk);
+	end procedure;	
+	
+	procedure AxiCheckRdBurst(		Addr		: in	integer;
+									Start		: in	integer;
+									Incr		: in	integer;
+									Size		: in	integer;
+									Resp		: in	std_logic_vector;
+							signal 	axi_ms 		: in 	axi_ms_t;
+							signal 	axi_sm 		: out 	axi_sm_t;
+							signal 	Clk 		: in 	std_logic;
+									ArRdyDelay	: in	time := 0 ns;
+									RVldLowCyc	: in	integer := 0) is
+	begin	
+		if ArRdyDelay > 0 ns then
+			wait for ArRdyDelay;
+			wait until rising_edge(Clk);
+		end if;
+		axi_expect_ar(	Addr, AxSIZE_2_c, Size-1, xBURST_INCR_c, axi_ms, axi_sm, Clk);
+		axi_apply_rresp_burst(	Size, Start, Incr, Resp, axi_ms, axi_sm, Clk, RVldLowCyc);
+	end procedure;		
+	
 	
 	procedure DbgPrint(	Enable 	: in boolean;
 						Str		: in string) is

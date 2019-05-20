@@ -150,7 +150,9 @@ architecture rtl of psi_common_axi_master_simple is
 	-- Type
 	------------------------------------------------------------------------------	
 	type WriteTfGen_s is (Idle_s, MaxCalc_s, GenTf_s, WriteTf_s);
+	type ReadTfGen_s is (Idle_s, MaxCalc_s, GenTf_s, WriteTf_s);
 	type AwFsm_s is (Idle_s, Wait_s);
+	type ArFsm_s is (Idle_s, Wait_s);
 	type WFsm_s is (Idle_s, NonLast_s, Last_s);
 	
 	------------------------------------------------------------------------------
@@ -170,8 +172,11 @@ architecture rtl of psi_common_axi_master_simple is
 	type two_process_r is record
 	
 		-- *** Write Related Registers ***
-		-- Generate Write Transactions
+		-- Command Interface
 		CmdWr_Rdy		: std_logic;
+		Wr_Error		: std_logic;
+		Wr_Done			: std_logic;		
+		-- Generate Write Transactions		
 		WriteTfGenState	: WriteTfGen_s;
 		WrAddr			: unsigned(CmdWr_Addr'range);
 		WrBeats			: unsigned(CmdWr_Size'range);
@@ -202,10 +207,39 @@ architecture rtl of psi_common_axi_master_simple is
 		M_Axi_AwLen		: std_logic_vector(M_Axi_AwLen'range);
 		M_Axi_AwValid	: std_logic;
 		M_Axi_WLast		: std_logic;
-		Wr_Error		: std_logic;
-		Wr_Done			: std_logic;
+
 		
 		-- *** Read Related Registers *** 
+		-- Command Interface
+		CmdRd_Rdy		: std_logic;
+		Rd_Error		: std_logic;
+		Rd_Done			: std_logic;			
+		-- Generate Read Transactions		
+		ReadTfGenState	: ReadTfGen_s;
+		RdAddr			: unsigned(CmdRd_Addr'range);
+		RdBeats			: unsigned(CmdRd_Size'range);
+		RdLowLat		: std_logic;
+		RdMaxBeats		: unsigned(BeatsBits_c-1 downto 0);
+		RdTfBeats		: unsigned(BeatsBits_c-1 downto 0);
+		RdTfVld			: std_logic;
+		RdTfIsLast		: std_logic;	
+		-- Execute Ar Commands
+		ArFsm 			: ArFsm_s;
+		ArFsmRdy		: std_logic;
+		ArCmdSent		: std_logic;
+		ArCmdSize		: unsigned(BeatsBits_c-1 downto 0);		
+		ArCmdSizeMin1	: unsigned(BeatsBits_c-1 downto 0);	-- 	ArCmdSize-1 for timing optimization reasons
+		RDataFifoRead	: std_logic;
+		-- Write Response
+		RdRespError		: std_logic;		
+		-- Read General
+		RdOpenTrans		: integer range 0 to AxiMaxOpenTrasactions_g;
+		RdFifoSpaceFree	: signed(log2ceil(MaxBeatsNoCmd_c+1) downto 0);
+		-- AXI Signals
+		M_Axi_ArAddr	: std_logic_vector(M_Axi_ArAddr'range);		
+		M_Axi_ArLen		: std_logic_vector(M_Axi_ArLen'range);
+		M_Axi_ArValid	: std_logic;
+		
 	end record;
 	signal r, r_next : two_process_r;
 		
@@ -222,18 +256,14 @@ architecture rtl of psi_common_axi_master_simple is
 	signal WrRespIsLast		: std_logic;
 	signal WrRespFifoVld	: std_logic;
 	signal WrData_Rdy_I		: std_logic;
+	signal RdTransFifoInVld	: std_logic;
+	signal RdRespIsLast		: std_logic;
+	signal RdRespFifoVld	: std_logic;
+	signal RdDat_Vld_I		: std_logic;
+	signal RdRespLast		: std_logic;
+	signal M_Axi_RReady_I	: std_logic;
 	
 begin
-	CmdRd_Rdy <= '0';
-	RdDat_Data <= (others => '0');
-	RdDat_Vld <= '0';
-	Rd_Done <= '0';
-	Rd_Error <= '0';
-	M_Axi_ArAddr <= (others => '0');
-	M_Axi_ArLen <= (others => '0');
-	M_Axi_ArValid <= '0';
-	M_Axi_RReady <= '0';
-	
 	
 	------------------------------------------------------------------------------
 	-- Assertions
@@ -245,9 +275,13 @@ begin
 	------------------------------------------------------------------------------	
 	p_comb : process(	r, M_Axi_AwReady, M_Axi_BValid, M_Axi_BResp,
 						WrDataFifoORdy, WrDataFifoOVld, WrTransFifoOutVld, WrTransFifoBeats, WrRespIsLast, WrRespFifoVld,
-						CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, WrDat_Vld, WrData_Rdy_I)
+						CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, WrDat_Vld, WrData_Rdy_I,
+						M_Axi_ArReady,
+						RdRespIsLast, RdRespFifoVld, RdRespLast,
+						CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, RdDat_Rdy, RdDat_Vld_I)
 		variable v 					: two_process_r;
-		variable Max4kBeats_v		: unsigned(13-UnusedAddrBits_c downto 0);
+		variable WrMax4kBeats_v		: unsigned(13-UnusedAddrBits_c downto 0);
+		variable RdMax4kBeats_v		: unsigned(13-UnusedAddrBits_c downto 0);
 		variable Stdlv9Bit_v		: std_logic_vector(8 downto 0);
 		variable WDataTransfer_v	: boolean;
 		variable StartWBurst_v		: boolean := true;
@@ -257,10 +291,10 @@ begin
 		
 		--------------------------------------------------------------------------
 		-- Write Related Code
-		---------------------------------------------------------------------------			
+		--------------------------------------------------------------------------		
 		
 		-- *** Write Transfer Generation ***
-		Max4kBeats_v	:= (others => '0');
+		WrMax4kBeats_v	:= (others => '0');
 		case r.WriteTfGenState is
 			when Idle_s =>
 				v.CmdWr_Rdy	:= '1';
@@ -273,11 +307,11 @@ begin
 				end if;
 				
 			when MaxCalc_s =>
-				Max4kBeats_v	:= resize(unsigned('0' & not r.WrAddr(11 downto UnusedAddrBits_c)) + 1, Max4kBeats_v'length);
-				if Max4kBeats_v > AxiMaxBeats_g then
+				WrMax4kBeats_v	:= resize(unsigned('0' & not r.WrAddr(11 downto UnusedAddrBits_c)) + 1, WrMax4kBeats_v'length);
+				if WrMax4kBeats_v > AxiMaxBeats_g then
 					v.WrMaxBeats := to_unsigned(AxiMaxBeats_g, BeatsBits_c);
 				else
-					v.WrMaxBeats := Max4kBeats_v(BeatsBits_c-1 downto 0);
+					v.WrMaxBeats := WrMax4kBeats_v(BeatsBits_c-1 downto 0);
 				end if;
 				v.WriteTfGenState 	:= GenTf_s;
 				
@@ -336,19 +370,19 @@ begin
 			when others => null;
 		end case;	
 		-- Update counter for FIFO entries that were not yet announced in a command
+		-- .. Implementation is a bit weird for timing optimization reasons.
+		-- Use registered WDataFifoWrite: This helps with timing and it does not introduce any risk since
+		-- .. the decrement is still done immediately, the increment is delayed by one clock cycle. So worst
+		-- .. case a High-Latency transfer is delayed by one cycle which is acceptable.		
 		v.WDataFifoWrite := WrData_Rdy_I and WrDat_Vld;
 		if r.AwCmdSent = '1' then
 			if r.WDataFifoWrite = '1' then
-				v.WrBeatsNoCmd	:= r.WrBeatsNoCmd - signed('0' & r.AwCmdSizeMin1);
+				v.WrBeatsNoCmd	:= r.WrBeatsNoCmd - signed('0' & r.AwCmdSizeMin1);	-- Decrement by size and increment by one (timing opt)
 			else
 				v.WrBeatsNoCmd	:= r.WrBeatsNoCmd - signed('0' & r.AwCmdSize);
 			end if;
-		--end if;
-		-- Use registered WDataFifoWrite: This helps with timing and it does not introduce any risk since
-		-- .. the decrement (above) is still done immediately, the increment is delayed by one clock cycle. So worst
-		-- .. case a High-Latency transfer is delayed by one cycle which is acceptable.
 		elsif r.WDataFifoWrite = '1' then
-			v.WrBeatsNoCmd := r.WrBeatsNoCmd + 1;	-- use v. beause modified above
+			v.WrBeatsNoCmd := r.WrBeatsNoCmd + 1;
 		end if;
 
 		-- *** W Data Generation ***
@@ -419,6 +453,121 @@ begin
 			end if;
 		end if;
 		
+		--------------------------------------------------------------------------
+		-- Read Related Code
+		--------------------------------------------------------------------------		
+		
+		-- *** Read Transfer Generation ***
+		RdMax4kBeats_v	:= (others => '0');
+		case r.ReadTfGenState is
+			when Idle_s =>
+				v.CmdRd_Rdy	:= '1';
+				if (r.CmdRd_Rdy = '1') and (CmdRd_Vld = '1') then
+					v.CmdRd_Rdy			:= '0';
+					v.RdAddr			:= unsigned(AddrMasked_f(CmdRd_Addr));
+					v.RdBeats			:= unsigned(CmdRd_Size);
+					v.RdLowLat			:= CmdRd_LowLat;
+					v.ReadTfGenState 	:= MaxCalc_s;
+				end if;
+				
+			when MaxCalc_s =>
+				RdMax4kBeats_v	:= resize(unsigned('0' & not r.RdAddr(11 downto UnusedAddrBits_c)) + 1, RdMax4kBeats_v'length);
+				if RdMax4kBeats_v > AxiMaxBeats_g then
+					v.RdMaxBeats := to_unsigned(AxiMaxBeats_g, BeatsBits_c);
+				else
+					v.RdMaxBeats := RdMax4kBeats_v(BeatsBits_c-1 downto 0);
+				end if;
+				v.ReadTfGenState 	:= GenTf_s;
+				
+			when GenTf_s =>
+				if (r.RdMaxBeats < r.RdBeats) then
+					v.RdTfBeats		:= r.RdMaxBeats;
+					v.RdTfIsLast	:= '0';
+				else
+					v.RdTfBeats 	:= r.RdBeats(BeatsBits_c-1 downto 0);
+					v.RdTfIsLast	:= '1';
+				end if;
+				v.RdTfVld			:= '1';
+				v.ReadTfGenState 	:= WriteTf_s;
+			
+			when WriteTf_s => 
+				if (r.RdTfVld = '1') and (r.ArFsmRdy = '1') then
+					v.RdTfVld 	:= '0';
+					v.RdBeats	:= r.RdBeats - r.RdTfBeats;
+					v.RdAddr	:= r.RdAddr + 2**UnusedAddrBits_c*r.RdTfBeats;
+					if r.RdTfIsLast = '1' then
+						v.ReadTfGenState 	:= Idle_s;
+					else
+						v.ReadTfGenState 	:= MaxCalc_s;
+					end if;
+				end if;			
+			
+			when others => null;
+		end case;
+
+		-- *** AR Command Generation ***
+		v.ArCmdSent	:= '0';
+		case r.ArFsm is
+			when Idle_s =>
+				if ((r.RdLowLat = '1') or (r.RdFifoSpaceFree >= signed('0' & r.RdTfBeats))) and (r.RdOpenTrans < AxiMaxOpenTrasactions_g) and (r.RdTfVld = '1') then
+					v.ArFsmRdy := '1';
+				end if;
+				if (r.ArFsmRdy = '1') and (r.RdTfVld = '1') then
+					v.ArFsmRdy 		:= '0';
+					v.M_Axi_ArAddr	:= std_logic_vector(r.RdAddr);
+					Stdlv9Bit_v		:= std_logic_vector(resize(r.RdTfBeats-1, 9));
+					v.M_Axi_ArLen	:= Stdlv9Bit_v(7 downto 0);
+					v.M_Axi_ArValid	:= '1';
+					v.ArFsm			:= Wait_s;
+					v.ArCmdSent		:= '1';
+					v.ArCmdSize		:= r.RdTfBeats;
+					v.ArCmdSizeMin1	:= r.RdTfBeats-1;
+				end if;
+				
+			when Wait_s =>
+				if M_Axi_ArReady = '1' then
+					v.RdOpenTrans	:= r.RdOpenTrans + 1;
+					v.M_Axi_ArValid	:= '0';
+					v.ArFsm			:= Idle_s;
+				end if;
+				
+			when others => null;
+		end case;	
+		-- Update counter for FIFO entries that were not yet announced in a command
+		-- .. Implementation is a bit weird for timing optimization reasons.
+		-- Use registered RDataFifoRead: This helps with timing and it does not introduce any risk since
+		-- .. the decrement is still done immediately, the increment is delayed by one clock cycle. So worst
+		-- .. case a High-Latency transfer is delayed by one cycle which is acceptable.		
+		v.RDataFifoRead := RdDat_Rdy and RdDat_Vld_I;
+		if r.ArCmdSent = '1' then
+			if r.RDataFifoRead = '1' then
+				v.RdFifoSpaceFree	:= r.RdFifoSpaceFree - signed('0' & r.ArCmdSizeMin1);	-- Decrement by size and increment by one (timing opt)
+			else
+				v.RdFifoSpaceFree	:= r.RdFifoSpaceFree - signed('0' & r.ArCmdSize);
+			end if;
+		elsif r.RDataFifoRead = '1' then
+			v.RdFifoSpaceFree := r.RdFifoSpaceFree + 1;
+		end if;		
+		
+		-- *** R Response Generation ***
+		v.Rd_Done := '0';
+		v.Rd_Error := '0';
+		if RdRespLast = '1' then
+			assert RdRespFifoVld = '1' report "###ERROR###: psi_common_axi_master_simple internal error --> RdRespFifo Empty" severity error;
+			v.RdOpenTrans	:= v.RdOpenTrans - 1; -- Use v. because it may have been modified above and this modification has not to be overriden
+			if RdRespIsLast = '1' then
+				if (M_Axi_RResp /= Axi_Resp_Okay_c) then
+					v.Rd_Error := '1';
+				else
+					v.Rd_Error := r.RdRespError;
+					v.Rd_Done  := not r.RdRespError;
+					v.RdRespError := '0';
+				end if;
+			elsif M_Axi_RResp /= Axi_Resp_Okay_c then
+				v.RdRespError := '1';
+			end if;
+		end if;	
+		
 		-- *** Update Signal ***
 		r_next <= v;
 	end process;
@@ -437,7 +586,7 @@ begin
 				r.WrTfVld			<= '0';
 				r.AwFsm				<= Idle_s;
 				r.AwFsmRdy			<= '0';
-				r.AwCmdSent		<= '0';
+				r.AwCmdSent			<= '0';
 				r.M_Axi_AwValid		<= '0';
 				r.WDataFifoRd		<= '0';
 				r.WDataEna			<= '0';
@@ -447,7 +596,21 @@ begin
 				r.Wr_Error			<= '0';
 				r.WrBeatsNoCmd		<= (others => '0');
 				r.WFsm				<= Idle_s;
-				r.WDataFifoWrite		<= '0';
+				r.WDataFifoWrite	<= '0';
+				-- *** Read Related Registers ***
+				r.CmdRd_Rdy 		<= '0';
+				r.ReadTfGenState	<= Idle_s;
+				r.RdTfVld			<= '0';
+				r.ArFsmRdy			<= '0';
+				r.ArCmdSent			<= '0';
+				r.M_Axi_ArValid		<= '0';
+				r.ArFsm				<= Idle_s;
+				r.RdOpenTrans		<= 1;
+				r.RdRespError		<= '0';
+				r.Rd_Done			<= '0';
+				r.Rd_Error			<= '0';
+				r.RdFifoSpaceFree	<= to_signed(DataFifoDepth_g, r.RdFifoSpaceFree'length);
+				r.RDataFifoRead		<= '0';
 			end if;
 		end if;
 	end process;
@@ -462,6 +625,12 @@ begin
 	M_Axi_WLast		<= r.M_Axi_WLast;
 	Wr_Done			<= r.Wr_Done;
 	Wr_Error		<= r.Wr_Error;
+	CmdRd_Rdy		<= r.CmdRd_Rdy;
+	M_Axi_ArAddr	<= r.M_Axi_ArAddr;
+	M_Axi_ArLen		<= r.M_Axi_ArLen;
+	M_Axi_ArValid	<= r.M_Axi_ArValid;
+	Rd_Done			<= r.Rd_Done;
+	Rd_Error		<= r.Rd_Error;
 	
 	------------------------------------------------------------------------------
 	-- Constant Outputs
@@ -543,7 +712,7 @@ begin
 	end block;
 	
 	-- FIFO for write response FSM
-	fifo_wr_data : entity work.psi_common_sync_fifo
+	fifo_wr_resp : entity work.psi_common_sync_fifo
 		generic map (
 			Width_g			=> 1,
 			Depth_g			=> AxiMaxOpenTrasactions_g,
@@ -561,6 +730,58 @@ begin
 			OutData(0)	=> WrRespIsLast,
 			OutVld		=> WrRespFifoVld,
 			OutRdy		=> M_Axi_BValid
+		);	
+		
+	-- *** Read FIFOs ***
+	
+	-- Read Data FIFO
+	b_fifo_rd_data : block
+	begin
+		fifo_wr_data : entity work.psi_common_sync_fifo
+			generic map (
+				Width_g			=> RdDat_Data'length,
+				Depth_g			=> DataFifoDepth_g,
+				AlmFullOn_g		=> false,
+				AlmEmptyOn_g	=> false,
+				RamStyle_g		=> "auto",
+				RamBehavior_g	=> RamBehavior_g
+			)
+			port map (
+				Clk		=> M_Axi_Aclk,
+				Rst		=> Rst,
+				InData	=> M_Axi_RData,
+				InVld	=> M_Axi_RValid,
+				InRdy	=> M_Axi_RReady_I,
+				OutData	=> RdDat_Data,
+				OutVld	=> RdDat_Vld_I,
+				OutRdy	=> RdDat_Rdy
+			);
+			
+		RdDat_Vld <= RdDat_Vld_I;
+		M_Axi_RReady <= M_Axi_RReady_I;
+	end block;	
+	
+	-- FIFO for read response FSM
+	RdTransFifoInVld <= r.ArFsmRdy and r.RdTfVld;	
+	RdRespLast <= M_Axi_RValid and M_Axi_RReady_I and M_Axi_RLast;
+	fifo_rd_resp : entity work.psi_common_sync_fifo
+		generic map (
+			Width_g			=> 1,
+			Depth_g			=> AxiMaxOpenTrasactions_g,
+			AlmFullOn_g		=> false,
+			AlmEmptyOn_g	=> false,
+			RamStyle_g		=> "auto",
+			RamBehavior_g	=> RamBehavior_g
+		)
+		port map (
+			Clk			=> M_Axi_Aclk,
+			Rst			=> Rst,
+			InData(0)	=> r.RdTfIsLast,
+			InVld		=> RdTransFifoInVld,
+			InRdy		=> open,	-- Not required since maximum of open transactions is limitted
+			OutData(0)	=> RdRespIsLast,
+			OutVld		=> RdRespFifoVld,
+			OutRdy		=> RdRespLast
 		);	
  
 end rtl;
