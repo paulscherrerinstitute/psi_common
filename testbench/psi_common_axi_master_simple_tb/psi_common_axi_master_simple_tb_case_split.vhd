@@ -115,34 +115,69 @@ package body psi_common_axi_master_simple_tb_case_split is
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------	
-		-- *** Burst over 4k Boundary ***
-		DbgPrint(DebugPrints, ">> Burst over 4k Boundary");
-		TestCase_v := 0;
-		ApplyCommand(16#00020FFC#, 4, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);	
-		WaitRespChecked(0, Clk);
-		wait for DelayBetweenTests;	
-		
-		-- *** Transaction exceed AXI Burst Limit ***
-		DbgPrint(DebugPrints, ">> Transaction exceed AXI Burst Limit");
-		TestCase_v := 1;
-		ApplyCommand(16#00020000#, AxiMaxBeats_g+2, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-		WaitRespChecked(1, Clk);
-		wait for DelayBetweenTests;	
-		
-		-- *** Large Transfer over 2*4K ***
-		DbgPrint(DebugPrints, ">> Large Transfer over 2*4K");
-		TestCase_v := 2;
-		ApplyCommand(16#00020F08#, 4096, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-		WaitRespChecked(2, Clk);
-		wait for DelayBetweenTests;	
+		if Generics_c.ImplWrite_g then
+			-- *** Burst over 4k Boundary ***
+			DbgPrint(DebugPrints, ">> Write Burst over 4k Boundary");
+			TestCase_v := 0;
+			ApplyCommand(16#00020FFC#, 4, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);	
+			WaitRespChecked(0, Clk);
+			wait for DelayBetweenTests;	
+			
+			-- *** Transaction exceed AXI Burst Limit ***
+			DbgPrint(DebugPrints, ">> Write Transaction exceed AXI Burst Limit");
+			TestCase_v := 1;
+			ApplyCommand(16#00020000#, AxiMaxBeats_g+2, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+			WaitRespChecked(1, Clk);
+			wait for DelayBetweenTests;	
+			
+			-- *** Large Transfer over 2*4K ***
+			DbgPrint(DebugPrints, ">> Write Large Transfer over 2*4K");
+			TestCase_v := 2;
+			ApplyCommand(16#00020F08#, 4096, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+			WaitRespChecked(2, Clk);
+			wait for DelayBetweenTests;	
 
-		-- *** Error in only one transaction ***
-		DbgPrint(DebugPrints, ">> Error in only one transaction");
-		TestCase_v := 3;
-		ApplyCommand(16#00020000#, 2*AxiMaxBeats_g+2, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-		WaitRespChecked(3, Clk);
-		wait for DelayBetweenTests;			
+			-- *** Error in only one transaction ***
+			DbgPrint(DebugPrints, ">> Write Error in only one transaction");
+			TestCase_v := 3;
+			ApplyCommand(16#00020000#, 2*AxiMaxBeats_g+2, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+			WaitRespChecked(3, Clk);
+			wait for DelayBetweenTests;		
+		end if;
 
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** Burst over 4k Boundary ***		
+			DbgPrint(DebugPrints, ">> Read Burst over 4k Boundary");
+			TestCase_v := 4;
+			ApplyCommand(16#00020FFC#, 4, true, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);	
+			WaitRespChecked(4, Clk);
+			wait for DelayBetweenTests;			
+			
+			-- *** Transaction exceed AXI Burst Limit ***
+			DbgPrint(DebugPrints, ">> Read Transaction exceed AXI Burst Limit");
+			TestCase_v := 5;
+			ApplyCommand(16#00020000#, AxiMaxBeats_g+2, true, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);	
+			WaitRespChecked(5, Clk);
+			wait for DelayBetweenTests;	
+			
+			-- *** Large Transfer over 2*4K ***	
+			DbgPrint(DebugPrints, ">> Read Large Transfer over 2*4K");
+			TestCase_v := 6;
+			ApplyCommand(16#00020F08#, 4096, true, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);	
+			WaitRespChecked(6, Clk);
+			wait for DelayBetweenTests;	
+			
+			-- *** Error in only one transaction ***		
+			DbgPrint(DebugPrints, ">> Read Error in only one transaction");
+			TestCase_v := 7;
+			ApplyCommand(16#00020000#, 2*AxiMaxBeats_g+2, true, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+			WaitRespChecked(7, Clk);
+			wait for DelayBetweenTests;	
+		end if;		
+		
 		wait for DelayBetweenTests;
 	end procedure;
 	
@@ -160,21 +195,44 @@ package body psi_common_axi_master_simple_tb_case_split is
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------	
-		-- *** Burst over 4k Boundary ***
-		WaitCase(0, Clk);
-		ApplyWrDataMulti(16#1000#, 1, 4, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	
+		if Generics_c.ImplWrite_g then
+			-- *** Burst over 4k Boundary ***
+			WaitCase(0, Clk);
+			ApplyWrDataMulti(16#1000#, 1, 4, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	
 
-		-- *** Transaction exceed AXI Burst Limit ***	
-		WaitCase(1, Clk);
-		ApplyWrDataMulti(16#1000#, 1, AxiMaxBeats_g+2, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	
+			-- *** Transaction exceed AXI Burst Limit ***	
+			WaitCase(1, Clk);
+			ApplyWrDataMulti(16#1000#, 1, AxiMaxBeats_g+2, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	
 
-		-- *** Large Transfer over 2*4K ***		
-		WaitCase(2, Clk);
-		ApplyWrDataMulti(16#0000#, 1, 4096, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);
+			-- *** Large Transfer over 2*4K ***		
+			WaitCase(2, Clk);
+			ApplyWrDataMulti(16#0000#, 1, 4096, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);
 
-		-- *** Error in only one transaction ***	
-		WaitCase(3, Clk);
-		ApplyWrDataMulti(16#0000#, 1, 2*AxiMaxBeats_g+2, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);		
+			-- *** Error in only one transaction ***	
+			WaitCase(3, Clk);
+			ApplyWrDataMulti(16#0000#, 1, 2*AxiMaxBeats_g+2, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);
+		end if;		
+
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** Burst over 4k Boundary ***		
+			WaitCase(4, Clk);
+			CheckRdDataMulti(16#1000#, 1, 4, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);		
+			
+			-- *** Transaction exceed AXI Burst Limit ***
+			WaitCase(5, Clk);
+			CheckRdDataMulti(16#1000#, 1, AxiMaxBeats_g+2, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);
+			
+			-- *** Large Transfer over 2*4K ***	
+			WaitCase(6, Clk);
+			CheckRdDataMulti(16#0000#, 1, 4096, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);
+			
+			-- *** Error in only one transaction ***	
+			WaitCase(7, Clk);
+			CheckRdDataMulti(16#0000#, 1, 2*AxiMaxBeats_g+2, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);
+		end if;
 		
 	end procedure;
 	
@@ -189,30 +247,60 @@ package body psi_common_axi_master_simple_tb_case_split is
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------
-		-- *** Burst over 4k Boundary ***
-		WaitCase(0, Clk);
-		WaitForCompletion(true, 1 us, Wr_Done, Wr_Error, Clk);
-		CheckNoActivity(Wr_Done, 1 us, 0, "Unexpected Done");
-		RespChecked_v := 0;
-		
-		-- *** Transaction exceed AXI Burst Limit ***	
-		WaitCase(1, Clk);
-		WaitForCompletion(true, 10 us, Wr_Done, Wr_Error, Clk);
-		CheckNoActivity(Wr_Done, 5 us, 0, "Unexpected Done");
-		RespChecked_v := 1;	
+		if Generics_c.ImplWrite_g then
+			-- *** Burst over 4k Boundary ***
+			WaitCase(0, Clk);
+			WaitForCompletion(true, 1 us, Wr_Done, Wr_Error, Clk);
+			CheckNoActivity(Wr_Done, 1 us, 0, "Unexpected Done");
+			RespChecked_v := 0;
+			
+			-- *** Transaction exceed AXI Burst Limit ***	
+			WaitCase(1, Clk);
+			WaitForCompletion(true, 10 us, Wr_Done, Wr_Error, Clk);
+			CheckNoActivity(Wr_Done, 5 us, 0, "Unexpected Done");
+			RespChecked_v := 1;	
 
-		-- *** Large Transfer over 2*4K ***
-		WaitCase(2, Clk);
-		WaitForCompletion(true, 100 us, Wr_Done, Wr_Error, Clk);
-		CheckNoActivity(Wr_Done, 5 us, 0, "Unexpected Done");
-		RespChecked_v := 2;		
+			-- *** Large Transfer over 2*4K ***
+			WaitCase(2, Clk);
+			WaitForCompletion(true, 100 us, Wr_Done, Wr_Error, Clk);
+			CheckNoActivity(Wr_Done, 5 us, 0, "Unexpected Done");
+			RespChecked_v := 2;		
 
-		-- *** Error in only one transaction ***	
-		WaitCase(3, Clk);
-		WaitForCompletion(false, 10 us, Wr_Done, Wr_Error, Clk);
-		CheckNoActivity(Wr_Error, 5 us, 0, "Unexpected Error");
-		RespChecked_v := 3;	
+			-- *** Error in only one transaction ***	
+			WaitCase(3, Clk);
+			WaitForCompletion(false, 10 us, Wr_Done, Wr_Error, Clk);
+			CheckNoActivity(Wr_Error, 5 us, 0, "Unexpected Error");
+			RespChecked_v := 3;	
+		end if;
 		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------		
+		if Generics_c.ImplRead_g then
+			-- *** Burst over 4k Boundary ***		
+			WaitCase(4, Clk);
+			WaitForCompletion(true, 1 us, Rd_Done, Rd_Error, Clk);
+			CheckNoActivity(Rd_Done, 1 us, 0, "Unexpected Done");
+			RespChecked_v := 4;
+			
+			-- *** Transaction exceed AXI Burst Limit ***
+			WaitCase(5, Clk);
+			WaitForCompletion(true, 10 us, Rd_Done, Rd_Error, Clk);
+			CheckNoActivity(Rd_Done, 5 us, 0, "Unexpected Done");
+			RespChecked_v := 5;	
+			
+			-- *** Large Transfer over 2*4K ***	
+			WaitCase(6, Clk);
+			WaitForCompletion(true, 100 us, Rd_Done, Rd_Error, Clk);
+			CheckNoActivity(Rd_Done, 5 us, 0, "Unexpected Done");
+			RespChecked_v := 6;		
+			
+			-- *** Error in only one transaction ***
+			WaitCase(7, Clk);
+			WaitForCompletion(false, 10 us, Rd_Done, Rd_Error, Clk);
+			CheckNoActivity(Rd_Error, 5 us, 0, "Unexpected Error");
+			RespChecked_v := 7;		
+		end if;
 	end procedure;
 	
 	procedure axi (
@@ -227,44 +315,91 @@ package body psi_common_axi_master_simple_tb_case_split is
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------
-		-- *** Burst over 4k Boundary ***
-		WaitCase(0, Clk);
-		AxiCheckWrBurst(16#00020FFC#, 16#1000#, 1, 2, "10", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
-		AxiCheckWrBurst(16#00021000#, 16#1002#, 1, 2, "11", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+		if Generics_c.ImplWrite_g then
+			-- *** Burst over 4k Boundary ***
+			WaitCase(0, Clk);
+			AxiCheckWrBurst(16#00020FFC#, 16#1000#, 1, 2, "10", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			AxiCheckWrBurst(16#00021000#, 16#1002#, 1, 2, "11", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			
+			-- *** Transaction exceed AXI Burst Limit ***
+			WaitCase(1, Clk);
+			AxiCheckWrBurst(16#00020000#, 16#1000#, 1, AxiMaxBeats_g, "10", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			AxiCheckWrBurst(16#00020000#+AxiMaxBeats_g*2, 16#1000#+AxiMaxBeats_g, 1, 2, "11", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk);		
+			
+			-- *** Large Transfer over 2*4K ***
+			WaitCase(2, Clk);
+			NextAddr_v := 16#00020F08#;
+			BeatsChecked_v := 0;
+			while BeatsChecked_v < 4096 loop
+				-- keep within AXI limit
+				NextBurstBeats_v := AxiMaxBeats_g;
+				-- Do not write over 4k boundaries
+				if ((NextAddr_v + NextBurstBeats_v*2 - 1) / 4096) /=
+				   (NextAddr_v / 4096) then
+				   NextBurstBeats_v := (4096-(NextAddr_v mod 4096))/2;
+				end if;
+				-- stop writing at the end
+				if (BeatsChecked_v+NextBurstBeats_v > 4096) then
+					NextBurstBeats_v := 4096-BeatsChecked_v;
+				end if;
+				--debug print usually disabled
+				--print("Expect: Addr: " & hstr(std_logic_vector(to_unsigned(NextAddr_v, 32))) & ", Offset: " & hstr(std_logic_vector(to_unsigned(BeatsChecked_v, 32))) & ", Beats:" & str(NextBurstBeats_v));
+				AxiCheckWrBurst(NextAddr_v, BeatsChecked_v, 1, NextBurstBeats_v, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+				BeatsChecked_v := BeatsChecked_v + NextBurstBeats_v;
+				NextAddr_v := NextAddr_v + NextBurstBeats_v*2;
+			end loop;		
+			
+			-- *** Error in only one transaction ***
+			WaitCase(3, Clk);
+			AxiCheckWrBurst(16#00020000#, 0, 1, AxiMaxBeats_g, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			AxiCheckWrBurst(16#00020000#+AxiMaxBeats_g*2, AxiMaxBeats_g, 1, AxiMaxBeats_g, "11", "11", xRESP_SLVERR_c, axi_ms, axi_sm, Clk);
+			AxiCheckWrBurst(16#00020000#+AxiMaxBeats_g*2*2, AxiMaxBeats_g*2, 1, 2, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);	
+		end if;
+
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------
+		if Generics_c.ImplRead_g then
+			-- *** Burst over 4k Boundary ***	
+			WaitCase(4, Clk);
+			AxiCheckRdBurst(16#00020FFC#, 16#1000#, 1, 2, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			AxiCheckRdBurst(16#00021000#, 16#1002#, 1, 2, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			
+			-- *** Transaction exceed AXI Burst Limit ***
+			WaitCase(5, Clk);
+			AxiCheckRdBurst(16#00020000#, 16#1000#, 1, AxiMaxBeats_g, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			AxiCheckRdBurst(16#00020000#+AxiMaxBeats_g*2, 16#1000#+AxiMaxBeats_g, 1, 2, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			
+			-- *** Large Transfer over 2*4K ***	
+			WaitCase(6, Clk);
+			NextAddr_v := 16#00020F08#;
+			BeatsChecked_v := 0;
+			while BeatsChecked_v < 4096 loop
+				-- keep within AXI limit
+				NextBurstBeats_v := AxiMaxBeats_g;
+				-- Do not write over 4k boundaries
+				if ((NextAddr_v + NextBurstBeats_v*2 - 1) / 4096) /=
+				   (NextAddr_v / 4096) then
+				   NextBurstBeats_v := (4096-(NextAddr_v mod 4096))/2;
+				end if;
+				-- stop writing at the end
+				if (BeatsChecked_v+NextBurstBeats_v > 4096) then
+					NextBurstBeats_v := 4096-BeatsChecked_v;
+				end if;
+				--debug print usually disabled
+				--print("Expect: Addr: " & hstr(std_logic_vector(to_unsigned(NextAddr_v, 32))) & ", Offset: " & hstr(std_logic_vector(to_unsigned(BeatsChecked_v, 32))) & ", Beats:" & str(NextBurstBeats_v));
+				AxiCheckRdBurst(NextAddr_v, BeatsChecked_v, 1, NextBurstBeats_v, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+				BeatsChecked_v := BeatsChecked_v + NextBurstBeats_v;
+				NextAddr_v := NextAddr_v + NextBurstBeats_v*2;
+			end loop;	
+			
+			-- *** Error in only one transaction ***
+			WaitCase(7, Clk);
+			AxiCheckRdBurst(16#00020000#, 0, 1, AxiMaxBeats_g, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			AxiCheckRdBurst(16#00020000#+AxiMaxBeats_g*2, AxiMaxBeats_g, 1, AxiMaxBeats_g, xRESP_SLVERR_c, axi_ms, axi_sm, Clk);
+			AxiCheckRdBurst(16#00020000#+AxiMaxBeats_g*2*2, AxiMaxBeats_g*2, 1, 2, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+		end if;
 		
-		-- *** Transaction exceed AXI Burst Limit ***
-		WaitCase(1, Clk);
-		AxiCheckWrBurst(16#00020000#, 16#1000#, 1, AxiMaxBeats_g, "10", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
-		AxiCheckWrBurst(16#00020000#+AxiMaxBeats_g*2, 16#1000#+AxiMaxBeats_g, 1, 2, "11", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk);		
-		
-		-- *** Large Transfer over 2*4K ***
-		WaitCase(2, Clk);
-		NextAddr_v := 16#00020F08#;
-		BeatsChecked_v := 0;
-		while BeatsChecked_v < 4096 loop
-			-- keep within AXI limit
-			NextBurstBeats_v := AxiMaxBeats_g;
-			-- Do not write over 4k boundaries
-			if ((NextAddr_v + NextBurstBeats_v*2 - 1) / 4096) /=
-			   (NextAddr_v / 4096) then
-			   NextBurstBeats_v := (4096-(NextAddr_v mod 4096))/2;
-			end if;
-			-- stop writing at the end
-			if (BeatsChecked_v+NextBurstBeats_v > 4096) then
-				NextBurstBeats_v := 4096-BeatsChecked_v;
-			end if;
-			--debug print usually disabled
-			--print("Expect: Addr: " & hstr(std_logic_vector(to_unsigned(NextAddr_v, 32))) & ", Offset: " & hstr(std_logic_vector(to_unsigned(BeatsChecked_v, 32))) & ", Beats:" & str(NextBurstBeats_v));
-			AxiCheckWrBurst(NextAddr_v, BeatsChecked_v, 1, NextBurstBeats_v, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
-			BeatsChecked_v := BeatsChecked_v + NextBurstBeats_v;
-			NextAddr_v := NextAddr_v + NextBurstBeats_v*2;
-		end loop;		
-		
-		-- *** Error in only one transaction ***
-		WaitCase(3, Clk);
-		AxiCheckWrBurst(16#00020000#, 0, 1, AxiMaxBeats_g, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
-		AxiCheckWrBurst(16#00020000#+AxiMaxBeats_g*2, AxiMaxBeats_g, 1, AxiMaxBeats_g, "11", "11", xRESP_SLVERR_c, axi_ms, axi_sm, Clk);
-		AxiCheckWrBurst(16#00020000#+AxiMaxBeats_g*2*2, AxiMaxBeats_g*2, 1, 2, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);			
 	end procedure;
 	
 end;

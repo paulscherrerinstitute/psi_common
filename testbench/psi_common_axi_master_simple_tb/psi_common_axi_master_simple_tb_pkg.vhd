@@ -27,7 +27,8 @@ package psi_common_axi_master_simple_tb_pkg is
 	
 	-- *** Generics Record ***
 	type Generics_t is record
-		Dummy : boolean; -- required since empty records are not allowed
+		ImplRead_g : boolean;
+		ImplWrite_g : boolean;
 	end record;
 	
 	------------------------------------------------------------

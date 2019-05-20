@@ -40,6 +40,10 @@ library work;
 -- Entity Declaration
 ------------------------------------------------------------
 entity psi_common_axi_master_simple_tb is
+	generic (
+		ImplWrite_g		: boolean 	:= true;
+		ImplRead_g		: boolean 	:= true
+	);
 end entity;
 
 ------------------------------------------------------------
@@ -55,7 +59,8 @@ architecture sim of psi_common_axi_master_simple_tb is
 	
 	-- *** Exported Generics ***
 	constant Generics_c : Generics_t := (
-		Dummy => true);
+		ImplRead_g => ImplRead_g,
+		ImplWrite_g => ImplWrite_g);
 	
 	-- *** TB Control ***
 	signal TbRunning : boolean := True;
@@ -104,6 +109,8 @@ begin
 			AxiMaxOpenTrasactions_g => AxiMaxOpenTrasactions_g,
 			UserTransactionSizeBits_g => UserTransactionSizeBits_g,
 			DataFifoDepth_g => DataFifoDepth_g,
+			ImplWrite_g => ImplWrite_g,
+			ImplRead_g => ImplRead_g,
 			RamBehavior_g => RamBehavior_g
 		)
 		port map (

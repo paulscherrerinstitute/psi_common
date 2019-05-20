@@ -68,7 +68,6 @@ package psi_common_axi_master_simple_tb_case_max_transact is
 		constant Generics_c : Generics_t);
 		
 	shared variable TestCase_v : integer := -1;
-	shared variable StartResp_v : boolean := false;
 	constant DelayBetweenTests 	: time := 0 us;
 	constant DebugPrints 		: boolean := false;
 		
@@ -107,21 +106,44 @@ package body psi_common_axi_master_simple_tb_case_max_transact is
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------
-		-- *** Single word wirte [high latency] ***
-		DbgPrint(DebugPrints, ">> Single word write [high latency]");
-		TestCase_v := 0;
-		for i in 0 to AxiMaxOpenTrasactions_g loop
-			ApplyCommand(16#00001000#*i, 1, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-		end loop;
-		wait for DelayBetweenTests;
-		
-		-- *** Burst write [low latency] ***
-		DbgPrint(DebugPrints, ">> Burst write [low latency]");
-		TestCase_v := 1;
-		for i in 0 to AxiMaxOpenTrasactions_g loop
-			ApplyCommand(16#00001000#*i, 8, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-		end loop;
-		wait for DelayBetweenTests;				
+		if Generics_c.ImplWrite_g then
+			-- *** Single word wirte [high latency] ***
+			DbgPrint(DebugPrints, ">> Single word write [high latency]");
+			TestCase_v := 0;
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				ApplyCommand(16#00001000#*i, 1, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+			end loop;
+			wait for DelayBetweenTests;
+			
+			-- *** Burst write [low latency] ***
+			DbgPrint(DebugPrints, ">> Burst write [low latency]");
+			TestCase_v := 1;
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				ApplyCommand(16#00001000#*i, 8, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+			end loop;
+			wait for DelayBetweenTests;	
+		end if;
+
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------
+		if Generics_c.ImplRead_g then
+			-- *** Single word read [high latency] ***
+			DbgPrint(DebugPrints, ">> Single word read [high latency]");
+			TestCase_v := 2;
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				ApplyCommand(16#00001000#*i, 1, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+			end loop;
+			wait for DelayBetweenTests;	
+
+			-- *** Burst read [low latency] ***
+			DbgPrint(DebugPrints, ">> Burst read [low latency]");
+			TestCase_v := 3;
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				ApplyCommand(16#00001000#*i, 8, true, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+			end loop;
+			wait for DelayBetweenTests;		
+		end if;
 		
 		wait for DelayBetweenTests;
 	end procedure;
@@ -140,17 +162,36 @@ package body psi_common_axi_master_simple_tb_case_max_transact is
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------	
-		-- *** Single word wirte [high latency] ***
-		WaitCase(0, Clk);
-		for i in 0 to AxiMaxOpenTrasactions_g loop
-			ApplyWrDataSingle(16#0001#*i, "11",  WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);
-		end loop;
+		if Generics_c.ImplWrite_g then
+			-- *** Single word wirte [high latency] ***
+			WaitCase(0, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				ApplyWrDataSingle(16#0001#*i, "11",  WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);
+			end loop;
+			
+			-- *** Burst write [low latency] ***
+			WaitCase(1, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				ApplyWrDataMulti(16#0001#*i, 1, 8, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	
+			end loop;
+		end if;
 		
-		-- *** Burst write [low latency] ***
-		WaitCase(1, Clk);
-		for i in 0 to AxiMaxOpenTrasactions_g loop
-			ApplyWrDataMulti(16#0001#*i, 1, 8, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	
-		end loop;
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------
+		if Generics_c.ImplRead_g then
+			-- *** Single word read [high latency] ***		
+			WaitCase(2, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				CheckRdDataSingle(16#0001#*i,  RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);	
+			end loop;		
+			
+			-- *** Burst read [low latency] ***
+			WaitCase(3, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				CheckRdDataMulti(16#0001#*i, 1, 8, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);	
+			end loop;	
+		end if;
 		
 	end procedure;
 	
@@ -164,18 +205,37 @@ package body psi_common_axi_master_simple_tb_case_max_transact is
 	begin
 		------------------------------------------------------------------
 		-- Writes
-		------------------------------------------------------------------		
-		-- *** Single word wirte [high latency] ***
-		WaitCase(0, Clk);
-		for i in 0 to AxiMaxOpenTrasactions_g loop
-			WaitForCompletion(true, 10 us, Wr_Done, Wr_Error, Clk);
-		end loop;
+		------------------------------------------------------------------
+		if Generics_c.ImplWrite_g then		
+			-- *** Single word wirte [high latency] ***
+			WaitCase(0, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				WaitForCompletion(true, 10 us, Wr_Done, Wr_Error, Clk);
+			end loop;
+			
+			-- *** Burst write [low latency] ***
+			WaitCase(1, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				WaitForCompletion(true, 10 us, Wr_Done, Wr_Error, Clk);
+			end loop;
+		end if;
 		
-		-- *** Burst write [low latency] ***
-		WaitCase(1, Clk);
-		for i in 0 to AxiMaxOpenTrasactions_g loop
-			WaitForCompletion(true, 10 us, Wr_Done, Wr_Error, Clk);
-		end loop;
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------
+		if Generics_c.ImplRead_g then
+			-- *** Single word read [high latency] ***	
+			WaitCase(2, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				WaitForCompletion(true, 20 us, Rd_Done, Rd_Error, Clk);
+			end loop;		
+			
+			-- *** Burst read [low latency] ***
+			WaitCase(3, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				WaitForCompletion(true, 20 us, Rd_Done, Rd_Error, Clk);
+			end loop;
+		end if;
 		
 	end procedure;
 	
@@ -190,46 +250,89 @@ package body psi_common_axi_master_simple_tb_case_max_transact is
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------	
-		-- *** Single word wirte [high latency] ***
-		StartResp_v := false;
-		WaitCase(0, Clk);
-		for i in 0 to AxiMaxOpenTrasactions_g loop
-			-- check if last transaction is really delayed until response generation is started
-			if i = AxiMaxOpenTrasactions_g then
-				wait for 1 us;
-				wait until rising_edge(Clk);
-				assert (axi_ms.awvalid = '0') and (axi_ms.wvalid = '0') report "###ERROR###: Transaction not delayed until responses generated" severity error;
-				-- send responses
-				for i in 0 to AxiMaxOpenTrasactions_g-1 loop
-					axi_apply_bresp(xRESP_OKAY_c, axi_ms, axi_sm, Clk);
-				end loop;
-			end if;
-			-- check transaction
-			AxiCheckWrSingle(16#00001000#*i, 16#0001#*i, "11", "XX", axi_ms, axi_sm, Clk, false); --without response
-		end loop;
-		-- Send last response
-		axi_apply_bresp(xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+		if Generics_c.ImplWrite_g then
+			-- *** Single word wirte [high latency] ***
+			WaitCase(0, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				-- check if last transaction is really delayed until response generation is started
+				if i = AxiMaxOpenTrasactions_g then
+					wait for 1 us;
+					wait until rising_edge(Clk);
+					assert (axi_ms.awvalid = '0') and (axi_ms.wvalid = '0') report "###ERROR###: Transaction not delayed until responses generated" severity error;
+					-- send responses
+					for i in 0 to AxiMaxOpenTrasactions_g-1 loop
+						axi_apply_bresp(xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+					end loop;
+				end if;
+				-- check transaction
+				AxiCheckWrSingle(16#00001000#*i, 16#0001#*i, "11", "XX", axi_ms, axi_sm, Clk, false); --without response
+			end loop;
+			-- Send last response
+			axi_apply_bresp(xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			
+			-- *** Burst write [low latency] ***
+			WaitCase(1, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				-- check if last transaction is really delayed until response generation is started
+				if i = AxiMaxOpenTrasactions_g then
+					wait for 1 us;
+					wait until rising_edge(Clk);
+					assert (axi_ms.awvalid = '0') and (axi_ms.wvalid = '0') report "###ERROR###: Transaction not delayed until responses generated" severity error;
+					-- send responses
+					for i in 0 to AxiMaxOpenTrasactions_g-1 loop
+						axi_apply_bresp(xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+					end loop;
+				end if;
+				-- check transaction
+				AxiCheckWrBurst(16#00001000#*i, 16#0001#*i, 1, 8, "10", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk, false); --without response
+			end loop;
+			-- Send last response
+			axi_apply_bresp(xRESP_OKAY_c, axi_ms, axi_sm, Clk);		
+		end if;
 		
-		-- *** Burst write [low latency] ***
-		StartResp_v := false;
-		WaitCase(1, Clk);
-		for i in 0 to AxiMaxOpenTrasactions_g loop
-			-- check if last transaction is really delayed until response generation is started
-			if i = AxiMaxOpenTrasactions_g then
-				wait for 1 us;
-				wait until rising_edge(Clk);
-				assert (axi_ms.awvalid = '0') and (axi_ms.wvalid = '0') report "###ERROR###: Transaction not delayed until responses generated" severity error;
-				-- send responses
-				for i in 0 to AxiMaxOpenTrasactions_g-1 loop
-					axi_apply_bresp(xRESP_OKAY_c, axi_ms, axi_sm, Clk);
-				end loop;
-			end if;
-			-- check transaction
-			AxiCheckWrBurst(16#00001000#*i, 16#0001#*i, 1, 8, "10", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk, false); --without response
-		end loop;
-		-- Send last response
-		axi_apply_bresp(xRESP_OKAY_c, axi_ms, axi_sm, Clk);		
-		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------
+		if Generics_c.ImplRead_g then
+			-- *** Single word read [high latency] ***			
+			WaitCase(2, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				-- check if last transaction is really delayed until response generation is started
+				if i = AxiMaxOpenTrasactions_g then
+					wait for 1 us;
+					wait until rising_edge(Clk);
+					assert axi_ms.arvalid = '0' report "###ERROR###: Transaction not delayed until responses generated" severity error;
+					-- send responses
+					for i in 0 to AxiMaxOpenTrasactions_g-1 loop
+						axi_apply_rresp_single(std_logic_vector(to_unsigned(16#0001#*i, AxiDataWidth_g)), xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+					end loop;
+				end if;
+				-- check transaction
+				axi_expect_ar(	16#00001000#*i, AxSIZE_2_c, 1-1, xBURST_INCR_c, axi_ms, axi_sm, Clk);
+			end loop;
+			-- Send last response
+			axi_apply_rresp_single(std_logic_vector(to_unsigned(16#0001#*AxiMaxOpenTrasactions_g, AxiDataWidth_g)), xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			
+			-- *** Burst read [low latency] ***
+			WaitCase(3, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				-- check if last transaction is really delayed until response generation is started
+				if i = AxiMaxOpenTrasactions_g then
+					wait for 1 us;
+					wait until rising_edge(Clk);
+					assert axi_ms.arvalid = '0' report "###ERROR###: Transaction not delayed until responses generated" severity error;
+					-- send responses
+					for i in 0 to AxiMaxOpenTrasactions_g-1 loop
+						axi_apply_rresp_burst(8, 16#0001#*i, 1, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+					end loop;
+				end if;
+				-- check transaction
+				axi_expect_ar(	16#00001000#*i, AxSIZE_2_c, 8-1, xBURST_INCR_c, axi_ms, axi_sm, Clk);
+			end loop;
+			-- Send last response
+			axi_apply_rresp_burst(8, 16#0001#*AxiMaxOpenTrasactions_g, 1, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+		end if;
+	
 	end procedure;
 	
 end;

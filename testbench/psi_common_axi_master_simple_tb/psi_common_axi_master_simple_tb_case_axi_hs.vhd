@@ -105,12 +105,24 @@ package body psi_common_axi_master_simple_tb_case_axi_hs is
 		print("*** Tet Group 3: Axi Handshake ***");
 		
 		-- *** Burst wirte - single transaction ***
-		DbgPrint(DebugPrints, ">> Burst write - single transaction");
-		TestCase_v := 0;
-		for i in 0 to AxiMaxOpenTrasactions_g+2 loop
-			ApplyCommand(16#00020000#*i, 12, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);	
-		end loop;
-		wait for DelayBetweenTests;		
+		if Generics_c.ImplWrite_g then
+			DbgPrint(DebugPrints, ">> Burst write - single transaction");
+			TestCase_v := 0;
+			for i in 0 to AxiMaxOpenTrasactions_g+2 loop
+				ApplyCommand(16#00020000#*i, 12, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);	
+			end loop;
+			wait for DelayBetweenTests;	
+		end if;
+		
+		-- *** Burst read - single transaction ***
+		if Generics_c.ImplRead_g then
+			DbgPrint(DebugPrints, ">> Burst read - single transaction");
+			TestCase_v := 1;
+			for i in 0 to AxiMaxOpenTrasactions_g+2 loop
+				ApplyCommand(16#00020000#*i, 12, true, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);	
+			end loop;
+			wait for DelayBetweenTests;	
+		end if;
 
 		wait for DelayBetweenTests;				
 	end procedure;
@@ -127,17 +139,34 @@ package body psi_common_axi_master_simple_tb_case_axi_hs is
 		constant Generics_c : Generics_t) is
 	begin
 		-- *** Burst wirte - single transaction ***
-		WaitCase(0, Clk);
-		wait until rising_edge(Clk);
-		-- First transfers at full speed
-		for i in 0 to AxiMaxOpenTrasactions_g loop
-			ApplyWrDataMulti(16#1000#*i, 1, 12, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	
-		end loop;
-		-- Last two transfers breaked by data stream (wait to ensure the Vld pattern is visible on AXI and not hidden by buffered data)
-		wait for 1 us;
-		wait until rising_edge(Clk);
-		ApplyWrDataMulti(16#1000#*(AxiMaxOpenTrasactions_g+1), 1, 12, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk, 3);	
-		ApplyWrDataMulti(16#1000#*(AxiMaxOpenTrasactions_g+2), 1, 12, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk, 3);	
+		if Generics_c.ImplWrite_g then
+			WaitCase(0, Clk);
+			wait until rising_edge(Clk);
+			-- First transfers at full speed
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				ApplyWrDataMulti(16#1000#*i, 1, 12, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	
+			end loop;
+			-- Last two transfers breaked by data stream (wait to ensure the Vld pattern is visible on AXI and not hidden by buffered data)
+			wait for 1 us;
+			wait until rising_edge(Clk);
+			ApplyWrDataMulti(16#1000#*(AxiMaxOpenTrasactions_g+1), 1, 12, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk, 3);	
+			ApplyWrDataMulti(16#1000#*(AxiMaxOpenTrasactions_g+2), 1, 12, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk, 3);	
+		end if;
+		
+		-- *** Burst read - single transaction ***
+		if Generics_c.ImplRead_g then
+			WaitCase(1, Clk);
+			wait until rising_edge(Clk);
+			-- First transfers at full speed
+			for i in 0 to AxiMaxOpenTrasactions_g loop
+				CheckRdDataMulti(16#1000#*i, 1, 12, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);	
+			end loop;
+			-- Last two transfers breaked by data stream (wait to ensure the Vld pattern is visible on AXI and not hidden by buffered data)
+			wait for 1 us;
+			wait until rising_edge(Clk);
+			CheckRdDataMulti(16#1000#*(AxiMaxOpenTrasactions_g+1), 1, 12, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 3);	
+			CheckRdDataMulti(16#1000#*(AxiMaxOpenTrasactions_g+2), 1, 12, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 3);
+		end if;		
 		
 	end procedure;
 	
@@ -150,10 +179,21 @@ package body psi_common_axi_master_simple_tb_case_axi_hs is
 		constant Generics_c : Generics_t) is
 	begin
 		-- *** Burst wirte - single transaction ***
-		WaitCase(0, Clk);
-		for i in 0 to AxiMaxOpenTrasactions_g+2 loop
-			WaitForCompletion(true, 10 us, Wr_Done, Wr_Error, Clk);
-		end loop;		
+		if Generics_c.ImplWrite_g then
+			WaitCase(0, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g+2 loop
+				WaitForCompletion(true, 10 us, Wr_Done, Wr_Error, Clk);
+			end loop;
+		end if;		
+
+		-- *** Burst read - single transaction ***
+		if Generics_c.ImplRead_g then
+			WaitCase(1, Clk);
+			for i in 0 to AxiMaxOpenTrasactions_g+2 loop
+				WaitForCompletion(true, 10 us, Rd_Done, Rd_Error, Clk);
+			end loop;
+		end if;		
+		
 	end procedure;
 	
 	procedure axi (
@@ -163,15 +203,31 @@ package body psi_common_axi_master_simple_tb_case_axi_hs is
 		constant Generics_c : Generics_t) is
 	begin
 		-- *** Burst wirte - single transaction ***
-		WaitCase(0, Clk);
-		-- First transaction breaked by awready
-		AxiCheckWrBurst(16#00020000#*0, 16#1000#*0, 1, 12, "10", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk, true, 800 ns);
-		-- Other transactions breaked by wready		
-		for i in 1 to AxiMaxOpenTrasactions_g+1 loop
-			AxiCheckWrBurst(16#00020000#*i, 16#1000#*i, 1, 12, "10", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk, true, 0 ns, 3);
-		end loop;
-		-- last transaction fullspeed
-		AxiCheckWrBurst(16#00020000#*(AxiMaxOpenTrasactions_g+2), 16#1000#*(AxiMaxOpenTrasactions_g+2), 1, 12, "10", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+		if Generics_c.ImplWrite_g then
+			WaitCase(0, Clk);
+			-- First transaction breaked by awready
+			AxiCheckWrBurst(16#00020000#*0, 16#1000#*0, 1, 12, "10", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk, true, 800 ns);
+			-- Other transactions breaked by wready		
+			for i in 1 to AxiMaxOpenTrasactions_g+1 loop
+				AxiCheckWrBurst(16#00020000#*i, 16#1000#*i, 1, 12, "10", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk, true, 0 ns, 3);
+			end loop;
+			-- last transaction fullspeed
+			AxiCheckWrBurst(16#00020000#*(AxiMaxOpenTrasactions_g+2), 16#1000#*(AxiMaxOpenTrasactions_g+2), 1, 12, "10", "01", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+		end if;
+		
+		-- *** Burst read - single transaction ***
+		if Generics_c.ImplRead_g then
+			WaitCase(1, Clk);
+			-- First transaction breaked by arready
+			AxiCheckRdBurst(16#00020000#*0, 16#1000#*0, 1, 12, xRESP_OKAY_c, axi_ms, axi_sm, Clk, 800 ns);	
+			-- Other transactions breaked by wready	
+			for i in 1 to AxiMaxOpenTrasactions_g+1 loop
+				AxiCheckRdBurst(16#00020000#*i, 16#1000#*i, 1, 12, xRESP_OKAY_c, axi_ms, axi_sm, Clk, 0 ns, 3);
+			end loop;
+			-- last transaction fullspeed
+			AxiCheckRdBurst(16#00020000#*(AxiMaxOpenTrasactions_g+2), 16#1000#*(AxiMaxOpenTrasactions_g+2), 1, 12, xRESP_OKAY_c, axi_ms, axi_sm, Clk);	
+		end if;
+
 	end procedure;
 	
 end;

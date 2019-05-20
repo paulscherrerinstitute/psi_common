@@ -222,6 +222,10 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_axi_master_simple_tb"
+tb_run_add_arguments \
+	"-gImplWrite_g=true -gImplRead_g=true" \
+	"-gImplWrite_g=true -gImplRead_g=false" \
+	"-gImplWrite_g=false -gImplRead_g=true"
 add_tb_run
 
 

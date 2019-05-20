@@ -69,8 +69,8 @@ package psi_common_axi_master_simple_tb_case_internals is
 		
 	shared variable TestCase_v 		: integer := -1;
 	shared variable DataBeats_v		: integer := 0;
-	constant DelayBetweenTests 		: time := 1 us;
-	constant DebugPrints 			: boolean := true;			
+	constant DelayBetweenTests 		: time := 0 us;
+	constant DebugPrints 			: boolean := false;			
 		
 end package;
 
@@ -107,18 +107,19 @@ package body psi_common_axi_master_simple_tb_case_internals is
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------	
-		-- *** Burst Write - Keep track of already anounced transfers ***		
-		-- Are beats already announced (AW-channel command already sent) not taken
-		-- into account for the high-latency mode?
-		DbgPrint(DebugPrints, "Burst Write - Keep track of already anounced transfers");
-		TestCase_v := 0;
-		while DataBeats_v < 7 loop
-			wait until rising_edge(Clk);
-		end loop;
-		ApplyCommand(16#00020000#, 4, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);	
-		ApplyCommand(16#00021000#, 4, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-		wait for DelayBetweenTests;			
-
+		if Generics_c.ImplWrite_g then
+			-- *** Burst Write - Keep track of already anounced transfers ***		
+			-- Are beats already announced (AW-channel command already sent) not taken
+			-- into account for the high-latency mode?
+			DbgPrint(DebugPrints, "Burst Write - Keep track of already anounced transfers");
+			TestCase_v := 0;
+			while DataBeats_v < 7 loop
+				wait until rising_edge(Clk);
+			end loop;
+			ApplyCommand(16#00020000#, 4, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);	
+			ApplyCommand(16#00021000#, 4, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+			wait for DelayBetweenTests;	
+		end if;
 
 		wait for DelayBetweenTests;
 	end procedure;
@@ -137,16 +138,18 @@ package body psi_common_axi_master_simple_tb_case_internals is
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------	
-		-- *** Burst Write - Keep track of already anounced transfers ***
-		DataBeats_v := 0;
-		WaitCase(0, Clk);
-		ApplyWrDataMulti(16#1000#, 1, 4, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);		
-		ApplyWrDataMulti(16#2000#, 1, 3, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	-- First 3 beats of second transfer
-		DataBeats_v := 7;
-		wait for 5 us;
-		wait until rising_edge(Clk);
-		ApplyWrDataMulti(16#2003#, 1, 1, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	-- Last beat of second transfer
-		DataBeats_v := 8;
+		if Generics_c.ImplWrite_g then
+			-- *** Burst Write - Keep track of already anounced transfers ***
+			DataBeats_v := 0;
+			WaitCase(0, Clk);
+			ApplyWrDataMulti(16#1000#, 1, 4, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);		
+			ApplyWrDataMulti(16#2000#, 1, 3, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	-- First 3 beats of second transfer
+			DataBeats_v := 7;
+			wait for 5 us;
+			wait until rising_edge(Clk);
+			ApplyWrDataMulti(16#2003#, 1, 1, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	-- Last beat of second transfer
+			DataBeats_v := 8;
+		end if;
 		
 	end procedure;
 	
@@ -161,9 +164,13 @@ package body psi_common_axi_master_simple_tb_case_internals is
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------
-		-- *** Burst Write - Keep track of already anounced transfers ***
-		WaitCase(0, Clk);
-		WaitForCompletion(true, 15 us, Wr_Done, Wr_Error, Clk);		
+		if Generics_c.ImplWrite_g then
+			-- *** Burst Write - Keep track of already anounced transfers ***
+			WaitCase(0, Clk);
+			WaitForCompletion(true, 15 us, Wr_Done, Wr_Error, Clk);	
+			WaitForCompletion(true, 15 us, Wr_Done, Wr_Error, Clk);	
+		end if;
+
 		
 	end procedure;
 	
@@ -176,17 +183,20 @@ package body psi_common_axi_master_simple_tb_case_internals is
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------
-		-- *** Burst Write - Keep track of already anounced transfers ***
-		WaitCase(0, Clk);
-		-- First burst is expected immediately
-		AxiCheckWrBurst(16#00020000#, 16#1000#, 1, 4, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);	
-		-- Check if next transfer is delayed until all data is present
-		while DataBeats_v < 8 loop
-			StdlCompare(0, axi_ms.awvalid, "Unexpected command");
-			wait until rising_edge(Clk);
-		end loop;
-		-- Check second transfer
-		AxiCheckWrBurst(16#00021000#, 16#2000#, 1, 4, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+		if Generics_c.ImplWrite_g then
+			-- *** Burst Write - Keep track of already anounced transfers ***
+			WaitCase(0, Clk);
+			-- First burst is expected immediately
+			AxiCheckWrBurst(16#00020000#, 16#1000#, 1, 4, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);	
+			-- Check if next transfer is delayed until all data is present
+			while DataBeats_v < 8 loop
+				StdlCompare(0, axi_ms.awvalid, "Unexpected command");
+				wait until rising_edge(Clk);
+			end loop;
+			-- Check second transfer
+			AxiCheckWrBurst(16#00021000#, 16#2000#, 1, 4, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+		end if;
+			
 		
 	end procedure;
 	
