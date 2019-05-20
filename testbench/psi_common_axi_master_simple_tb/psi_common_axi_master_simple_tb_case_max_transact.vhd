@@ -69,6 +69,8 @@ package psi_common_axi_master_simple_tb_case_max_transact is
 		
 	shared variable TestCase_v : integer := -1;
 	shared variable StartResp_v : boolean := false;
+	constant DelayBetweenTests 	: time := 0 us;
+	constant DebugPrints 		: boolean := false;
 		
 end package;
 
@@ -99,30 +101,29 @@ package body psi_common_axi_master_simple_tb_case_max_transact is
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t) is
 	begin
-		wait for 1 us;
+		wait for DelayBetweenTests;
 		print("*** Tet Group 2: Maximum Open Transactions ***");
 		
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------
 		-- *** Single word wirte [high latency] ***
-		print(">> Single word write [high latency]");
+		DbgPrint(DebugPrints, ">> Single word write [high latency]");
 		TestCase_v := 0;
 		for i in 0 to AxiMaxOpenTrasactions_g loop
 			ApplyCommand(16#00001000#*i, 1, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
 		end loop;
-		wait for 1 us;
+		wait for DelayBetweenTests;
 		
 		-- *** Burst write [low latency] ***
-		print(">> Burst write [low latency]");
+		DbgPrint(DebugPrints, ">> Burst write [low latency]");
 		TestCase_v := 1;
 		for i in 0 to AxiMaxOpenTrasactions_g loop
 			ApplyCommand(16#00001000#*i, 8, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
 		end loop;
-		wait for 1 us;		
+		wait for DelayBetweenTests;				
 		
-		
-		wait for 1 us;
+		wait for DelayBetweenTests;
 	end procedure;
 	
 	procedure user_data (

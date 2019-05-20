@@ -88,7 +88,7 @@ add_sources "../testbench" {
 	psi_common_axi_master_simple_tb/psi_common_axi_master_simple_tb_case_axi_hs.vhd \
 	psi_common_axi_master_simple_tb/psi_common_axi_master_simple_tb_case_split.vhd \
 	psi_common_axi_master_simple_tb/psi_common_axi_master_simple_tb_case_max_transact.vhd \
-	psi_common_axi_master_simple_tb/psi_common_axi_master_simple_tb_case_highlat.vhd \
+	psi_common_axi_master_simple_tb/psi_common_axi_master_simple_tb_case_special.vhd \
 	psi_common_axi_master_simple_tb/psi_common_axi_master_simple_tb_case_internals.vhd \
 	psi_common_axi_master_simple_tb/psi_common_axi_master_simple_tb.vhd \
 } -tag tb

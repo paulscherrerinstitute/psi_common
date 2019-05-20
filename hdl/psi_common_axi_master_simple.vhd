@@ -138,16 +138,20 @@ architecture rtl of psi_common_axi_master_simple is
 	constant Axi_Resp_Okay_c 		: std_logic_vector(1 downto 0) 	:= "00";
 	constant UnusedAddrBits_c		: natural	:= log2(AxiDataWidth_g/8);
 	
+	constant BeatsBits_c		: natural	:= log2ceil(AxiMaxBeats_g+1);
 	subtype Trans_AddrRange_c 	is natural range CmdWr_Addr'high downto 0;
-	subtype Trans_BurstRange_c	is natural range 9+Trans_AddrRange_c'high downto Trans_AddrRange_c'high+1;
+	subtype Trans_BurstRange_c	is natural range BeatsBits_c+Trans_AddrRange_c'high downto Trans_AddrRange_c'high+1;
 	constant Trans_LowLatIdx_c	: natural	:= Trans_BurstRange_c'high+1;
 	constant Trans_Size_c		: natural	:= Trans_LowLatIdx_c+1;
+	constant MaxBeatsNoCmd_c	: natural	:= max(AxiMaxBeats_g*AxiMaxOpenTrasactions_g, DataFifoDepth_g);
+	
 	
 	------------------------------------------------------------------------------
 	-- Type
 	------------------------------------------------------------------------------	
 	type WriteTfGen_s is (Idle_s, MaxCalc_s, GenTf_s, WriteTf_s);
 	type AwFsm_s is (Idle_s, Wait_s);
+	type WFsm_s is (Idle_s, NonLast_s, Last_s);
 	
 	------------------------------------------------------------------------------
 	-- Functions
@@ -170,21 +174,23 @@ architecture rtl of psi_common_axi_master_simple is
 		WrAddr			: unsigned(CmdWr_Addr'range);
 		WrBeats			: unsigned(CmdWr_Size'range);
 		WrLowLat		: std_logic;
-		WrMaxBeats		: unsigned(8 downto 0);
-		WrTfBeats		: unsigned(8 downto 0);
+		WrMaxBeats		: unsigned(BeatsBits_c-1 downto 0);
+		WrTfBeats		: unsigned(BeatsBits_c-1 downto 0);
 		WrTfVld			: std_logic;
 		WrTfIsLast		: std_logic;
 		-- Execute Aw Commands
 		AwFsm 			: AwFsm_s;
 		AwFsmRdy		: std_logic;
 		-- Execute W Data
+		WFsm 			: WFsm_s;
 		WDataFifoRd		: std_logic;
 		WDataEna		: std_logic;
-		WDataBeats		: unsigned(8 downto 0);
+		WDataBeats		: unsigned(BeatsBits_c-1 downto 0);
 		-- Write Response
 		WrRespError		: std_logic;
 		-- Write General
 		WrOpenTrans		: integer range 0 to AxiMaxOpenTrasactions_g;
+		WrBeatsNoCmd	: signed(log2ceil(MaxBeatsNoCmd_c+1) downto 0);
 		-- AXI Signals
 		M_Axi_AwAddr	: std_logic_vector(M_Axi_AwAddr'range);
 		M_Axi_AwLen		: std_logic_vector(M_Axi_AwLen'range);
@@ -200,14 +206,14 @@ architecture rtl of psi_common_axi_master_simple is
 	-- Instantiation Signals
 	------------------------------------------------------------------------------
 	signal Rst				: std_logic;
-	signal WrDataFifoLevel	: std_logic_vector(log2ceil(DataFifoDepth_g) downto 0);
 	signal WrDataFifoORdy	: std_logic;
 	signal WrDataFifoOVld	: std_logic;
 	signal WrTransFifoInVld	: std_logic;
-	signal WrTransFifoBeats	: std_logic_vector(8 downto 0);
+	signal WrTransFifoBeats	: std_logic_vector(BeatsBits_c-1 downto 0);
 	signal WrTransFifoOutVld: std_logic;
 	signal WrRespIsLast		: std_logic;
 	signal WrRespFifoVld	: std_logic;
+	signal WrData_Rdy_I		: std_logic;
 	
 begin
 	CmdRd_Rdy <= '0';
@@ -230,11 +236,13 @@ begin
 	-- Combinatorial Process
 	------------------------------------------------------------------------------	
 	p_comb : process(	r, M_Axi_AwReady, M_Axi_BValid, M_Axi_BResp,
-						WrDataFifoLevel, WrDataFifoORdy, WrDataFifoOVld, WrTransFifoOutVld, WrTransFifoBeats, WrRespIsLast, WrRespFifoVld,
-						CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld)
-		variable v 				: two_process_r;
-		variable Max4kBeats_v	: unsigned(13-UnusedAddrBits_c downto 0);
-		variable Stdlv9Bit_v	: std_logic_vector(8 downto 0);
+						WrDataFifoORdy, WrDataFifoOVld, WrTransFifoOutVld, WrTransFifoBeats, WrRespIsLast, WrRespFifoVld,
+						CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, WrDat_Vld, WrData_Rdy_I)
+		variable v 					: two_process_r;
+		variable Max4kBeats_v		: unsigned(13-UnusedAddrBits_c downto 0);
+		variable Stdlv9Bit_v		: std_logic_vector(8 downto 0);
+		variable WDataTransfer_v	: boolean;
+		variable StartWBurst_v		: boolean := true;
 	begin
 		-- *** Keep two process variables stable ***
 		v := r;
@@ -254,10 +262,10 @@ begin
 				
 			when MaxCalc_s =>
 				Max4kBeats_v	:= resize(unsigned('0' & not r.WrAddr(11 downto UnusedAddrBits_c)) + 1, Max4kBeats_v'length);
-				if Max4kBeats_v > AxiMaxBeats_g-1 then
-					v.WrMaxBeats := to_unsigned(AxiMaxBeats_g, 9);
+				if Max4kBeats_v > AxiMaxBeats_g then
+					v.WrMaxBeats := to_unsigned(AxiMaxBeats_g, BeatsBits_c);
 				else
-					v.WrMaxBeats := Max4kBeats_v(8 downto 0);
+					v.WrMaxBeats := Max4kBeats_v(BeatsBits_c-1 downto 0);
 				end if;
 				v.WriteTfGenState 	:= GenTf_s;
 				
@@ -266,7 +274,7 @@ begin
 					v.WrTfBeats		:= r.WrMaxBeats;
 					v.WrTfIsLast	:= '0';
 				else
-					v.WrTfBeats 	:= r.WrBeats(8 downto 0);
+					v.WrTfBeats 	:= r.WrBeats(BeatsBits_c-1 downto 0);
 					v.WrTfIsLast	:= '1';
 				end if;
 				v.WrTfVld	:= '1';
@@ -290,13 +298,14 @@ begin
 		-- *** AW Command Generation ***
 		case r.AwFsm is
 			when Idle_s =>
-				if ((r.WrLowLat = '1') or (unsigned(WrDataFifoLevel) >= r.WrTfBeats)) and (r.WrOpenTrans < AxiMaxOpenTrasactions_g) and (r.WrTfVld = '1') then
+				if ((r.WrLowLat = '1') or (r.WrBeatsNoCmd >= signed('0' & r.WrTfBeats))) and (r.WrOpenTrans < AxiMaxOpenTrasactions_g) and (r.WrTfVld = '1') then
 					v.AwFsmRdy := '1';
 				end if;
 				if (r.AwFsmRdy = '1') and (r.WrTfVld = '1') then
 					v.AwFsmRdy 		:= '0';
 					v.M_Axi_AwAddr	:= std_logic_vector(r.WrAddr);
-					Stdlv9Bit_v		:= std_logic_vector(r.WrTfBeats-1);
+					Stdlv9Bit_v		:= std_logic_vector(resize(r.WrTfBeats-1, 9));
+					v.WrBeatsNoCmd	:= r.WrBeatsNoCmd - signed('0' & r.WrTfBeats);
 					v.M_Axi_AwLen	:= Stdlv9Bit_v(7 downto 0);
 					v.M_Axi_AwValid	:= '1';
 					v.AwFsm			:= Wait_s;
@@ -311,28 +320,79 @@ begin
 				
 			when others => null;
 		end case;	
+		-- Update counter for FIFO entries that were not yet announced in a command
+		if (WrData_Rdy_I = '1') and (WrDat_Vld = '1') then
+			v.WrBeatsNoCmd := v.WrBeatsNoCmd + 1;	-- use v. beause modified above
+		end if;
 
 		-- *** W Data Generation ***
-		v.WDataFifoRd := '0';
-		if (r.WDataEna = '0') and (WrTransFifoOutVld = '1') then
+		WDataTransfer_v := (r.WDataEna = '1') and (WrDataFifoOVld = '1') and (WrDataFifoORdy = '1');
+		v.WDataFifoRd := '0';		
+		StartWBurst_v := false;
+		case r.WFsm is
+			when Idle_s => 
+				if WrTransFifoOutVld = '1' then
+					StartWBurst_v := true; -- shared code
+				end if;
+				
+			when NonLast_s =>
+				if WDataTransfer_v then
+					if r.WDataBeats = 2 then
+						v.M_Axi_WLast := '1';
+						v.WFsm			:= Last_s;
+					end if;
+					v.WDataBeats := r.WDataBeats - 1;
+				end if;
+				
+			when Last_s => 
+				if WDataTransfer_v then
+					-- Immediately start next transfer 
+					-- .. WDataFifoRd is checked to leave time for the FIFO to complete the read in case of single cycle transfers
+					if (WrTransFifoOutVld = '1') and (r.WDataFifoRd = '0') then
+						StartWBurst_v := true; -- shared code
+					-- End of transfer without a next one back-to-back
+					else
+						v.WDataEna 		:= '0';
+						v.WFsm			:= Idle_s;
+						v.M_Axi_WLast	:= '0';
+					end if;
+				end if;
+			
+			when others => null;
+		end case;
+		-- implementation of shared code
+		if StartWBurst_v then
 			v.WDataFifoRd 	:= '1';
 			v.WDataEna 		:= '1';
-			v.WDataBeats	:= unsigned(WrTransFifoBeats);			
-			-- If it is a single beat transfer, last has to be asserted on the first beat
+			v.WDataBeats	:= unsigned(WrTransFifoBeats);	
 			if unsigned(WrTransFifoBeats) = 1 then
 				v.M_Axi_WLast	:= '1';
+				v.WFsm			:= Last_s;
 			else
 				v.M_Axi_WLast	:= '0';
+				v.WFsm			:= NonLast_s;
 			end if;
 		end if;
-		if (r.WDataEna = '1') and (WrDataFifoOVld = '1') and (WrDataFifoORdy = '1') then
-			if r.WDataBeats = 2 then
-				v.M_Axi_WLast := '1';
-			elsif r.WDataBeats = 1 then
-				v.WDataEna := '0';
-			end if;
-			v.WDataBeats := r.WDataBeats - 1;
-		end if;		
+		
+--		if (r.WDataEna = '0') and (WrTransFifoOutVld = '1') then
+--			v.WDataFifoRd 	:= '1';
+--			v.WDataEna 		:= '1';
+--			v.WDataBeats	:= unsigned(WrTransFifoBeats);			
+--			-- If it is a single beat transfer, last has to be asserted on the first beat
+--			if unsigned(WrTransFifoBeats) = 1 then
+--				v.M_Axi_WLast	:= '1';
+--			else
+--				v.M_Axi_WLast	:= '0';
+--			end if;
+--		end if;
+--		if WDataTransfer_v then
+--			if r.WDataBeats = 2 then
+--				v.M_Axi_WLast := '1';
+--			elsif r.WDataBeats = 1 then
+--				v.WDataEna := '0';
+--			end if;
+--			v.WDataBeats := r.WDataBeats - 1;
+--		end if;		
 		
 		-- *** W Response Generation ***
 		v.Wr_Done := '0';
@@ -377,6 +437,8 @@ begin
 				r.WrRespError		<= '0';
 				r.Wr_Done			<= '0';
 				r.Wr_Error			<= '0';
+				r.WrBeatsNoCmd		<= (others => '0');
+				r.WFsm				<= Idle_s;
 			end if;
 		end if;
 	end process;
@@ -418,7 +480,7 @@ begin
 	WrTransFifoInVld <= r.AwFsmRdy and r.WrTfVld;	
 	fifo_wr_trans : entity work.psi_common_sync_fifo
 		generic map (
-			Width_g			=> 9,
+			Width_g			=> BeatsBits_c,
 			Depth_g			=> AxiMaxOpenTrasactions_g,
 			AlmFullOn_g		=> false,
 			AlmEmptyOn_g	=> false,
@@ -428,7 +490,7 @@ begin
 		port map (
 			Clk					=> M_Axi_Aclk,
 			Rst					=> Rst,
-			InData(8 downto 0)	=> std_logic_vector(r.WrTfBeats),
+			InData				=> std_logic_vector(r.WrTfBeats),
 			InVld				=> WrTransFifoInVld,
 			InRdy				=> open,	-- Not required since maximum of open transactions is limitted
 			OutData				=> WrTransFifoBeats,
@@ -457,38 +519,39 @@ begin
 				Rst		=> Rst,
 				InData	=> InData,
 				InVld	=> WrDat_Vld,
-				InRdy	=> WrDat_Rdy,
+				InRdy	=> WrData_Rdy_I,
 				OutData	=> OutData,
 				OutVld	=> WrDataFifoOVld,
-				OutRdy	=> WrDataFifoORdy,
-				InLevel	=> WrDataFifoLevel
+				OutRdy	=> WrDataFifoORdy
 			);
 		M_Axi_WData	<= OutData(WrDat_Data'high downto WrDat_Data'low);
 		M_Axi_WStrb	<= OutData(WrDat_Data'high+WrDat_Be'length downto WrDat_Data'high+1);
 			
 		M_Axi_WValid 	<= WrDataFifoOVld and r.WDataEna;
 		WrDataFifoORdy 	<= M_Axi_WReady and r.WDataEna;
+		
+		WrDat_Rdy <= WrData_Rdy_I;
 	end block;
 	
 	-- FIFO for write response FSM
-		fifo_wr_data : entity work.psi_common_sync_fifo
-			generic map (
-				Width_g			=> 1,
-				Depth_g			=> AxiMaxOpenTrasactions_g,
-				AlmFullOn_g		=> false,
-				AlmEmptyOn_g	=> false,
-				RamStyle_g		=> "auto",
-				RamBehavior_g	=> RamBehavior_g
-			)
-			port map (
-				Clk			=> M_Axi_Aclk,
-				Rst			=> Rst,
-				InData(0)	=> r.WrTfIsLast,
-				InVld		=> WrTransFifoInVld,
-				InRdy		=> open,	-- Not required since maximum of open transactions is limitted
-				OutData(0)	=> WrRespIsLast,
-				OutVld		=> WrRespFifoVld,
-				OutRdy		=> M_Axi_BValid
-			);	
+	fifo_wr_data : entity work.psi_common_sync_fifo
+		generic map (
+			Width_g			=> 1,
+			Depth_g			=> AxiMaxOpenTrasactions_g,
+			AlmFullOn_g		=> false,
+			AlmEmptyOn_g	=> false,
+			RamStyle_g		=> "auto",
+			RamBehavior_g	=> RamBehavior_g
+		)
+		port map (
+			Clk			=> M_Axi_Aclk,
+			Rst			=> Rst,
+			InData(0)	=> r.WrTfIsLast,
+			InVld		=> WrTransFifoInVld,
+			InRdy		=> open,	-- Not required since maximum of open transactions is limitted
+			OutData(0)	=> WrRespIsLast,
+			OutVld		=> WrRespFifoVld,
+			OutRdy		=> M_Axi_BValid
+		);	
  
 end rtl;

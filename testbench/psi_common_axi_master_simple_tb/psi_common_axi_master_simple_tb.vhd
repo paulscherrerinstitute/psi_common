@@ -34,7 +34,7 @@ library work;
 	use work.psi_common_axi_master_simple_tb_case_axi_hs.all;
 	use work.psi_common_axi_master_simple_tb_case_split.all;
 	use work.psi_common_axi_master_simple_tb_case_internals.all;
-	use work.psi_common_axi_master_simple_tb_case_highlat.all;
+	use work.psi_common_axi_master_simple_tb_case_special.all;
 
 ------------------------------------------------------------
 -- Entity Declaration
@@ -255,10 +255,10 @@ begin
 		work.psi_common_axi_master_simple_tb_case_internals.user_cmd(CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, M_Axi_Aclk, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_user_cmd_c) <= '1';
-		-- highlat
+		-- special cases
 		wait until NextCase = 5;
 		ProcessDone(TbProcNr_user_cmd_c) <= '0';
-		work.psi_common_axi_master_simple_tb_case_highlat.user_cmd(CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, M_Axi_Aclk, Generics_c);
+		work.psi_common_axi_master_simple_tb_case_special.user_cmd(CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, M_Axi_Aclk, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_user_cmd_c) <= '1';
 		wait;
@@ -297,10 +297,10 @@ begin
 		work.psi_common_axi_master_simple_tb_case_internals.user_data(WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, RdDat_Data, RdDat_Vld, RdDat_Rdy, M_Axi_Aclk, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_user_data_c) <= '1';
-		-- highlat
+		-- special cases
 		wait until NextCase = 5;
 		ProcessDone(TbProcNr_user_data_c) <= '0';
-		work.psi_common_axi_master_simple_tb_case_highlat.user_data(WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, RdDat_Data, RdDat_Vld, RdDat_Rdy, M_Axi_Aclk, Generics_c);
+		work.psi_common_axi_master_simple_tb_case_special.user_data(WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, RdDat_Data, RdDat_Vld, RdDat_Rdy, M_Axi_Aclk, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_user_data_c) <= '1';
 		wait;
@@ -339,10 +339,10 @@ begin
 		work.psi_common_axi_master_simple_tb_case_internals.user_resp(Wr_Done, Wr_Error, Rd_Done, Rd_Error, M_Axi_Aclk, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_user_resp_c) <= '1';
-		-- highlat
+		-- special cases
 		wait until NextCase = 5;
 		ProcessDone(TbProcNr_user_resp_c) <= '0';
-		work.psi_common_axi_master_simple_tb_case_highlat.user_resp(Wr_Done, Wr_Error, Rd_Done, Rd_Error, M_Axi_Aclk, Generics_c);
+		work.psi_common_axi_master_simple_tb_case_special.user_resp(Wr_Done, Wr_Error, Rd_Done, Rd_Error, M_Axi_Aclk, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_user_resp_c) <= '1';
 		wait;
@@ -381,10 +381,10 @@ begin
 		work.psi_common_axi_master_simple_tb_case_internals.axi(axi_ms, axi_sm, M_Axi_Aclk, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_axi_c) <= '1';
-		-- highlat
+		-- special cases
 		wait until NextCase = 5;
 		ProcessDone(TbProcNr_axi_c) <= '0';
-		work.psi_common_axi_master_simple_tb_case_highlat.axi(axi_ms, axi_sm, M_Axi_Aclk, Generics_c);
+		work.psi_common_axi_master_simple_tb_case_special.axi(axi_ms, axi_sm, M_Axi_Aclk, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_axi_c) <= '1';
 		wait;

@@ -67,8 +67,10 @@ package psi_common_axi_master_simple_tb_case_simple_tf is
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t);
 		
-	shared variable TestCase_v : integer := -1;
+	shared variable TestCase_v 	: integer := -1;
 	shared variable ExpectCmd_v : boolean;
+	constant DelayBetweenTests 	: time := 1 us;
+	constant DebugPrints 		: boolean := true;
 		
 end package;
 
@@ -98,64 +100,64 @@ package body psi_common_axi_master_simple_tb_case_simple_tf is
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t) is
 	begin
-		wait for 1 us;
+		wait for DelayBetweenTests;
 		print("*** Tet Group 1: Simple Transfer ***");
 		
 		------------------------------------------------------------------
 		-- High Latency Writes
 		------------------------------------------------------------------		
 		-- *** Single word wirte [high latency, command+data together] ***
-		print(">> Single word write [high latency, command+data together]");
+		DbgPrint(DebugPrints, ">> Single word write [high latency, command+data together]");
 		TestCase_v := 0;
 		ApplyCommand(16#12345678#, 1, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-		wait for 1 us;
+		wait for DelayBetweenTests;
 		
 		-- *** Single word wirte [high latency, command before data] ***
-		print(">> Single word wirte [high latency, command before data]");
+		DbgPrint(DebugPrints, ">> Single word wirte [high latency, command before data]");
 		TestCase_v := 1;
 		ApplyCommand(16#00010020#, 1, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);		
-		wait for 1 us;
+		wait for DelayBetweenTests;
 		
 		-- *** Single word wirte [high latency, command after data + error] ***
-		print(">> Single word wirte [high latency, command after data + error]");
+		DbgPrint(DebugPrints, ">> Single word wirte [high latency, command after data + error]");
 		TestCase_v := 2;
 		wait for 200 ns;
 		ApplyCommand(16#00010030#, 1, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);		
-		wait for 1 us;		
+		wait for DelayBetweenTests;		
 		
-		-- *** Burst wirte[high latency] ***
-		print(">> Burst write [high latency]");
+		-- *** Burst wirte[high latency] ***		
+		DbgPrint(DebugPrints, ">> Burst write [high latency]");
 		TestCase_v := 3;
 		ApplyCommand(16#00020000#, 12, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);	
-		wait for 1 us;	
+		wait for DelayBetweenTests;	
 		
 		------------------------------------------------------------------
 		-- Low Latency Writes
 		------------------------------------------------------------------	
 		-- *** Single word wirte [low latency, command+data together] ***
-		print(">> Single word write [low latency, command+data together]");
+		DbgPrint(DebugPrints, ">> Single word write [low latency, command+data together]");
 		TestCase_v := 4;
 		ApplyCommand(16#12345678#, 1, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-		wait for 1 us;
+		wait for DelayBetweenTests;
 		
 		-- *** Single word wirte [low latency, command before data] ***
-		print(">> Single word wirte [low latency, command before data]");
+		DbgPrint(DebugPrints, ">> Single word wirte [low latency, command before data]");
 		TestCase_v := 5;
 		ApplyCommand(16#00010020#, 1, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);		
-		wait for 1 us;
+		wait for DelayBetweenTests;
 		
 		-- *** Single word wirte [low latency, command after data + error] ***
-		print(">> Single word wirte [low latency, command after data + error]");
+		DbgPrint(DebugPrints, ">> Single word wirte [low latency, command after data + error]");
 		TestCase_v := 6;
 		wait for 200 ns;
 		ApplyCommand(16#00010030#, 1, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);		
-		wait for 1 us;		
+		wait for DelayBetweenTests;		
 		
 		-- *** Burst wirte[low latency] ***
-		print(">> Burst write [low latency]");
+		DbgPrint(DebugPrints, ">> Burst write [low latency]");
 		TestCase_v := 7;
 		ApplyCommand(16#00020000#, 12, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);	
-		wait for 1 us;			
+		wait for DelayBetweenTests;			
 		
 	end procedure;
 	
@@ -193,6 +195,7 @@ package body psi_common_axi_master_simple_tb_case_simple_tf is
 		-- *** Burst wirte[high latency] ***
 		ExpectCmd_v := false;
 		WaitCase(3, Clk);
+		wait for 200 ns;
 		wait until rising_edge(Clk);
 		ApplyWrDataMulti(16#1000#, 1, 12, "10", "01", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);
 		ExpectCmd_v := true;

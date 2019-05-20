@@ -35,7 +35,7 @@ package psi_common_axi_master_simple_tb_pkg is
 	------------------------------------------------------------
 	constant DataFifoDepth_g : natural := 14;
 	constant AxiDataWidth_g : natural := 16;
-	constant UserTransactionSizeBits_g : natural := 10;
+	constant UserTransactionSizeBits_g : natural := 16;
 	constant AxiAddrWidth_g : natural := 32;
 	constant AxiMaxBeats_g : natural := 16;
 	constant RamBehavior_g : string := "RBW";
@@ -96,7 +96,8 @@ package psi_common_axi_master_simple_tb_pkg is
 							signal	WrDat_Be	: out	std_logic_vector;
 							signal	WrDat_Vld	: out	std_logic;
 							signal	WrDat_Rdy	: in	std_logic;
-							signal	Clk			: in	std_logic);								
+							signal	Clk			: in	std_logic;
+									VldLowCyc	: in	integer := 0);								
 
 	procedure WaitForCompletion(	Success		: in	boolean;
 									WaitTime	: in	time;
@@ -123,7 +124,12 @@ package psi_common_axi_master_simple_tb_pkg is
 							signal 	axi_ms 		: in axi_ms_t;
 							signal 	axi_sm 		: out axi_sm_t;
 							signal 	Clk 		: in std_logic;
-									SendResp	: in	boolean := true);							
+									SendResp	: in	boolean := true;
+									AwRdyDelay	: in	time := 0 ns;
+									WRdyLowCyc	: in	integer := 0);		
+
+	procedure DbgPrint(	Enable 	: in boolean;
+						Str		: in string);
 								
 	
 end package;
@@ -180,7 +186,8 @@ package body psi_common_axi_master_simple_tb_pkg is
 								signal	WrDat_Be	: out	std_logic_vector;
 								signal	WrDat_Vld	: out	std_logic;
 								signal	WrDat_Rdy	: in	std_logic;
-								signal	Clk			: in	std_logic) is
+								signal	Clk			: in	std_logic;
+										VldLowCyc	: in	integer := 0) is
 		variable DataCnt_v 	: integer := Start;
 		constant LastIdx_c 	: integer := Size-1;
 		constant BeOnes_c	: std_logic_vector(WrDat_Be'range) := (others => '1');
@@ -197,6 +204,12 @@ package body psi_common_axi_master_simple_tb_pkg is
 			WrDat_Vld <= '1';
 			wait until rising_edge(Clk) and WrDat_Rdy = '1';
 			DataCnt_v := (DataCnt_v + Incr) mod 2**AxiDataWidth_g;
+			if VldLowCyc > 0 then
+				WrDat_Vld <= '0';
+				for i in 0 to VldLowCyc-1 loop
+					wait until rising_edge(Clk);
+				end loop;
+			end if;				
 		end loop;
 		WrDat_Vld <= '0';	
 	end procedure;
@@ -240,16 +253,30 @@ package body psi_common_axi_master_simple_tb_pkg is
 									FirstBe		: in	std_logic_vector;
 									LastBe		: in	std_logic_vector;
 									Resp		: in	std_logic_vector;
-							signal 	axi_ms 		: in axi_ms_t;
-							signal 	axi_sm 		: out axi_sm_t;
-							signal 	Clk 		: in std_logic;
-									SendResp	: in	boolean := true) is
+							signal 	axi_ms 		: in 	axi_ms_t;
+							signal 	axi_sm 		: out 	axi_sm_t;
+							signal 	Clk 		: in 	std_logic;
+									SendResp	: in	boolean := true;
+									AwRdyDelay	: in	time := 0 ns;
+									WRdyLowCyc	: in	integer := 0) is
 	begin	
+		if AwRdyDelay > 0 ns then
+			wait for AwRdyDelay;
+			wait until rising_edge(Clk);
+		end if;
 		axi_expect_aw(	Addr, AxSIZE_2_c, Size-1, xBURST_INCR_c, axi_ms, axi_sm, Clk);
-		axi_expect_wd_burst(Size, Start, Incr, FirstBe, LastBe, axi_ms, axi_sm, Clk);
+		axi_expect_wd_burst(Size, Start, Incr, FirstBe, LastBe, axi_ms, axi_sm, Clk, WRdyLowCyc);
 		if SendResp then
 			axi_apply_bresp(Resp, axi_ms, axi_sm, Clk);
 		end if;
 	end procedure;	
+	
+	procedure DbgPrint(	Enable 	: in boolean;
+						Str		: in string) is
+	begin
+		if Enable then
+			Print(Str);
+		end if;
+	end procedure;
 		
 end;

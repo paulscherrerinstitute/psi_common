@@ -21,6 +21,7 @@ library work;
 	use work.psi_tb_txt_util.all;
 	use work.psi_tb_compare_pkg.all;
 	use work.psi_tb_activity_pkg.all;
+	use work.psi_tb_axi_pkg.all;
 
 ------------------------------------------------------------
 -- Package Header
@@ -61,10 +62,15 @@ package psi_common_axi_master_simple_tb_case_internals is
 		constant Generics_c : Generics_t);
 		
 	procedure axi (
-		signal axi_ms : axi_ms_t;
-		signal axi_sm : axi_sm_t;
+		signal axi_ms : in axi_ms_t;
+		signal axi_sm : out axi_sm_t;
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t);
+		
+	shared variable TestCase_v 		: integer := -1;
+	shared variable DataBeats_v		: integer := 0;
+	constant DelayBetweenTests 		: time := 1 us;
+	constant DebugPrints 			: boolean := true;			
 		
 end package;
 
@@ -72,6 +78,15 @@ end package;
 -- Package Body
 ------------------------------------------------------------
 package body psi_common_axi_master_simple_tb_case_internals is
+
+	procedure WaitCase(	nr 			: integer;
+						signal Clk 	: std_logic) is
+	begin
+		while TestCase_v /= nr loop
+			wait until rising_edge(Clk);
+		end loop;
+	end procedure;
+
 	procedure user_cmd (
 		signal CmdWr_Addr : inout std_logic_vector;
 		signal CmdWr_Size : inout std_logic_vector;
@@ -86,7 +101,26 @@ package body psi_common_axi_master_simple_tb_case_internals is
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t) is
 	begin
-		assert false report "Case INTERNALS Procedure USER_CMD: No Content added yet!" severity warning;
+		wait for DelayBetweenTests;
+		print("*** Tet Group 5: Inernals ***");	
+		
+		------------------------------------------------------------------
+		-- Writes
+		------------------------------------------------------------------	
+		-- *** Burst Write - Keep track of already anounced transfers ***		
+		-- Are beats already announced (AW-channel command already sent) not taken
+		-- into account for the high-latency mode?
+		DbgPrint(DebugPrints, "Burst Write - Keep track of already anounced transfers");
+		TestCase_v := 0;
+		while DataBeats_v < 7 loop
+			wait until rising_edge(Clk);
+		end loop;
+		ApplyCommand(16#00020000#, 4, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);	
+		ApplyCommand(16#00021000#, 4, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+		wait for DelayBetweenTests;			
+
+
+		wait for DelayBetweenTests;
 	end procedure;
 	
 	procedure user_data (
@@ -100,7 +134,20 @@ package body psi_common_axi_master_simple_tb_case_internals is
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t) is
 	begin
-		assert false report "Case INTERNALS Procedure USER_DATA: No Content added yet!" severity warning;
+		------------------------------------------------------------------
+		-- Writes
+		------------------------------------------------------------------	
+		-- *** Burst Write - Keep track of already anounced transfers ***
+		DataBeats_v := 0;
+		WaitCase(0, Clk);
+		ApplyWrDataMulti(16#1000#, 1, 4, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);		
+		ApplyWrDataMulti(16#2000#, 1, 3, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	-- First 3 beats of second transfer
+		DataBeats_v := 7;
+		wait for 5 us;
+		wait until rising_edge(Clk);
+		ApplyWrDataMulti(16#2003#, 1, 1, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);	-- Last beat of second transfer
+		DataBeats_v := 8;
+		
 	end procedure;
 	
 	procedure user_resp (
@@ -111,16 +158,36 @@ package body psi_common_axi_master_simple_tb_case_internals is
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t) is
 	begin
-		assert false report "Case INTERNALS Procedure USER_RESP: No Content added yet!" severity warning;
+		------------------------------------------------------------------
+		-- Writes
+		------------------------------------------------------------------
+		-- *** Burst Write - Keep track of already anounced transfers ***
+		WaitCase(0, Clk);
+		WaitForCompletion(true, 15 us, Wr_Done, Wr_Error, Clk);		
+		
 	end procedure;
 	
 	procedure axi (
-		signal axi_ms : axi_ms_t;
-		signal axi_sm : axi_sm_t;
+		signal axi_ms : in axi_ms_t;
+		signal axi_sm : out axi_sm_t;
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t) is
 	begin
-		assert false report "Case INTERNALS Procedure AXI: No Content added yet!" severity warning;
+		------------------------------------------------------------------
+		-- Writes
+		------------------------------------------------------------------
+		-- *** Burst Write - Keep track of already anounced transfers ***
+		WaitCase(0, Clk);
+		-- First burst is expected immediately
+		AxiCheckWrBurst(16#00020000#, 16#1000#, 1, 4, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);	
+		-- Check if next transfer is delayed until all data is present
+		while DataBeats_v < 8 loop
+			StdlCompare(0, axi_ms.awvalid, "Unexpected command");
+			wait until rising_edge(Clk);
+		end loop;
+		-- Check second transfer
+		AxiCheckWrBurst(16#00021000#, 16#2000#, 1, 4, "11", "11", xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+		
 	end procedure;
 	
 end;

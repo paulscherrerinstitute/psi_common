@@ -25,7 +25,7 @@ library work;
 ------------------------------------------------------------
 -- Package Header
 ------------------------------------------------------------
-package psi_common_axi_master_simple_tb_case_highlat is
+package psi_common_axi_master_simple_tb_case_special is
 	
 	procedure user_cmd (
 		signal CmdWr_Addr : inout std_logic_vector;
@@ -66,12 +66,15 @@ package psi_common_axi_master_simple_tb_case_highlat is
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t);
 		
+	shared variable TestCase_v 		: integer := -1;
+	constant DelayBetweenTests 		: time := 1 us;
+	constant DebugPrints 			: boolean := false;					
 end package;
 
 ------------------------------------------------------------
 -- Package Body
 ------------------------------------------------------------
-package body psi_common_axi_master_simple_tb_case_highlat is
+package body psi_common_axi_master_simple_tb_case_special is
 	procedure user_cmd (
 		signal CmdWr_Addr : inout std_logic_vector;
 		signal CmdWr_Size : inout std_logic_vector;
@@ -86,7 +89,8 @@ package body psi_common_axi_master_simple_tb_case_highlat is
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t) is
 	begin
-		assert false report "Case HIGHLAT Procedure USER_CMD: No Content added yet!" severity warning;
+		wait for DelayBetweenTests;
+		print("*** Tet Group 6: Special Cases ***");	
 	end procedure;
 	
 	procedure user_data (
@@ -100,7 +104,6 @@ package body psi_common_axi_master_simple_tb_case_highlat is
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t) is
 	begin
-		assert false report "Case HIGHLAT Procedure USER_DATA: No Content added yet!" severity warning;
 	end procedure;
 	
 	procedure user_resp (
@@ -111,7 +114,6 @@ package body psi_common_axi_master_simple_tb_case_highlat is
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t) is
 	begin
-		assert false report "Case HIGHLAT Procedure USER_RESP: No Content added yet!" severity warning;
 	end procedure;
 	
 	procedure axi (
@@ -120,7 +122,6 @@ package body psi_common_axi_master_simple_tb_case_highlat is
 		signal Clk : in std_logic;
 		constant Generics_c : Generics_t) is
 	begin
-		assert false report "Case HIGHLAT Procedure AXI: No Content added yet!" severity warning;
 	end procedure;
 	
 end;
