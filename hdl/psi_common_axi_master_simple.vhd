@@ -168,6 +168,8 @@ architecture rtl of psi_common_axi_master_simple is
 	-- Two Process Record
 	------------------------------------------------------------------------------		
 	type two_process_r is record
+	
+		-- *** Write Related Registers ***
 		-- Generate Write Transactions
 		CmdWr_Rdy		: std_logic;
 		WriteTfGenState	: WriteTfGen_s;
@@ -181,6 +183,10 @@ architecture rtl of psi_common_axi_master_simple is
 		-- Execute Aw Commands
 		AwFsm 			: AwFsm_s;
 		AwFsmRdy		: std_logic;
+		AwCmdSent		: std_logic;
+		AwCmdSize		: unsigned(BeatsBits_c-1 downto 0);		
+		AwCmdSizeMin1	: unsigned(BeatsBits_c-1 downto 0);	-- 	AwCmdSize-1 for timing optimization reasons
+		WDataFifoWrite	: std_logic;
 		-- Execute W Data
 		WFsm 			: WFsm_s;
 		WDataFifoRd		: std_logic;
@@ -198,6 +204,8 @@ architecture rtl of psi_common_axi_master_simple is
 		M_Axi_WLast		: std_logic;
 		Wr_Error		: std_logic;
 		Wr_Done			: std_logic;
+		
+		-- *** Read Related Registers *** 
 	end record;
 	signal r, r_next : two_process_r;
 		
@@ -246,6 +254,10 @@ begin
 	begin
 		-- *** Keep two process variables stable ***
 		v := r;
+		
+		--------------------------------------------------------------------------
+		-- Write Related Code
+		---------------------------------------------------------------------------			
 		
 		-- *** Write Transfer Generation ***
 		Max4kBeats_v	:= (others => '0');
@@ -296,6 +308,7 @@ begin
 		end case;
 		
 		-- *** AW Command Generation ***
+		v.AwCmdSent	:= '0';
 		case r.AwFsm is
 			when Idle_s =>
 				if ((r.WrLowLat = '1') or (r.WrBeatsNoCmd >= signed('0' & r.WrTfBeats))) and (r.WrOpenTrans < AxiMaxOpenTrasactions_g) and (r.WrTfVld = '1') then
@@ -305,10 +318,12 @@ begin
 					v.AwFsmRdy 		:= '0';
 					v.M_Axi_AwAddr	:= std_logic_vector(r.WrAddr);
 					Stdlv9Bit_v		:= std_logic_vector(resize(r.WrTfBeats-1, 9));
-					v.WrBeatsNoCmd	:= r.WrBeatsNoCmd - signed('0' & r.WrTfBeats);
 					v.M_Axi_AwLen	:= Stdlv9Bit_v(7 downto 0);
 					v.M_Axi_AwValid	:= '1';
 					v.AwFsm			:= Wait_s;
+					v.AwCmdSent		:= '1';
+					v.AwCmdSize		:= r.WrTfBeats;
+					v.AwCmdSizeMin1	:= r.WrTfBeats-1;
 				end if;
 				
 			when Wait_s =>
@@ -321,8 +336,19 @@ begin
 			when others => null;
 		end case;	
 		-- Update counter for FIFO entries that were not yet announced in a command
-		if (WrData_Rdy_I = '1') and (WrDat_Vld = '1') then
-			v.WrBeatsNoCmd := v.WrBeatsNoCmd + 1;	-- use v. beause modified above
+		v.WDataFifoWrite := WrData_Rdy_I and WrDat_Vld;
+		if r.AwCmdSent = '1' then
+			if r.WDataFifoWrite = '1' then
+				v.WrBeatsNoCmd	:= r.WrBeatsNoCmd - signed('0' & r.AwCmdSizeMin1);
+			else
+				v.WrBeatsNoCmd	:= r.WrBeatsNoCmd - signed('0' & r.AwCmdSize);
+			end if;
+		--end if;
+		-- Use registered WDataFifoWrite: This helps with timing and it does not introduce any risk since
+		-- .. the decrement (above) is still done immediately, the increment is delayed by one clock cycle. So worst
+		-- .. case a High-Latency transfer is delayed by one cycle which is acceptable.
+		elsif r.WDataFifoWrite = '1' then
+			v.WrBeatsNoCmd := r.WrBeatsNoCmd + 1;	-- use v. beause modified above
 		end if;
 
 		-- *** W Data Generation ***
@@ -374,26 +400,6 @@ begin
 			end if;
 		end if;
 		
---		if (r.WDataEna = '0') and (WrTransFifoOutVld = '1') then
---			v.WDataFifoRd 	:= '1';
---			v.WDataEna 		:= '1';
---			v.WDataBeats	:= unsigned(WrTransFifoBeats);			
---			-- If it is a single beat transfer, last has to be asserted on the first beat
---			if unsigned(WrTransFifoBeats) = 1 then
---				v.M_Axi_WLast	:= '1';
---			else
---				v.M_Axi_WLast	:= '0';
---			end if;
---		end if;
---		if WDataTransfer_v then
---			if r.WDataBeats = 2 then
---				v.M_Axi_WLast := '1';
---			elsif r.WDataBeats = 1 then
---				v.WDataEna := '0';
---			end if;
---			v.WDataBeats := r.WDataBeats - 1;
---		end if;		
-		
 		-- *** W Response Generation ***
 		v.Wr_Done := '0';
 		v.Wr_Error := '0';
@@ -425,11 +431,13 @@ begin
 		if rising_edge(M_Axi_Aclk) then
 			r <= r_next;
 			if M_Axi_Aresetn = '0' then
+				-- *** Write Related Registers ***
 				r.CmdWr_Rdy 		<= '0';
 				r.WriteTfGenState	<= Idle_s;
 				r.WrTfVld			<= '0';
 				r.AwFsm				<= Idle_s;
 				r.AwFsmRdy			<= '0';
+				r.AwCmdSent		<= '0';
 				r.M_Axi_AwValid		<= '0';
 				r.WDataFifoRd		<= '0';
 				r.WDataEna			<= '0';
@@ -439,6 +447,7 @@ begin
 				r.Wr_Error			<= '0';
 				r.WrBeatsNoCmd		<= (others => '0');
 				r.WFsm				<= Idle_s;
+				r.WDataFifoWrite		<= '0';
 			end if;
 		end if;
 	end process;
