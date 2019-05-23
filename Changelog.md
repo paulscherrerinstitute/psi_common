@@ -1,3 +1,10 @@
+## 2.3.0
+* Added Features
+  * Added generator scripts for wrappers to ease usage of *psi\_common\_par\_tdm*, *psi\_common\_tdm\_par*, *psi\_common\_simple\_cc* and *psi\_common\_status\_cc*
+  * Added *psi\_common\_axi\_master\_simple* (AXI-Master, supporting aligned transfers only)
+* Bugfixes 
+  * None
+ 
 ## 2.2.0
 * Added Features
   * Added generic to control Rdy-behavior during reset
