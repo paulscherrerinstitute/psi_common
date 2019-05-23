@@ -65,63 +65,63 @@ entity psi_common_axi_master_simple is
 		CmdRd_Rdy		: out	std_logic;																		-- $$ proc=user_cmd $$		
 		
 		-- Write Data
-		WrDat_Data		: in	std_logic_vector(AxiDataWidth_g-1 downto 0);				-- $$ proc=user_data $$
-		WrDat_Be		: in	std_logic_vector(AxiDataWidth_g/8-1 downto 0);				-- $$ proc=user_data $$
-		WrDat_Vld		: in	std_logic;													-- $$ proc=user_data $$
-		WrDat_Rdy		: out	std_logic;													-- $$ proc=user_data $$		
+		WrDat_Data		: in	std_logic_vector(AxiDataWidth_g-1 downto 0)				:= (others => '0');		-- $$ proc=user_data $$
+		WrDat_Be		: in	std_logic_vector(AxiDataWidth_g/8-1 downto 0)			:= (others => '0');		-- $$ proc=user_data $$
+		WrDat_Vld		: in	std_logic												:= '0';					-- $$ proc=user_data $$
+		WrDat_Rdy		: out	std_logic;																		-- $$ proc=user_data $$		
     
 		-- Read Data
-		RdDat_Data		: out	std_logic_vector(AxiDataWidth_g-1 downto 0);				-- $$ proc=user_data $$
-		RdDat_Vld		: out	std_logic;													-- $$ proc=user_data $$
-		RdDat_Rdy		: in	std_logic;													-- $$ proc=user_data $$			
+		RdDat_Data		: out	std_logic_vector(AxiDataWidth_g-1 downto 0);									-- $$ proc=user_data $$
+		RdDat_Vld		: out	std_logic;																		-- $$ proc=user_data $$
+		RdDat_Rdy		: in	std_logic												:= '0';					-- $$ proc=user_data $$			
 		
 		-- Response
-		Wr_Done			: out	std_logic;													-- $$ proc=user_resp $$
-		Wr_Error		: out	std_logic;													-- $$ proc=user_resp $$
-		Rd_Done			: out	std_logic;													-- $$ proc=user_resp $$
-		Rd_Error		: out	std_logic;													-- $$ proc=user_resp $$
+		Wr_Done			: out	std_logic;																		-- $$ proc=user_resp $$
+		Wr_Error		: out	std_logic;																		-- $$ proc=user_resp $$
+		Rd_Done			: out	std_logic;																		-- $$ proc=user_resp $$
+		Rd_Error		: out	std_logic;																		-- $$ proc=user_resp $$
 		
 		-- AXI Address Write Channel
-		M_Axi_AwAddr	: out	std_logic_vector(AxiAddrWidth_g-1 downto 0);				-- $$ proc=axi $$
-		M_Axi_AwLen		: out	std_logic_vector(7 downto 0);								-- $$ proc=axi $$
-		M_Axi_AwSize	: out	std_logic_vector(2 downto 0);								-- $$ proc=axi $$
-		M_Axi_AwBurst	: out	std_logic_vector(1 downto 0);								-- $$ proc=axi $$
-		M_Axi_AwLock	: out	std_logic;													-- $$ proc=axi $$
-		M_Axi_AwCache	: out	std_logic_vector(3 downto 0);								-- $$ proc=axi $$
-		M_Axi_AwProt	: out	std_logic_vector(2 downto 0);								-- $$ proc=axi $$
-		M_Axi_AwValid	: out	std_logic;                                                  -- $$ proc=axi $$
-		M_Axi_AwReady	: in	std_logic;                                                  -- $$ proc=axi $$
+		M_Axi_AwAddr	: out	std_logic_vector(AxiAddrWidth_g-1 downto 0);									-- $$ proc=axi $$
+		M_Axi_AwLen		: out	std_logic_vector(7 downto 0);													-- $$ proc=axi $$
+		M_Axi_AwSize	: out	std_logic_vector(2 downto 0);													-- $$ proc=axi $$
+		M_Axi_AwBurst	: out	std_logic_vector(1 downto 0);													-- $$ proc=axi $$
+		M_Axi_AwLock	: out	std_logic;																		-- $$ proc=axi $$
+		M_Axi_AwCache	: out	std_logic_vector(3 downto 0);													-- $$ proc=axi $$
+		M_Axi_AwProt	: out	std_logic_vector(2 downto 0);													-- $$ proc=axi $$
+		M_Axi_AwValid	: out	std_logic;                                                  					-- $$ proc=axi $$
+		M_Axi_AwReady	: in	std_logic                                             	:= '0';			     	-- $$ proc=axi $$
     
-		-- AXI Write Data Channel                                                           -- $$ proc=axi $$
-		M_Axi_WData		: out	std_logic_vector(AxiDataWidth_g-1 downto 0);                -- $$ proc=axi $$
-		M_Axi_WStrb		: out	std_logic_vector(AxiDataWidth_g/8-1 downto 0);              -- $$ proc=axi $$
-		M_Axi_WLast		: out	std_logic;                                                  -- $$ proc=axi $$
-		M_Axi_WValid	: out	std_logic;                                                  -- $$ proc=axi $$
-		M_Axi_WReady	: in	std_logic;                                                  -- $$ proc=axi $$
+		-- AXI Write Data Channel                                                           					-- $$ proc=axi $$
+		M_Axi_WData		: out	std_logic_vector(AxiDataWidth_g-1 downto 0);                					-- $$ proc=axi $$
+		M_Axi_WStrb		: out	std_logic_vector(AxiDataWidth_g/8-1 downto 0);              					-- $$ proc=axi $$
+		M_Axi_WLast		: out	std_logic;                                                  					-- $$ proc=axi $$
+		M_Axi_WValid	: out	std_logic;                                                  					-- $$ proc=axi $$
+		M_Axi_WReady	: in	std_logic                                              := '0';				    -- $$ proc=axi $$
     
-		-- AXI Write Response Channel                                                       -- $$ proc=axi $$
-		M_Axi_BResp		: in	std_logic_vector(1 downto 0);                               -- $$ proc=axi $$
-		M_Axi_BValid	: in	std_logic;                                                  -- $$ proc=axi $$
-		M_Axi_BReady	: out	std_logic;                                                  -- $$ proc=axi $$
+		-- AXI Write Response Channel                                                      
+		M_Axi_BResp		: in	std_logic_vector(1 downto 0)                           := (others => '0');	    -- $$ proc=axi $$
+		M_Axi_BValid	: in	std_logic                                              := '0';				    -- $$ proc=axi $$
+		M_Axi_BReady	: out	std_logic;                                                  					-- $$ proc=axi $$
     
-		-- AXI Read Address Channel                                                         -- $$ proc=axi $$
-		M_Axi_ArAddr	: out	std_logic_vector(AxiAddrWidth_g-1 downto 0);                -- $$ proc=axi $$
-		M_Axi_ArLen		: out	std_logic_vector(7 downto 0);                               -- $$ proc=axi $$
-		M_Axi_ArSize	: out	std_logic_vector(2 downto 0);                               -- $$ proc=axi $$
-		M_Axi_ArBurst	: out	std_logic_vector(1 downto 0);                               -- $$ proc=axi $$
-		M_Axi_ArLock	: out	std_logic;                                                  -- $$ proc=axi $$
-		M_Axi_ArCache	: out	std_logic_vector(3 downto 0);                               -- $$ proc=axi $$
-		M_Axi_ArProt	: out	std_logic_vector(2 downto 0);                               -- $$ proc=axi $$
-		M_Axi_ArValid	: out	std_logic;                                                  -- $$ proc=axi $$
-		M_Axi_ArReady	: in	std_logic;                                                  -- $$ proc=axi $$
+		-- AXI Read Address Channel                                               
+		M_Axi_ArAddr	: out	std_logic_vector(AxiAddrWidth_g-1 downto 0);                					-- $$ proc=axi $$
+		M_Axi_ArLen		: out	std_logic_vector(7 downto 0);                               					-- $$ proc=axi $$
+		M_Axi_ArSize	: out	std_logic_vector(2 downto 0);                               					-- $$ proc=axi $$
+		M_Axi_ArBurst	: out	std_logic_vector(1 downto 0);                               					-- $$ proc=axi $$
+		M_Axi_ArLock	: out	std_logic;                                                  					-- $$ proc=axi $$
+		M_Axi_ArCache	: out	std_logic_vector(3 downto 0);                               					-- $$ proc=axi $$
+		M_Axi_ArProt	: out	std_logic_vector(2 downto 0);                               					-- $$ proc=axi $$
+		M_Axi_ArValid	: out	std_logic;                                                  					-- $$ proc=axi $$
+		M_Axi_ArReady	: in	std_logic                                           	:= '0';					-- $$ proc=axi $$
     
-		-- AXI Read Data Channel                                                            -- $$ proc=axi $$
-		M_Axi_RData		: in	std_logic_vector(AxiDataWidth_g-1 downto 0);                -- $$ proc=axi $$
-		M_Axi_RResp		: in	std_logic_vector(1 downto 0);                               -- $$ proc=axi $$
-		M_Axi_RLast		: in	std_logic;                                                  -- $$ proc=axi $$
-		M_Axi_RValid	: in	std_logic;                                                  -- $$ proc=axi $$
-		M_Axi_RReady	: out	std_logic		                                            -- $$ proc=axi $$
-	);
+		-- AXI Read Data Channel                                                      
+		M_Axi_RData		: in	std_logic_vector(AxiDataWidth_g-1 downto 0)             := (others => '0');    	-- $$ proc=axi $$
+		M_Axi_RResp		: in	std_logic_vector(1 downto 0)                            := (others => '0');	    -- $$ proc=axi $$
+		M_Axi_RLast		: in	std_logic                                               := '0';				    -- $$ proc=axi $$
+		M_Axi_RValid	: in	std_logic                                               := '0';				    -- $$ proc=axi $$
+		M_Axi_RReady	: out	std_logic		                                         						-- $$ proc=axi $$
+	);	
 end entity;
 
 ------------------------------------------------------------------------------
