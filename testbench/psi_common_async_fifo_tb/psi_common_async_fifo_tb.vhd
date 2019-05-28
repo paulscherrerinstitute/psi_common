@@ -14,15 +14,16 @@ library ieee;
 library work;
 	use work.psi_tb_txt_util.all;
 	use work.psi_common_math_pkg.all;
+	use work.psi_common_logic_pkg.all;
 	
 
 entity psi_common_async_fifo_tb is
 	generic (
-		AlmFullOn_g				: boolean 	:= true;
-		AlmEmptyOn_g			: boolean 	:= true;
-		Depth_g					: natural	:= 32;
-		RamBehavior_g			: string	:= "RBW";
-		RdyRstState_g			: std_logic	:= '1'
+		AlmFullOn_g				: boolean 				:= true;
+		AlmEmptyOn_g			: boolean 				:= true;
+		Depth_g					: natural				:= 32;
+		RamBehavior_g			: string				:= "RBW";
+		RdyRstState_g			: integer range 0 to 1	:= 1
 	);
 end entity psi_common_async_fifo_tb;
 
@@ -86,7 +87,7 @@ begin
 			AlmEmptyOn_g	=> AlmEmptyOn_g,
 			AlmEmptyLevel_g	=> AlmEmptyLevel_c,
 			RamBehavior_g	=> RamBehavior_g,
-			RdyRstState_g	=> RdyRstState_g
+			RdyRstState_g	=> IntToStdLogic(RdyRstState_g)
 		)
 		port map (
 			-- Control Ports
@@ -160,7 +161,7 @@ begin
 		-- check if ready state during reset is correct
 		wait for 20 ns; -- reset must be transferred to other clock domain
 		wait until rising_edge(InClk);
-		assert InRdy = RdyRstState_g report "###ERROR###: InRdy reset state not according to generic" severity error;
+		assert InRdy = IntToStdLogic(RdyRstState_g) report "###ERROR###: InRdy reset state not according to generic" severity error;
 		wait for 1 us;
 	
 		-- Remove reset
