@@ -47,7 +47,10 @@ package psi_common_logic_pkg is
 	-- 0010		--> 0011
 	function PpcOr(	inp	: in	std_logic_vector)
 					return std_logic_vector;
-  
+					
+	function IntToStdLogic(	int 	: in	integer)
+							return std_logic;
+
 end psi_common_logic_pkg;	 
 
 ------------------------------------------------------------------------------
@@ -148,6 +151,18 @@ package body psi_common_logic_pkg is
 			end loop;
 		end loop;
 		return StageOut_v(Stages_c)(inp'length-1 downto 0);
+	end function;
+	
+	function IntToStdLogic(	int 	: in	integer)
+							return std_logic is
+	begin
+		if int = 1 then
+			return '1';
+		elsif int = 0 then
+			return '0';
+		else
+			return 'X';
+		end if;
 	end function;
 	
 end psi_common_logic_pkg;
