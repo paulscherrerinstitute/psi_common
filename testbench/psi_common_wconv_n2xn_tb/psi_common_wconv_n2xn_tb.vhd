@@ -20,6 +20,7 @@ library ieee;
 library work;
 	use work.psi_common_math_pkg.all;
 	use work.psi_common_logic_pkg.all;
+	use work.psi_tb_compare_pkg.all;
 	use work.psi_tb_txt_util.all;
 
 ------------------------------------------------------------
@@ -51,10 +52,13 @@ architecture sim of psi_common_wconv_n2xn_tb is
 	signal Rst : std_logic := '1';
 	signal InVld : std_logic := '0';
 	signal InRdy : std_logic := '0';
+	signal InLast : std_logic := '0';
 	signal InData : std_logic_vector(InWidth_g-1 downto 0) := (others => '0');
 	signal OutVld : std_logic := '0';
 	signal OutRdy : std_logic := '0';
 	signal OutData : std_logic_vector(OutWidth_g-1 downto 0) := (others => '0');
+	signal OutLast : std_logic := '0';
+	signal OutWe : std_logic_vector(3 downto 0) := (others => '0');
 	
 	-- user stuff --
 	signal done : boolean := False;
@@ -86,9 +90,12 @@ begin
 			InVld => InVld,
 			InRdy => InRdy,
 			InData => InData,
+			InLast => InLast,
 			OutVld => OutVld,
 			OutRdy => OutRdy,
-			OutData => OutData
+			OutData => OutData,
+			OutLast => OutLast,
+			OutWe => OutWe
 		);
 	
 	------------------------------------------------------------
@@ -209,8 +216,92 @@ begin
 		end loop;
 		if done /= true then
 			wait until done = true;
-		end if;			
-				
+		end if;		
+
+		-- Test Last Assertion
+		print(">> Last Assertion");
+		testcase <= 3;		
+		for del in 0 to 3 loop
+			for size in 1 to 4 loop
+				for byte in 0 to size-1 loop
+					InData <= std_logic_vector(to_unsigned(size*2+byte+del, 4));
+					InVld <= '1';
+					if byte = size-1 then
+						InLast <= '1';
+					else
+						InLast <= '0';
+					end if;
+					wait until rising_edge(Clk) and InRdy = '1';
+					for j in 0 to del-1 loop
+						InVld <= '0';
+						wait until rising_edge(Clk);
+					end loop;
+				end loop;
+				InVld <= '0';
+				wait until rising_edge(Clk);
+				wait until rising_edge(Clk);
+				wait until rising_edge(Clk);
+				wait until rising_edge(Clk);
+			end loop;
+		end loop;	
+		if done /= true then
+			wait until done = true;
+		end if;				
+		
+		-- Test Last Assertion with back pressure
+		print(">> Last Assertion with back pressure");
+		testcase <= 4;		
+		for size in 1 to 4 loop
+			for byte in 0 to size-1 loop
+				InData <= std_logic_vector(to_unsigned(size*2+byte, 4));
+				InVld <= '1';
+				if byte = size-1 then
+					InLast <= '1';
+				else
+					InLast <= '0';
+				end if;
+				wait until rising_edge(Clk) and InRdy = '1';
+			end loop;
+			InVld <= '0';
+		end loop;	
+		if done /= true then
+			wait until done = true;
+		end if;		
+		
+		-- Test Last back-to-back
+		print(">> Last Assertion back-to-back");
+		testcase <= 5;		
+		for byte in 0 to 15 loop
+			InData <= std_logic_vector(to_unsigned(byte, 4));
+			InVld <= '1';
+			InLast <= '1';
+			wait until rising_edge(Clk) and InRdy = '1';			
+		end loop;
+		InVld <= '0';		
+		if done /= true then
+			wait until done = true;
+		end if;	
+		
+		-- Frames
+		print(">> Frames ");
+		testcase <= 6;		
+		for size in 5 to 12 loop
+			for byte in 0 to size-1 loop
+				InData <= std_logic_vector(to_unsigned(byte, 4));
+				InVld <= '1';
+				if byte = size-1 then
+					InLast <= '1';
+				else
+					InLast <= '0';
+				end if;
+				wait until rising_edge(Clk) and InRdy = '1';			
+			end loop;
+		end loop;
+		InVld <= '0';		
+		if done /= true then
+			wait until done = true;
+		end if;	
+		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_stim_c) <= '1';
 		wait;
@@ -228,6 +319,8 @@ begin
 		OutRdy <= '1';
 		for del in 0 to 3 loop
 			wait until rising_edge(Clk) and OutVld = '1';
+			assert OutLast = '0' report "###ERROR###: OutLast asserted wrongly" severity error;
+			assert OutWe = "1111" report "###ERROR###: OutWe not 0xF" severity error;
 			CheckOutput(del*2);
 			wait until rising_edge(Clk);
 			assert OutVld = '0' report "###ERROR###: OutVld did not go low" severity error;
@@ -241,6 +334,8 @@ begin
 		for del in 0 to 3 loop
 			for word in 0 to 2 loop
 				wait until rising_edge(Clk) and OutVld = '1';
+				assert OutLast = '0' report "###ERROR###: OutLast asserted wrongly" severity error;
+				assert OutWe = "1111" report "###ERROR###: OutWe not 0xF" severity error;
 				CheckOutput(del+word*4);
 			end loop;
 			wait until rising_edge(Clk);
@@ -259,13 +354,99 @@ begin
 					wait until rising_edge(Clk);
 				end loop;
 				OutRdy <= '1';
+				assert OutLast = '0' report "###ERROR###: OutLast asserted wrongly" severity error;
+				assert OutWe = "1111" report "###ERROR###: OutWe not 0xF" severity error;
 				CheckOutput(del+word*4);
 				wait until rising_edge(Clk);
 				OutRdy <= '0';
 			end loop;
 			wait until rising_edge(Clk);
 		end loop;
-		done <= True;		
+		done <= True;	
+
+		-- Test Last Assertion
+		wait until testcase = 3;
+		done <= False;	
+		OutRdy <= '1';
+		for del in 0 to 3 loop
+			for size in 1 to 4 loop
+				wait until rising_edge(Clk) and OutVld = '1';
+				StdlCompare(1, OutLast, "Last not asserted");
+				for byte in 0 to size-1 loop	
+					StdlvCompareInt (size*2+byte+del, OutData((byte+1)*4-1 downto byte*4), "Wrong Data", false);			
+					StdlCompare(1, OutWe(byte), "OutWe not asserted");
+				end loop;
+				for byte in size to 3 loop
+					StdlCompare(0, OutWe(byte), "OutWe not de-asserted");
+				end loop;
+			end loop;
+		end loop;
+		done <= True;
+		
+		-- Test Last Assertion with back pressure
+		wait until testcase = 4;
+		done <= False;	
+		OutRdy <= '0';
+		for size in 1 to 4 loop
+			for i in 0 to 20 loop
+				wait until rising_edge(Clk);
+			end loop;
+			OutRdy <= '1';
+			wait until rising_edge(Clk) and OutVld = '1';
+			OutRdy <= '0';
+			StdlCompare(1, OutLast, "Last not asserted");
+			for byte in 0 to size-1 loop	
+				StdlvCompareInt (size*2+byte, OutData((byte+1)*4-1 downto byte*4), "Wrong Data", false);			
+				StdlCompare(1, OutWe(byte), "OutWe not asserted");
+			end loop;
+			for byte in size to 3 loop
+				StdlCompare(0, OutWe(byte), "OutWe not de-asserted");
+			end loop;
+		end loop;
+		done <= True;
+		
+		-- Test Last back-to-back
+		wait until testcase = 5;
+		done <= False;	
+		OutRdy <= '0';
+		for byte in 0 to 15 loop
+			-- Back pressure for bytes 8-15
+			if byte >= 8 then
+				for i in 0 to 20 loop
+					wait until rising_edge(Clk);
+				end loop;
+			end if;
+			-- Test
+			OutRdy <= '1';
+			wait until rising_edge(Clk) and OutVld = '1';
+			OutRdy <= '0';
+			StdlCompare(1, OutLast, "Last not asserted");
+			StdlvCompareInt(byte, OutData(3 downto 0), "Wrong Data", false);	
+			StdlvCompareStdlv("0001", OutWe, "Wrong OutWe");	
+		end loop;
+		done <= True;	
+
+		-- Frames
+		wait until testcase = 6;
+		done <= False;	
+		OutRdy <= '1';
+		for size in 5 to 12 loop
+			for byte in 0 to size-1 loop
+				-- wait for data word every 4 bytes
+				if byte mod 4 = 0 then
+					wait until rising_edge(Clk) and OutVld = '1';
+				end if;
+				-- Check data
+				StdlvCompareInt(byte, OutData((byte mod 4+1)*4-1 downto (byte mod 4)*4), "Wrong Data", false);	
+				StdlCompare(1, OutWe(byte mod 4), "OutWe not asserted");
+				if byte/4 = (size-1)/4 then
+					StdlCompare(1, OutLast, "Last not asserted");
+				else
+					StdlCompare(0, OutLast, "Last asserted wrongly");
+				end if;
+			end loop;
+		end loop;
+		done <= True;	
 		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_check_c) <= '1';

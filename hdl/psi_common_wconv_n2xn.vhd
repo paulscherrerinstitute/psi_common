@@ -40,11 +40,14 @@ entity psi_common_wconv_n2xn is
 		InVld		: in 	std_logic;
 		InRdy		: out 	std_logic;
 		InData		: in	std_logic_vector(InWidth_g-1 downto 0);
+		InLast		: in	std_logic := '0';
 		
 		-- Output
 		OutVld		: out	std_logic;
 		OutRdy		: in	std_logic	:= '1';
-		OutData		: out	std_logic_vector(OutWidth_g-1 downto 0)
+		OutData		: out	std_logic_vector(OutWidth_g-1 downto 0);
+		OutLast		: out	std_logic;
+		OutWe		: out	std_logic_vector(Outwidth_g/InWidth_g-1 downto 0)
 	);
 end entity;
 		
@@ -59,10 +62,14 @@ architecture rtl of psi_common_wconv_n2xn is
 	
 	-- *** Two Process Method ***
 	type two_process_r is record
-		DataVld	: std_logic_vector(RatioInt_c-1 downto 0);
-		Data	: std_logic_vector(OutWidth_g-1 downto 0);
-		OutVld	: std_logic;
-		OutData	: std_logic_vector(OutWidth_g-1 downto 0);
+		DataVld		: std_logic_vector(RatioInt_c-1 downto 0);
+		Data		: std_logic_vector(OutWidth_g-1 downto 0);
+		DataLast	: std_logic;
+		OutVld		: std_logic;
+		OutData		: std_logic_vector(OutWidth_g-1 downto 0);
+		OutLast		: std_logic;
+		OutWe		: std_logic_vector(RatioInt_c-1 downto 0);
+		Cnt			: integer range 0 to RatioInt_c;
 	end record;
 	signal r, r_next : two_process_r;
 	
@@ -78,13 +85,15 @@ begin
 	--------------------------------------------------------------------------
 	p_comb : process(r, InVld, InData, OutRdy)
 		variable v : two_process_r;
-		variable IsStuck_v : std_logic;
+		variable IsStuck_v 		: std_logic;
+		variable ShiftDone_v	: boolean;
 	begin
 		-- *** hold variables stable ***
 		v := r;
 		
 		-- Halt detection
-		if (r.DataVld(r.DataVld'high) = '1') and (r.OutVld = '1')  then
+		ShiftDone_v := (r.DataVld(r.DataVld'high) = '1') or (r.DataLast = '1');
+		if ShiftDone_v and (r.OutVld = '1')  and (OutRdy = '0') then
 			IsStuck_v := '1';
 		else 
 			IsStuck_v := '0';
@@ -96,20 +105,33 @@ begin
 		end if;
 		
 		-- Data Deserialization
-		if r.DataVld(r.DataVld'high) = '1' and ((r.OutVld = '0') or (OutRdy = '1'))then
+		if ShiftDone_v and ((r.OutVld = '0') or (OutRdy = '1'))then
 			v.OutVld 	:= '1';
 			v.OutData 	:= r.Data;
-			v.DataVld 	:= (others => '0');
+			v.OutLast	:= r.DataLast;
+			v.OutWe		:= r.DataVld;
+			v.DataVld 	:= (others => '0');		
+			v.DataLast	:= '0';
 		end if;
-		if InVld = '1' and IsStuck_v = '0' then
-			v.DataVld 	:= v.DataVld(v.DataVld'high-1 downto 0) & '1';
-			v.Data 		:= InData & r.Data(r.Data'high downto InWidth_g);
+		if InVld = '1' and IsStuck_v = '0' then			
+			v.Data((r.Cnt+1)*InWidth_g-1 downto r.Cnt*InWidth_g)	:= InData;
+			v.DataVld(r.Cnt) 	:= '1';
+			if InLast = '1' then
+				v.DataLast	:= '1';
+			end if;
+			if (r.Cnt = RatioInt_c-1) or (InLast = '1') then
+				v.Cnt := 0;
+			else
+				v.Cnt		:= r.Cnt + 1;
+			end if;
 		end if;	
 
 		-- Outputs
 		InRdy 	<= not IsStuck_v;
 		OutVld 	<= r.OutVld;
 		OutData <= r.OutData;
+		OutLast	<= r.OutLast;
+		OutWe	<= r.OutWe;
 		
 		-- *** assign signal ***
 		r_next <= v;
@@ -123,8 +145,10 @@ begin
 		if rising_edge(Clk) then
 			r <= r_next;
 			if Rst = '1' then
-				r.DataVld <= (others => '0');
-				r.OutVld <= '0';
+				r.DataVld 	<= (others => '0');
+				r.OutVld 	<= '0';
+				r.Cnt		<= 0;
+				r.DataLast	<= '0';
 			end if;			
 		end if;
 	end process;
