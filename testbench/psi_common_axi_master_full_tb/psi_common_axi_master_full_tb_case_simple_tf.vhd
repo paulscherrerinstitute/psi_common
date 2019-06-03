@@ -101,18 +101,25 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 		constant Generics_c : Generics_t) is
 	begin
 		wait for DelayBetweenTests;
+		wait until rising_edge(Clk);
+		
 		print("*** Tet Group 1: Simple Transfer ***");
 		------------------------------------------------------------------
 		-- High Latency Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** Single word wirte [high latency] ***
-			DbgPrint(DebugPrints, ">> Single word write [high latency]");
-			TestCase_v := 0;
-			ApplyCommand(16#02000001#, 1, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-			wait for DelayBetweenTests;		
-			
-			-- 32-bit only test with 2 bytes shifted by 1
+			-- *** 1-8 bytes, shifted by 0-3 ***
+			DbgPrint(DebugPrints, ">> 1-8 bytes, shifted by 0-3");
+			for size in 1 to 8 loop
+				for offs in 0 to 3 loop
+					TestCase_v := TestCase_v + 1;
+					-- Debug helper string
+					-- print("Addr=" & hstr(to_unsigned(16#02000000#+offs, 32)) & ", size=" & str(size));
+					ApplyCommand(16#02000000#+offs, size, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+					wait for DelayBetweenTests;
+				end loop;
+			end loop;
+			wait for DelayBetweenTests;					
 		end if;
 
 		
@@ -127,14 +134,20 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 		signal RdDat_Vld : in std_logic;
 		signal RdDat_Rdy : inout std_logic;
 		constant Generics_c : Generics_t) is
+		variable LastCase_v : integer := -1;
 	begin
 		------------------------------------------------------------------
 		-- High Latency Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** Single word wirte [high latency] ***
-			WaitCase(0, Clk);	
-			ApplyWrDataSingle(16#3EADBEEF#, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk);
+			-- *** 1-8 bytes, shifted by 0-3  ***
+			for size in 1 to 8 loop
+				for offs in 0 to 3 loop
+					WaitCase(LastCase_v+1, Clk);
+					LastCase_v := TestCase_v;
+					ApplyWrData(16#10#, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk);
+				end loop;
+			end loop;			
 		end if;
 	end procedure;
 	
@@ -145,14 +158,20 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 		signal Rd_Done : in std_logic;
 		signal Rd_Error : in std_logic;
 		constant Generics_c : Generics_t) is
+		variable LastCase_v : integer := -1;
 	begin
 		------------------------------------------------------------------
 		-- High Latency Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** Single word wirte [high latency] ***
-			WaitCase(0, Clk);	
-			WaitForCompletion(true, 1 us, Wr_Done, Wr_Error, Clk);			
+			-- *** 1-8 bytes, shifted by 0-3  ***	
+			for size in 1 to 8 loop
+				for offs in 0 to 3 loop
+					WaitCase(LastCase_v+1, Clk);
+					LastCase_v := TestCase_v;
+					WaitForCompletion(true, DelayBetweenTests + 1 us, Wr_Done, Wr_Error, Clk);	
+				end loop;
+			end loop;
 		end if;
 	end procedure;
 	
@@ -161,6 +180,7 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 		signal axi_ms : in axi_ms_t;
 		signal axi_sm : out axi_sm_t;
 		constant Generics_c : Generics_t) is
+		variable LastCase_v : integer := -1;
 	begin
 		axi_slave_init(axi_sm);
 		
@@ -168,10 +188,14 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 		-- High Latency Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** Single word wirte [high latency] ***
-			WaitCase(0, Clk);	
-			AxiCheckWrSingle(16#02000000#, 16#EF00#, 2#10#, xRESP_OKAY_c, axi_ms, axi_sm, Clk, AxiDataWidth_g);
-			
+			-- *** 1-8 bytes, shifted by 0-3 ***
+			for size in 1 to 8 loop
+				for offs in 0 to 3 loop	
+					WaitCase(LastCase_v+1, Clk);
+					LastCase_v := TestCase_v;
+					CheckAxiWrite(16#02000000#+offs, 16#10#, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+				end loop;
+			end loop;
 		end if;
 	end procedure;
 	

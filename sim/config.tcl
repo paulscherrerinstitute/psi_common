@@ -96,7 +96,7 @@ add_sources "../testbench" {
    psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_simple_tf.vhd \
    psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_axi_hs.vhd \
    psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_user_hs.vhd \
-   psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_all_shifts.vhd \
+   psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_large.vhd \
    psi_common_axi_master_full_tb/psi_common_axi_master_full_tb.vhd \
 } -tag tb
 	
@@ -236,6 +236,9 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_axi_master_full_tb"
+tb_run_add_arguments \
+	"-gDataWidth_g=16" \
+	"-gDataWidth_g=32"
 add_tb_run
 
 

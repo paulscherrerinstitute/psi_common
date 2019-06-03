@@ -26,7 +26,7 @@ library work;
 ------------------------------------------------------------
 -- Package Header
 ------------------------------------------------------------
-package psi_common_axi_master_full_tb_case_user_hs is
+package psi_common_axi_master_full_tb_case_large is
 	
 	procedure user_cmd (
 		signal Clk : in std_logic;
@@ -69,14 +69,14 @@ package psi_common_axi_master_full_tb_case_user_hs is
 	shared variable TestCase_v 	: integer := -1;
 	shared variable AllDone_v	: integer := -1;
 	constant DebugPrints 		: boolean := false;	
-	constant DelayBetweenTests 	: time := 1 us;	-- Minimum is 0.2 us (because of test implementation...)			
+	constant DelayBetweenTests 	: time := 1 us;	-- Minimum is 0.2 us (because of test implementation...)		
 		
 end package;
 
 ------------------------------------------------------------
 -- Package Body
 ------------------------------------------------------------
-package body psi_common_axi_master_full_tb_case_user_hs is
+package body psi_common_axi_master_full_tb_case_large is
 
 	procedure WaitCase(	nr 			: integer;
 						signal Clk 	: std_logic) is
@@ -93,7 +93,7 @@ package body psi_common_axi_master_full_tb_case_user_hs is
 			wait until rising_edge(Clk);
 		end loop;
 	end procedure;	
-
+	
 	procedure user_cmd (
 		signal Clk : in std_logic;
 		signal CmdWr_Addr : inout std_logic_vector;
@@ -111,34 +111,19 @@ package body psi_common_axi_master_full_tb_case_user_hs is
 		wait for DelayBetweenTests;
 		wait until rising_edge(Clk);
 		
-		print("*** Tet Group 3: User Data Handshaking ***");
+		print("*** Tet Group 4: Large Transfers ***");
 		
 		------------------------------------------------------------------
 		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** Lo Latency write with delay ***
-			DbgPrint(DebugPrints, ">> Lo Latency write with delay ");
+			-- *** Write 1022 bytes to 0x02000001 ***
+			DbgPrint(DebugPrints, ">> Write 1022 bytes to 0x02000001");
 			TestCase_v := 0;
-			for size in 20 to 24 loop
-				for offs in 0 to 3 loop
-					ApplyCommand(16#02000000#+offs, size, true, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-				end loop;
-			end loop;
+			ApplyCommand(16#02000001#, 1022, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
 			WaitDone(0, Clk);
-			wait for DelayBetweenTests;	
-
-			-- *** Hi Latency write with delay ***
-			DbgPrint(DebugPrints, ">> Hi Latency write with delay ");
-			TestCase_v := 1;
-			for size in 20 to 24 loop
-				for offs in 0 to 3 loop
-					ApplyCommand(16#02000000#+offs, size, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-				end loop;
-			end loop;
-			WaitDone(1, Clk);
 			wait for DelayBetweenTests;				
-		end if;		
+		end if;	
 	end procedure;
 	
 	procedure user_data (
@@ -155,21 +140,10 @@ package body psi_common_axi_master_full_tb_case_user_hs is
 		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** Lo Latency write with delay ***
+			-- *** Write 1022 bytes to 0x02000001 ***
 			WaitCase(0, Clk);
-			for size in 20 to 24 loop
-				for offs in 0 to 3 loop
-					ApplyWrData(16#10#, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk, 100 ns);
-				end loop;
-			end loop;	
-
-			-- *** Hi Latency write with delay ***
-			WaitCase(1, Clk);
-			for size in 20 to 24 loop
-				for offs in 0 to 3 loop
-					ApplyWrData(16#10#, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk, 100 ns);
-				end loop;
-			end loop;				
+			ApplyWrData(16#10#, 1022, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk);
+				
 		end if;
 	end procedure;
 	
@@ -185,23 +159,11 @@ package body psi_common_axi_master_full_tb_case_user_hs is
 		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** Lo Latency write with delay ***
+			-- *** Write 1022 bytes to 0x02000001 ***
 			WaitCase(0, Clk);
-			for size in 20 to 24 loop
-				for offs in 0 to 3 loop
-					WaitForCompletion(true, DelayBetweenTests + 50 us, Wr_Done, Wr_Error, Clk);	
-				end loop;
-			end loop;
+			WaitForCompletion(true, 100 us, Wr_Done, Wr_Error, Clk);	
 			AllDone_v := 0;
-			
-			-- *** Hi Latency write with delay ***
-			WaitCase(1, Clk);
-			for size in 20 to 24 loop
-				for offs in 0 to 3 loop
-					WaitForCompletion(true, DelayBetweenTests + 50 us, Wr_Done, Wr_Error, Clk);	
-				end loop;
-			end loop;
-			AllDone_v := 1;					
+							
 		end if;
 	end procedure;
 	
@@ -215,23 +177,26 @@ package body psi_common_axi_master_full_tb_case_user_hs is
 		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** Lo Latency write with delay ***
+			-- *** Write 1022 bytes to 0x02000001 ***			
 			WaitCase(0, Clk);
-			for size in 20 to 24 loop	
-				-- Execute transfer
-				for offs in 0 to 3 loop	
-					CheckAxiWrite(16#02000000#+offs, 16#10#, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
-				end loop;
-			end loop;
+			CheckAxiWrite(16#02000001#, 16#10#, 63, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#02000040#, 16#4F#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#02000080#, 16#8F#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#020000C0#, 16#CF#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#02000100#, 16#0F#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#02000140#, 16#4F#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#02000180#, 16#8F#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#020001C0#, 16#CF#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#02000200#, 16#0F#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#02000240#, 16#4F#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#02000280#, 16#8F#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#020002C0#, 16#CF#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#02000300#, 16#0F#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);		
+			CheckAxiWrite(16#02000340#, 16#4F#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);	
+			CheckAxiWrite(16#02000380#, 16#8F#, 64, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+			CheckAxiWrite(16#020003C0#, 16#CF#, 63, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
 			
-			-- *** Hi Latency write with delay ***
-			WaitCase(1, Clk);
-			for size in 20 to 24 loop
-				-- Execute transfer
-				for offs in 0 to 3 loop	
-					CheckAxiWrite(16#02000000#+offs, 16#10#, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
-				end loop;
-			end loop;	
+	
 		end if;
 	end procedure;
 	

@@ -167,6 +167,7 @@ architecture rtl of psi_common_axi_master_full is
 		CmdWr_Rdy		: std_logic;
 		AxiWrCmd_Addr	: std_logic_vector(AxiAddrWidth_g-1 downto 0);
 		AxiWrCmd_Size	: std_logic_vector(UserTransactionSizeBits_g-1 downto 0);
+		WrAlignCmdSize	: std_logic_vector(UserTransactionSizeBits_g-1 downto 0);
 		AxiWrCmd_LowLat	: std_logic;
 		AxiWrCmd_Vld	: std_logic;
 		WrWconvFsm		: WriteWconvFsm_t;
@@ -177,10 +178,13 @@ architecture rtl of psi_common_axi_master_full is
 		WrAlignFsm		: WriteAlignFsm_t;
 		WrAlignReg		: std_logic_vector(AxiDataWidth_g*2-1 downto 0);
 		WrAlignBe		: std_logic_vector(AxiBytes_c*2-1 downto 0);		
-		WrShift			: unsigned(log2(AxiBytes_c)-1 downto 0);	
+		WrShift			: unsigned(log2(AxiBytes_c)-1 downto 0);
+		WrAlignShift	: unsigned(log2(AxiBytes_c)-1 downto 0);
 		WrAlignVld		: std_logic;
 		AxiWordCnt		: unsigned(UserTransactionSizeBits_g-1 downto 0);
 		WrLastBe		: std_logic_vector(AxiBytes_c-1 downto 0);
+		WrAlignLastBe	: std_logic_vector(AxiBytes_c-1 downto 0);
+		WrAlignLast		: std_logic;
 
 		
 		-- *** Read Related Registers *** 
@@ -263,12 +267,12 @@ begin
 						v.WrCmdFsm		:= Apply_s;						
 					end if;
 					
-				when Apply_s =>
-					v.WrStartTf	:= '1';
-					v.AxiWrCmd_Vld	:= '1';
-					if AxiWrCmd_Rdy = '1' and r.WrWconvFsm = Idle_s and r.WrAlignFsm = Idle_s then
+				when Apply_s =>						
+					if (AxiWrCmd_Rdy = '1') and (r.WrWconvFsm = Idle_s) and (r.WrAlignFsm = Idle_s) then
+						v.AxiWrCmd_Vld	:= '1';
+						v.WrStartTf	:= '1';
 						v.WrCmdFsm		:= Idle_s;
-						v.CmdWr_Rdy		:= '1';
+						v.CmdWr_Rdy		:= '1';						
 						v.AxiWrCmd_Size	:= std_logic_vector(resize(shift_right(AlignedAddr_f(r.WrLastAddr) - unsigned(r.AxiWrCmd_Addr), log2(AxiBytes_c))+1, UserTransactionSizeBits_g));
 						-- Calculate byte enables for last word
 						for byte in 0 to AxiBytes_c-1 loop
@@ -314,36 +318,50 @@ begin
 			-- *** Alignment FSM ***
 			-- Initial values
 			WrDataEna <= '0';
-			v.WrAlignVld := '0';
+			--v.WrAlignVld := '0';
 			-- Word- to Byte-Enable conversion
 			for i in 0 to AxiBytes_c-1 loop
-				WriteBe_v(i)	:= WrData_We(i/(AxiDataWidth_g/DataWidth_g));
+				WriteBe_v(i)	:= WrData_We(i/DataWidth_g);
 			end loop;
 			-- FSM
 			case r.WrAlignFsm is
 				when Idle_s =>				
-					v.WrAlignReg 	:= (others => '0');
-					v.WrAlignBe		:= (others => '0');
-					v.AxiWordCnt	:= to_unsigned(1, v.AxiWordCnt'length);
+					v.WrAlignReg 		:= (others => '0');
+					v.WrAlignBe			:= (others => '0');
+					v.AxiWordCnt		:= to_unsigned(1, v.AxiWordCnt'length);
+					v.WrAlignLast		:= '0';
+					v.WrAlignShift		:= r.WrShift;
+					v.WrAlignCmdSize	:= r.AxiWrCmd_Size;
+					v.WrAlignLastBe		:= r.WrLastBe;
+					v.WrAlignVld 		:= '0';
 					if r.WrStartTf = '1' then
 						v.WrAlignFsm := Transfer_s;
 					end if;
 					
 				when Transfer_s =>
 					WrDataEna <= '1';
-					if (AxiWrDat_Rdy = '1') and (WrData_Vld = '1') then
+					if (AxiWrDat_Rdy = '1') and ((WrData_Vld = '1') or (r.WrAlignLast = '1')) then			
+						-- Don't add new byte enables on last data flushing
+						if r.WrAlignLast = '1' then
+							WriteBe_v := (others => '0');
+						end if;
 						-- Shift
 						v.WrAlignReg(AxiDataWidth_g-1 downto 0)	:= r.WrAlignReg(r.WrAlignReg'left downto AxiDataWidth_g);
-						v.WrAlignBe(AxiBytes_c-1 downto 0)		:= r.WrAlignBe(r.WrAlignBe'left downto AxiBytes_c);
+						v.WrAlignBe(AxiBytes_c-1 downto 0)		:= r.WrAlignBe(r.WrAlignBe'left downto AxiBytes_c);					
 						-- New Data
-						v.WrAlignReg((to_integer(r.WrShift)+AxiBytes_c)*8-1 downto to_integer(r.WrShift)*8) := WrData_Data;
-						v.WrAlignBe(to_integer(r.WrShift)+AxiBytes_c-1 downto to_integer(r.WrShift)) := WriteBe_v;
+						v.WrAlignReg((to_integer(r.WrAlignShift)+AxiBytes_c)*8-1 downto to_integer(r.WrAlignShift)*8) := WrData_Data;
+						v.WrAlignBe(to_integer(r.WrAlignShift)+AxiBytes_c-1 downto to_integer(r.WrAlignShift)) := WriteBe_v;
 						-- Flow control
 						v.WrAlignVld	:= '1';
-						if r.AxiWordCnt = unsigned(r.AxiWrCmd_Size) then
+						if r.AxiWordCnt = unsigned(r.WrAlignCmdSize) then
 							v.WrAlignFsm := Last_s;
-							v.WrAlignBe(AxiBytes_c-1 downto 0) := v.WrAlignBe(AxiBytes_c-1 downto 0) and r.WrLastBe;
-						end if;						
+							v.WrAlignBe(AxiBytes_c-1 downto 0) := v.WrAlignBe(AxiBytes_c-1 downto 0) and r.WrAlignLastBe;
+						end if;	
+						v.AxiWordCnt := r.AxiWordCnt+1;
+						-- Force last data out
+						v.WrAlignLast := WrData_Last;	
+					elsif AxiWrDat_Rdy = '1' then
+						v.WrAlignVld	:= '0';
 					end if;
 					
 				when Last_s =>
@@ -355,7 +373,6 @@ begin
 					
 				when others => null;	
 			end case;
-					
 		end if;
 		
 		--------------------------------------------------------------------------
@@ -399,6 +416,7 @@ begin
 	-- Outputs
 	------------------------------------------------------------------------------		
 	CmdWr_Rdy	<= r.CmdWr_Rdy;
+	CmdRd_Rdy	<= '0';
 
 	
 	------------------------------------------------------------------------------
@@ -495,49 +513,56 @@ begin
 			M_Axi_RReady	=> M_Axi_RReady
 		);	
 		
-	-- Write Data FIFO	
-	WrFifo_Rdy	<= WrWconv_Rdy and WrWconvEna;
-	fifo_wr_data : entity work.psi_common_sync_fifo
-		generic map (
-			Width_g			=> DataWidth_g,
-			Depth_g			=> DataFifoDepth_g,
-			AlmFullOn_g		=> false,
-			AlmEmptyOn_g	=> false,
-			RamStyle_g		=> "auto",
-			RamBehavior_g	=> RamBehavior_g
-		)
-		port map (
-			Clk		=> M_Axi_Aclk,
-			Rst		=> Rst,
-			InData	=> WrDat_Data,
-			InVld	=> WrDat_Vld,
-			InRdy	=> WrDat_Rdy,
-			OutData	=> WrFifo_Data,
-			OutVld	=> WrFifo_Vld,
-			OutRdy	=> WrFifo_Rdy
-		);	
+	-- *** Write Releated Code ***
+	g_write : if ImplWrite_g generate
 		
-	-- Write Data With Conversion
-	WrWconv_Vld <= WrWconvEna and WrFifo_Vld;
-	WrData_Rdy <= AxiWrDat_Rdy and WrDataEna;
-	wc_wr : entity work.psi_common_wconv_n2xn
-		generic map (
-			InWidth_g	=> DataWidth_g,
-			OutWidth_g	=> AxiDataWidth_g
-		)
-		port map (
-			Clk			=> M_Axi_Aclk,
-			Rst			=> Rst,
-			InVld		=> WrWconv_Vld,
-			InRdy		=> WrWconv_Rdy,
-			InData		=> WrFifo_Data,
-			InLast		=> WrWconv_Last,
-			OutVld		=> WrData_Vld,
-			OutRdy		=> WrData_Rdy,
-			OutData		=> WrData_Data,
-			OutLast		=> WrData_Last,
-			OutWe		=> WrData_We
-		);
+		-- Write Data FIFO	
+		WrFifo_Rdy	<= WrWconv_Rdy and WrWconvEna;
+		fifo_wr_data : entity work.psi_common_sync_fifo
+			generic map (
+				Width_g			=> DataWidth_g,
+				Depth_g			=> DataFifoDepth_g,
+				AlmFullOn_g		=> false,
+				AlmEmptyOn_g	=> false,
+				RamStyle_g		=> "auto",
+				RamBehavior_g	=> RamBehavior_g
+			)
+			port map (
+				Clk		=> M_Axi_Aclk,
+				Rst		=> Rst,
+				InData	=> WrDat_Data,
+				InVld	=> WrDat_Vld,
+				InRdy	=> WrDat_Rdy,
+				OutData	=> WrFifo_Data,
+				OutVld	=> WrFifo_Vld,
+				OutRdy	=> WrFifo_Rdy
+			);	
+			
+		-- Write Data With Conversion
+		WrWconv_Vld <= WrWconvEna and WrFifo_Vld;
+		WrData_Rdy <= AxiWrDat_Rdy and WrDataEna;
+		wc_wr : entity work.psi_common_wconv_n2xn
+			generic map (
+				InWidth_g	=> DataWidth_g,
+				OutWidth_g	=> AxiDataWidth_g
+			)
+			port map (
+				Clk			=> M_Axi_Aclk,
+				Rst			=> Rst,
+				InVld		=> WrWconv_Vld,
+				InRdy		=> WrWconv_Rdy,
+				InData		=> WrFifo_Data,
+				InLast		=> WrWconv_Last,
+				OutVld		=> WrData_Vld,
+				OutRdy		=> WrData_Rdy,
+				OutData		=> WrData_Data,
+				OutLast		=> WrData_Last,
+				OutWe		=> WrData_We
+			);
+	end generate;
+	g_nwrite : if not ImplWrite_g generate
+		WrDat_Rdy 	<= '0';
+	end generate;
 
 	
 	-- Read Data FIFO

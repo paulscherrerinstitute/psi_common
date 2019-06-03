@@ -32,7 +32,7 @@ library work;
 	use work.psi_common_axi_master_full_tb_case_simple_tf.all;
 	use work.psi_common_axi_master_full_tb_case_axi_hs.all;
 	use work.psi_common_axi_master_full_tb_case_user_hs.all;
-	use work.psi_common_axi_master_full_tb_case_all_shifts.all;
+	use work.psi_common_axi_master_full_tb_case_large.all;
 
 ------------------------------------------------------------
 -- Entity Declaration
@@ -258,7 +258,7 @@ begin
 		-- all_shifts
 		wait until NextCase = 3;
 		ProcessDone(TbProcNr_user_cmd_c) <= '0';
-		work.psi_common_axi_master_full_tb_case_all_shifts.user_cmd(M_Axi_Aclk, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Generics_c);
+		work.psi_common_axi_master_full_tb_case_large.user_cmd(M_Axi_Aclk, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_user_cmd_c) <= '1';
 		wait;
@@ -288,7 +288,7 @@ begin
 		-- all_shifts
 		wait until NextCase = 3;
 		ProcessDone(TbProcNr_user_data_c) <= '0';
-		work.psi_common_axi_master_full_tb_case_all_shifts.user_data(M_Axi_Aclk, WrDat_Data, WrDat_Vld, WrDat_Rdy, RdDat_Data, RdDat_Vld, RdDat_Rdy, Generics_c);
+		work.psi_common_axi_master_full_tb_case_large.user_data(M_Axi_Aclk, WrDat_Data, WrDat_Vld, WrDat_Rdy, RdDat_Data, RdDat_Vld, RdDat_Rdy, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_user_data_c) <= '1';
 		wait;
@@ -318,7 +318,7 @@ begin
 		-- all_shifts
 		wait until NextCase = 3;
 		ProcessDone(TbProcNr_user_resp_c) <= '0';
-		work.psi_common_axi_master_full_tb_case_all_shifts.user_resp(M_Axi_Aclk, Wr_Done, Wr_Error, Rd_Done, Rd_Error, Generics_c);
+		work.psi_common_axi_master_full_tb_case_large.user_resp(M_Axi_Aclk, Wr_Done, Wr_Error, Rd_Done, Rd_Error, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_user_resp_c) <= '1';
 		wait;
@@ -348,7 +348,7 @@ begin
 		-- all_shifts
 		wait until NextCase = 3;
 		ProcessDone(TbProcNr_axi_c) <= '0';
-		work.psi_common_axi_master_full_tb_case_all_shifts.axi(M_Axi_Aclk, axi_ms, axi_sm, Generics_c);
+		work.psi_common_axi_master_full_tb_case_large.axi(M_Axi_Aclk, axi_ms, axi_sm, Generics_c);
 		wait for 1 ps;
 		ProcessDone(TbProcNr_axi_c) <= '1';
 		wait;

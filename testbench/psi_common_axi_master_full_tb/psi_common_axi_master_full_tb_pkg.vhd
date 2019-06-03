@@ -80,13 +80,7 @@ package psi_common_axi_master_full_tb_pkg is
 							signal	CmdX_LowLat	: out	std_logic;
 							signal	CmdX_Vld	: out 	std_logic;
 							signal	CmdX_Rdy	: in	std_logic;
-							signal	Clk			: in	std_logic);			
-
-	procedure ApplyWrDataSingle(	Data		: in	integer;
-							signal	WrDat_Data	: out	std_logic_vector;
-							signal	WrDat_Vld	: out	std_logic;
-							signal	WrDat_Rdy	: in	std_logic;
-							signal	Clk			: in	std_logic);		
+							signal	Clk			: in	std_logic);				
 
 	procedure WaitForCompletion(	Success		: in	boolean;
 									WaitTime	: in	time;
@@ -94,18 +88,26 @@ package psi_common_axi_master_full_tb_pkg is
 							signal	X_Error		: in	std_logic;
 							signal	Clk			: in	std_logic);		
 
-	procedure AxiCheckWrSingle(		Addr		: in	integer;
-									Data		: in	integer;
-									Be			: in	integer;
-									Resp		: in	std_logic_vector;
-							signal 	axi_ms 		: in axi_ms_t;
-							signal 	axi_sm 		: out axi_sm_t;
-							signal 	Clk 		: in std_logic;
-									AxiDataWidth: in	integer;
-									SendResp	: in	boolean := true);	
-
 	procedure DbgPrint(	Enable 	: in boolean;
-						Str		: in string);									
+						Str		: in string);	
+
+	procedure ApplyWrData(	DataStart	: in 	integer;
+							NrBytes		: in	integer;
+					signal	WrDat_Data	: out	std_logic_vector;
+					signal	WrDat_Vld	: out	std_logic;
+					signal	WrDat_Rdy	: in	std_logic;
+					signal	Clk			: in	std_logic;
+							VldDelay	: in	time	:= 0 ns);		
+
+	procedure CheckAxiWrite(		Addr		: in	integer;
+									DataStart	: in	integer;
+									NrBytes		: in	integer;
+									Resp		: in	std_logic_vector;
+							signal 	axi_ms 		: in 	axi_ms_t;
+							signal 	axi_sm 		: out 	axi_sm_t;
+							signal 	Clk 		: in 	std_logic;
+									AwRdyDelay	: in	time	:= 0 ns;
+									WRdyDelay	: in	time	:= 0 ns);					
 	
 	
 end package;
@@ -151,18 +153,6 @@ package body psi_common_axi_master_full_tb_pkg is
 		CmdX_Vld <= '0';
 	end procedure;	
 	
-	procedure ApplyWrDataSingle(	Data		: in	integer;
-							signal	WrDat_Data	: out	std_logic_vector;
-							signal	WrDat_Vld	: out	std_logic;
-							signal	WrDat_Rdy	: in	std_logic;
-							signal	Clk			: in	std_logic) is
-	begin
-		WrDat_Data <= std_logic_vector(to_unsigned(Data, WrDat_Data'length));
-		WrDat_Vld <= '1';
-		wait until rising_edge(Clk) and WrDat_Rdy = '1';
-		WrDat_Vld <= '0';	
-	end procedure;	
-	
 	procedure WaitForCompletion(	Success		: in	boolean;
 									WaitTime	: in	time;
 							signal	X_Done		: in	std_logic;
@@ -178,22 +168,6 @@ package body psi_common_axi_master_full_tb_pkg is
 		end if;
 	end procedure;	
 	
-	procedure AxiCheckWrSingle(		Addr		: in	integer;
-									Data		: in	integer;
-									Be			: in	integer;
-									Resp		: in	std_logic_vector;
-							signal 	axi_ms 		: in 	axi_ms_t;
-							signal 	axi_sm 		: out 	axi_sm_t;
-							signal 	Clk 		: in 	std_logic;
-									AxiDataWidth: in	integer;
-									SendResp	: in	boolean := true) is
-	begin	
-		axi_expect_aw(	Addr, AxSize(AxiDataWidth), 1-1, xBURST_INCR_c, axi_ms, axi_sm, Clk);
-		axi_expect_wd_single(std_logic_vector(to_unsigned(Data, AxiDataWidth_g)), std_logic_vector(to_unsigned(Be, AxiDataWidth/8)), axi_ms, axi_sm, Clk);
-		if SendResp then
-			axi_apply_bresp(Resp, axi_ms, axi_sm, Clk);
-		end if;
-	end procedure;	
 	
 	procedure DbgPrint(	Enable 	: in boolean;
 						Str		: in string) is
@@ -202,4 +176,120 @@ package body psi_common_axi_master_full_tb_pkg is
 			Print(Str);
 		end if;
 	end procedure;	
+	
+	procedure ApplyWrData(	DataStart	: in 	integer;
+							NrBytes		: in	integer;
+					signal	WrDat_Data	: out	std_logic_vector;
+					signal	WrDat_Vld	: out	std_logic;
+					signal	WrDat_Rdy	: in	std_logic;
+					signal	Clk			: in	std_logic;
+							VldDelay	: in	time	:= 0 ns) is
+		constant DataWidth_c 	: integer := WrDat_Data'length;
+		variable BitsDone_v		: integer := 0;
+		variable Data_v			: integer := DataStart;
+	begin
+		assert DataWidth_c = 16 or DataWidth_c = 32 report "###ERROR###: ApplyWrData() only works for 16 or 32 bits data width" severity error;
+		WrDat_Vld <= '0';
+		while BitsDone_v < NrBytes*8 loop
+			if VldDelay > 0 ns then
+				WrDat_Vld <= '0';
+				wait for VldDelay;
+				wait until rising_edge(Clk);
+				WrDat_Vld <= '1';
+			else
+				WrDat_Vld <= '1';
+			end if;
+			for byte in 0 to DataWidth_c/8-1 loop
+				if BitsDone_v < NrBytes*8 then
+					WrDat_Data((byte+1)*8-1 downto byte*8) <= std_logic_vector(to_unsigned(Data_v, 8));
+					Data_v := Data_v + 1;
+					BitsDone_v := BitsDone_v + 8;
+				end if;
+			end loop;
+			wait until rising_edge(Clk) and WrDat_Rdy = '1';
+		end loop;
+		WrDat_Vld <= '0';
+	end procedure;
+	
+	procedure CheckAxiWrite(		Addr		: in	integer;
+									DataStart	: in	integer;
+									NrBytes		: in	integer;
+									Resp		: in	std_logic_vector;
+							signal 	axi_ms 		: in 	axi_ms_t;
+							signal 	axi_sm 		: out 	axi_sm_t;
+							signal 	Clk 		: in 	std_logic;
+									AwRdyDelay	: in	time	:= 0 ns;
+									WRdyDelay	: in	time	:= 0 ns) is	
+		constant AxiBytes_c 	: integer	:= axi_ms.wdata'length/8;
+		constant LastAddr_c		: integer	:= Addr+NrBytes-1;
+		constant WordAddr_c		: integer	:= Addr/4*4;
+		constant Beats_c		: integer	:= (LastAddr_c-WordAddr_c)/AxiBytes_c+1; 
+		variable Data_v			: integer 	:= DataStart;
+		variable BytesChecked_v	: integer	:= 0;
+		constant AddrOffs		: integer	:= Addr mod 4;
+		
+	begin
+		-- Check AW
+		if AwRdyDelay > 0 ns then
+			wait for AwRdyDelay;
+			wait until rising_edge(Clk);
+		end if;
+		axi_expect_aw(	WordAddr_c, AxSize(AxiBytes_c*8), Beats_c-1, xBURST_INCR_c, axi_ms, axi_sm, Clk);
+		-- Check W		
+		for beat in 1 to Beats_c loop	
+			if WRdyDelay > 0 ns then
+				axi_sm.wready <= '0';
+				wait for WRdyDelay;
+				wait until rising_edge(Clk);
+				axi_sm.wready <= '1';
+			else
+				axi_sm.wready <= '1';
+			end if;
+			wait until rising_edge(Clk) and axi_ms.wvalid = '1';
+			if WRdyDelay > 0 ns then
+				axi_sm.wready <= '0';
+			end if;
+			-- last transfer
+			if beat = Beats_c then
+				StdlCompare(1, axi_ms.wlast, "WLAST not asserted at end of burst transfer");
+			elsif beat = 1 then
+				StdlCompare(0, axi_ms.wlast, "WLAST asserted at beginning of burst transfer");
+			else
+				StdlCompare(0, axi_ms.wlast, "WLAST asserted in the middle of burst transfer");
+			end if;
+			-- Check First Beats
+			if beat = 1 then
+				-- unused bytes
+				for byte in 0 to AddrOffs-1 loop
+					StdlCompare(0, axi_ms.wstrb(byte), "STRB high in beat 1 byte " & str(byte));
+				end loop;
+				-- used bytes
+				for byte in AddrOffs to 3 loop
+					if BytesChecked_v < NrBytes then
+						StdlCompare(1, axi_ms.wstrb(byte), "STRB low in beat 1 byte " & str(byte));
+						StdlvCompareInt(Data_v, axi_ms.wdata((byte+1)*8-1 downto byte*8), "wrong WDATA, beat 1, byte " & str(byte), false);
+						Data_v := (Data_v + 1) mod 256;
+						BytesChecked_v := BytesChecked_v + 1;
+					else
+						StdlCompare(0, axi_ms.wstrb(byte), "STRB high in beat 1, byte " & str(byte));
+					end if;
+				end loop;
+			-- Check other beats
+			else
+				for byte in 0 to 3 loop
+					if BytesChecked_v < NrBytes then
+						StdlCompare(1, axi_ms.wstrb(byte), "STRB low in beat " & str(beat) & " byte " & str(byte));
+						StdlvCompareInt(Data_v, axi_ms.wdata((byte+1)*8-1 downto byte*8), "wrong WDATA, beat " & str(beat) & " byte " & str(byte), false);
+						Data_v := (Data_v + 1) mod 256;
+						BytesChecked_v := BytesChecked_v + 1;	
+					else
+						StdlCompare(0, axi_ms.wstrb(byte), "STRB high in beat " & str(beat) & " byte " & str(byte));
+					end if;
+				end loop;
+			end if;
+		end loop;
+		axi_sm.wready <= '0';	
+		-- Apply BRESP
+		axi_apply_bresp(Resp, axi_ms, axi_sm, Clk);
+	end procedure;
 end;
