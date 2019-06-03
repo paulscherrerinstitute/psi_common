@@ -83,7 +83,7 @@ begin
 	--------------------------------------------------------------------------
 	-- Combinatorial Proccess
 	--------------------------------------------------------------------------
-	p_comb : process(r, InVld, InData, OutRdy)
+	p_comb : process(r, InVld, InData, OutRdy, InLast)
 		variable v : two_process_r;
 		variable IsStuck_v 		: std_logic;
 		variable ShiftDone_v	: boolean;
