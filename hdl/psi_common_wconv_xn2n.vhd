@@ -40,11 +40,14 @@ entity psi_common_wconv_xn2n is
 		InVld		: in 	std_logic;
 		InRdy		: out 	std_logic;
 		InData		: in	std_logic_vector(InWidth_g-1 downto 0);
+		InLast		: in	std_logic	:= '0';
+		InWe		: in	std_logic_vector(InWidth_g/OutWidth_g-1 downto 0) := (others => '1');
 		
 		-- Output
 		OutVld		: out	std_logic;
 		OutRdy		: in	std_logic	:= '1';
-		OutData		: out	std_logic_vector(OutWidth_g-1 downto 0)
+		OutData		: out	std_logic_vector(OutWidth_g-1 downto 0);
+		OutLast		: out	std_logic
 	);
 end entity;
 		
@@ -59,8 +62,9 @@ architecture rtl of psi_common_wconv_xn2n is
 	
 	-- *** Two Process Method ***
 	type two_process_r is record
-		Data	: std_logic_vector(InWidth_g-1 downto 0);
-		DataVld	: std_logic_vector(RatioInt_c-1 downto 0);
+		Data		: std_logic_vector(InWidth_g-1 downto 0);
+		DataVld		: std_logic_vector(RatioInt_c-1 downto 0);
+		DataLast	: std_logic_vector(RatioInt_c-1 downto 0);
 	end record;
 	signal r, r_next : two_process_r;
 	
@@ -74,7 +78,7 @@ begin
 	--------------------------------------------------------------------------
 	-- Combinatorial Proccess
 	--------------------------------------------------------------------------
-	p_comb : process(r, InVld, InData, OutRdy)
+	p_comb : process(r, InVld, InData, OutRdy, InWe, InLast)
 		variable v : two_process_r;
 		variable IsReady_v : std_logic;
 	begin
@@ -83,7 +87,7 @@ begin
 		
 		-- Halt detection
 		IsReady_v := '1';
-		if r.DataVld(1) = '1' then
+		if unsigned(r.DataVld(r.DataVld'high downto 1)) /= 0 then
 			IsReady_v := '0';		
 		elsif r.DataVld(0) = '1' and OutRdy = '0' then
 			IsReady_v := '0';
@@ -92,16 +96,23 @@ begin
 		-- Get new data
 		if IsReady_v = '1' and InVld = '1' then
 			v.Data 		:= InData;
-			v.DataVld 	:= (others => '1');
-		elsif (OutRdy = '1') and (r.DataVld(0) = '1') then
+			v.DataVld 	:= InWe;
+			-- Assert last to the correct data-word
+			for i in 0 to RatioInt_c-2 loop
+				v.DataLast(i)	:= InWe(i) and not InWe(i+1) and InLast;
+			end loop;
+			v.DataLast(RatioInt_c-1)	:= InWe(RatioInt_c-1) and InLast;
+		elsif (OutRdy = '1') and (unsigned(r.DataVld) /= 0) then
 			v.Data		:= ZerosVector(OutWidth_g) & r.Data(r.Data'left downto OutWidth_g);
 			v.DataVld 	:= '0' & r.DataVld(r.DataVld'left downto 1);
+			v.DataLast	:= '0' & r.DataLast(r.DataLast'left downto 1);
 		end if;
 		
 		-- Outputs
 		OutData <= r.Data(OutWidth_g-1 downto 0);
 		InRdy 	<= IsReady_v;
 		OutVld 	<= r.DataVld(0);
+		OutLast	<= r.DataLast(0);
 		
 		-- *** assign signal ***
 		r_next <= v;

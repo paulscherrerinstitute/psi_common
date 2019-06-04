@@ -21,6 +21,7 @@ library work;
 	use work.psi_common_math_pkg.all;
 	use work.psi_common_logic_pkg.all;
 	use work.psi_tb_txt_util.all;
+	use work.psi_tb_compare_pkg.all;
 
 ------------------------------------------------------------
 -- Entity Declaration
@@ -52,24 +53,45 @@ architecture sim of psi_common_wconv_xn2n_tb is
 	signal InVld : std_logic := '0';
 	signal InRdy : std_logic := '0';
 	signal InData : std_logic_vector(InWidth_g-1 downto 0) := (others => '0');
+	signal InLast : std_logic := '0';
+	signal InWe : std_logic_vector(InWidth_g/OutWidth_g-1 downto 0) := (others => '1');
 	signal OutVld : std_logic := '0';
 	signal OutRdy : std_logic := '0';
 	signal OutData : std_logic_vector(OutWidth_g-1 downto 0) := (others => '0');
+	signal OutLast : std_logic := '0';
 	
 	-- user stuff --
 	signal done : boolean := False;
 	signal testcase : integer := -1;
 	
-	procedure ApplyInput(StartValue : in integer; signal InData : out std_logic_vector) is
+	procedure ApplyInput(	StartValue 	: in 	integer;  
+				signal		InData		: out	std_logic_vector;
+				signal		InLast		: out	std_logic;
+				signal		InWe		: out	std_logic_vector(InWe'range);
+							IsLast		: in	boolean := false;
+							LastByte	: in	integer := 0) is
 	begin
 		for i in 0 to 3 loop
 			InData(3+i*4 downto i*4) <= std_logic_vector(to_unsigned(i+StartValue, 4));
 		end loop;
+		InLast <= '0';
+		InWe <= (others => '1');
+		if IsLast then
+			InLast <= '1';
+			InWe(InWe'high downto LastByte+1) <= (others => '0');
+		end if;
 	end procedure;
 	
-	procedure CheckOutput(StartValue : in integer; offset : in integer) is
+	procedure CheckOutput(	StartValue 	: in integer; 
+							offset 		: in integer;
+							isLast		: in boolean := false) is
 	begin
-		assert unsigned(OutData) = StartValue+offset report "###ERROR###: received wrong output " & to_string(to_integer(unsigned(OutData))) & " instead of " & to_string(StartValue+offset) severity error;
+		StdlvCompareInt(StartValue+offset, OutData, "received wrong output", false);
+		if isLast then
+			StdlCompare(1, OutLast, "did not receive Last");
+		else	
+			StdlCompare(0, OutLast, "Received unexpected Last");
+		end if;
 	end procedure;
 	
 begin
@@ -87,9 +109,12 @@ begin
 			InVld => InVld,
 			InRdy => InRdy,
 			InData => InData,
+			InLast => InLast,
+			InWe => InWe,
 			OutVld => OutVld,
 			OutRdy => OutRdy,
-			OutData => OutData
+			OutData => OutData,
+			OutLast => OutLast
 		);
 	
 	------------------------------------------------------------
@@ -136,6 +161,7 @@ begin
 	------------------------------------------------------------
 	-- *** stim ***
 	p_stim : process
+		variable LastWordNr_v	: integer;
 	begin
 		-- start of process !DO NOT EDIT
 		wait until Rst = '0';
@@ -146,11 +172,11 @@ begin
 		wait until rising_edge(Clk);
 		for del in 0 to 3 loop
 			InVld <= '1';
-			ApplyInput(del*2, InData);
+			ApplyInput(del*2, InData, InLast, InWe);
 			wait until rising_edge(Clk);
 			InVld <= '0';
 			wait for 1 ns;
-			assert InRdy = '0' report "###ERROR###: InRdy did not go low" severity error;
+			StdlCompare(0, InRdy, "InRdy did not go low");
 			for j in 0 to 10 loop
 				wait until rising_edge(Clk);
 			end loop;
@@ -167,13 +193,65 @@ begin
 		InVld <= '1';
 		for del in 0 to 3 loop	
 			for data in 0 to 2 loop
-				ApplyInput(del+data, InData);
+				ApplyInput(del+data, InData, InLast, InWe);
 				wait until rising_edge(Clk) and InRdy = '1';
 			end loop;
 		end loop;
+		InVld <= '0';
 		if done /= true then
 			wait until done = true;
 		end if;
+		
+		-- Test Last Handling
+		print(">> Last Handling");
+		testcase <= 2;
+		wait until rising_edge(Clk);		
+		for del in 0 to 3 loop	
+			for bytes in 1 to 12 loop
+				InVld <= '1';
+				LastWordNr_v := (bytes-1)/4;
+				for data in 0 to LastWordNr_v loop
+					if data = LastWordNr_v then							
+						ApplyInput(del+data*4, InData, InLast, InWe, true, bytes-data*4-1);
+					else
+						ApplyInput(del+data*4, InData, InLast, InWe, false);
+					end if;
+					wait until rising_edge(Clk) and InRdy = '1';
+				end loop;
+				InVld <= '0';
+			end loop;
+		end loop;		
+		if done /= true then
+			wait until done = true;
+		end if;	
+
+		-- Test Alignment
+		print(">> Alignment");
+		testcase <= 3;
+		wait until rising_edge(Clk);		
+		for del in 0 to 3 loop	
+			for skipBytes in 0 to 3 loop
+				for bytes in 4 to 8 loop
+					InVld <= '1';
+					LastWordNr_v := (bytes-1)/4;
+					for data in 0 to LastWordNr_v loop
+						if data = LastWordNr_v then							
+							ApplyInput(del+data*4, InData, InLast, InWe, true, bytes-data*4-1);
+						else
+							ApplyInput(del+data*4, InData, InLast, InWe, false);
+						end if;
+						if data = 0 then
+							InWe(skipBytes-1 downto 0) <= (others => '0');
+						end if;
+						wait until rising_edge(Clk) and InRdy = '1';
+					end loop;
+					InVld <= '0';
+				end loop;
+			end loop;
+		end loop;		
+		if done /= true then
+			wait until done = true;
+		end if;			
 				
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_stim_c) <= '1';
@@ -182,6 +260,7 @@ begin
 	
 	-- *** check ***
 	p_check : process
+		variable LastByteNr_v	: integer;
 	begin
 		-- start of process !DO NOT EDIT
 		wait until Rst = '0';
@@ -219,6 +298,46 @@ begin
 			end loop;
 		end loop;
 		done <= True;
+		
+		-- Test Last Handling
+		wait until testcase = 2;
+		done <= False;
+		for del in 0 to 3 loop
+			for bytes in 1 to 12 loop
+				LastByteNr_v := bytes-1;
+				for data in 0 to LastByteNr_v loop
+					OutRdy <= '1';
+					wait until rising_edge(Clk) and OutVld = '1';
+					CheckOutput(del+data, 0, data=LastByteNr_v);
+					for j in 0 to del-1 loop
+						OutRdy <= '0';
+						wait until rising_edge(Clk);
+					end loop;
+				end loop;
+			end loop;
+		end loop;
+		done <= True;		
+		
+		-- Alignment
+		wait until testcase = 3;
+		done <= False;
+		for del in 0 to 3 loop
+			for skipBytes in 0 to 3 loop
+				for bytes in 4 to 8 loop
+					LastByteNr_v := bytes-1;
+					for data in skipBytes to LastByteNr_v loop
+						OutRdy <= '1';
+						wait until rising_edge(Clk) and OutVld = '1';
+						CheckOutput(del+data, 0, data=LastByteNr_v);
+						for j in 0 to del-1 loop
+							OutRdy <= '0';
+							wait until rising_edge(Clk);
+						end loop;
+					end loop;
+				end loop;
+			end loop;
+		end loop;
+		done <= True;			
 		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_check_c) <= '1';
