@@ -136,6 +136,7 @@ architecture rtl of psi_common_axi_master_full is
 	------------------------------------------------------------------------------	
 	constant AxiBytes_c		: natural 	:= AxiDataWidth_g/8;
 	constant DataBytes_c	: natural	:= DataWidth_g/8;
+	constant WidthRatio_c	: natural	:= AxiDataWidth_g/DataWidth_g;
 	
 	
 	------------------------------------------------------------------------------
@@ -144,6 +145,9 @@ architecture rtl of psi_common_axi_master_full is
 	type WriteCmdFsm_t is (Idle_s, Apply_s);
 	type WriteWconvFsm_t is (Idle_s, Transfer_s);
 	type WriteAlignFsm_t is (Idle_s, Transfer_s, Last_s);
+	type ReadCmdFsm_t is (Idle_s, Apply_s, WaitDataFsm_s);
+	type ReadDataFsm_t is (Idle_s, Transfer_s, Wait_s);
+	
 	
 	------------------------------------------------------------------------------
 	-- Functions
@@ -185,11 +189,32 @@ architecture rtl of psi_common_axi_master_full is
 		WrLastBe		: std_logic_vector(AxiBytes_c-1 downto 0);
 		WrAlignLastBe	: std_logic_vector(AxiBytes_c-1 downto 0);
 		WrAlignLast		: std_logic;
-
 		
 		-- *** Read Related Registers *** 
-
-		
+		RdCmdFsm		: ReadCmdFsm_t;
+		RdLastAddr		: unsigned(AxiAddrWidth_g-1 downto 0);
+		RdFirstAddrOffs	: unsigned(log2(AxiBytes_c)-1 downto 0);
+		CmdRd_Rdy		: std_logic;
+		AxiRdCmd_Addr	: std_logic_vector(AxiAddrWidth_g-1 downto 0);
+		AxiRdCmd_LowLat	: std_logic;
+		AxiRdCmd_Vld	: std_logic;
+		AxiRdCmd_Size	: std_logic_vector(UserTransactionSizeBits_g-1 downto 0);
+		RdFirstBe		: std_logic_vector(AxiBytes_c-1 downto 0);
+		RdLastBe		: std_logic_vector(AxiBytes_c-1 downto 0);
+		RdDataFsm		: ReadDataFsm_t;
+		RdStartTf		: std_logic;
+		RdDataEna		: std_logic;
+		RdDatFirstBe	: std_logic_vector(AxiBytes_c-1 downto 0);
+		RdDatLastBe		: std_logic_vector(AxiBytes_c-1 downto 0);
+		RdDataWords		: unsigned(UserTransactionSizeBits_g-1 downto 0);
+		RdCurrentWord	: unsigned(UserTransactionSizeBits_g-1 downto 0);
+		RdShift			: unsigned(log2(AxiBytes_c)-1 downto 0);
+		RdLowIdx		: unsigned(log2(AxiBytes_c) downto 0);
+		RdAlignShift	: unsigned(log2(AxiBytes_c)-1 downto 0);	
+		RdAlignLowIdx	: unsigned(log2(AxiBytes_c) downto 0);	
+		RdAlignByteVld	: std_logic_vector(AxiBytes_c*2-1 downto 0);
+		RdAlignReg		: std_logic_vector(AxiDataWidth_g*2-1 downto 0);
+		RdAlignLast		: std_logic;
 	end record;
 	signal r, r_next : two_process_r;
 		
@@ -204,8 +229,7 @@ architecture rtl of psi_common_axi_master_full is
 	signal AxiWrDat_Rdy		: std_logic;
 	signal AxiWrDat_Data	: std_logic_vector(AxiDataWidth_g-1 downto 0);
 	signal WrFifo_Rdy		: std_logic;
-	signal AxiWrDat_Be		: std_logic_vector(AxiBytes_c-1 downto 0);
-	
+	signal AxiWrDat_Be		: std_logic_vector(AxiBytes_c-1 downto 0);	
 	signal WrWconvEna		: std_logic;
 	signal WrWconv_Vld		: std_logic;
 	signal WrWconv_Rdy		: std_logic;
@@ -216,6 +240,13 @@ architecture rtl of psi_common_axi_master_full is
 	signal WrData_We		: std_logic_vector(AxiBytes_c/DataBytes_c-1 downto 0);
 	signal WrData_Rdy		: std_logic;
 	signal WrDataEna		: std_logic;
+	signal AxiRdCmd_Rdy		: std_logic;	
+	signal AxiRdDat_Rdy		: std_logic;
+	signal AxiRdDat_Vld		: std_logic;
+	signal AxiRdDat_Data	: std_logic_vector(AxiDataWidth_g-1 downto 0);
+	signal RdFifo_Rdy		: std_logic;
+	signal RdFifo_Data		: std_logic_vector(DataWidth_g-1 downto 0);
+	signal RdFifo_Vld		: std_logic;
 	
 begin
 	
@@ -232,11 +263,18 @@ begin
 	------------------------------------------------------------------------------	
 	p_comb : process(	r,
 						CmdWr_Addr, CmdWr_Size, CmdWr_Vld, CmdWr_LowLat,
+						CmdRd_Addr, CmdRd_Size, CmdRd_Vld, CmdRd_LowLat,
 						AxiWrCmd_Rdy, AxiWrDat_Rdy,
+						AxiRdCmd_Rdy, AxiRdDat_Vld, AxiRdDat_Data,
 						WrWconv_Rdy, WrFifo_Vld,
-						WrData_Vld, WrData_Data, WrData_Last, WrData_We)
+						WrData_Vld, WrData_Data, WrData_Last, WrData_We,
+						RdFifo_Rdy)
 		variable v 					: two_process_r;
 		variable WriteBe_v			: std_logic_vector(AxiBytes_c-1 downto 0);
+		variable RdAlignReady_v		: std_logic;
+		variable RdLowIdxInt_v		: integer range 0 to AxiBytes_c;
+		variable RdDatBe_v			: std_logic_vector(AxiBytes_c-1 downto 0);
+		variable RdDataLast_v		: std_logic;
 	begin
 		-- *** Keep two process variables stable ***
 		v := r;
@@ -267,7 +305,7 @@ begin
 						v.WrCmdFsm		:= Apply_s;						
 					end if;
 					
-				when Apply_s =>						
+				when Apply_s =>			
 					if (AxiWrCmd_Rdy = '1') and (r.WrWconvFsm = Idle_s) and (r.WrAlignFsm = Idle_s) then
 						v.AxiWrCmd_Vld	:= '1';
 						v.WrStartTf	:= '1';
@@ -293,13 +331,15 @@ begin
 			WrWconv_Last <= '0';
 			case r.WrWconvFsm is 
 			
+				-- Latch values that change for the next command that may be interpreted while the current one is running
 				when Idle_s =>
 					v.WrWordsDone		:= to_unsigned(1, v.WrWordsDone'length);
 					v.WrDataWordsWc	:= r.WrDataWordsCmd;
 					if r.WrStartTf = '1' then
 						v.WrWconvFsm 	:= Transfer_s;	
 					end if;
-									
+							
+				-- Execute transfer
 				when Transfer_s =>
 					WrWconvEna <= '1';
 					if r.WrWordsDone = r.WrDataWordsWc then
@@ -325,6 +365,8 @@ begin
 			end loop;
 			-- FSM
 			case r.WrAlignFsm is
+			
+				-- Latch values that change for the next command that may be interpreted while the current one is running
 				when Idle_s =>				
 					v.WrAlignReg 		:= (others => '0');
 					v.WrAlignBe			:= (others => '0');
@@ -338,6 +380,7 @@ begin
 						v.WrAlignFsm := Transfer_s;
 					end if;
 					
+				-- Move data from the FIFO to AXI
 				when Transfer_s =>
 					WrDataEna <= '1';
 					if (AxiWrDat_Rdy = '1') and ((WrData_Vld = '1') or (r.WrAlignLast = '1')) then			
@@ -363,7 +406,8 @@ begin
 					elsif AxiWrDat_Rdy = '1' then
 						v.WrAlignVld	:= '0';
 					end if;
-					
+				
+				-- Wait for the last beat te be accepted without reading more data from the FIFO
 				when Last_s =>
 					v.WrAlignVld	:= '1';
 					if AxiWrDat_Rdy = '1' then
@@ -379,6 +423,150 @@ begin
 		-- Read Related Code
 		--------------------------------------------------------------------------	
 		if ImplRead_g then
+		
+			-- *** Variables ***
+			RdLowIdxInt_v := to_integer(r.RdAlignLowIdx);
+			RdAlignReady_v := r.RdDataEna;
+			-- Vivado workaround
+			for i in 0 to AxiBytes_c loop
+			    if i = RdLowIdxInt_v then
+					-- no new data fits into shifter, even if output is ready. This only happens for user width < axi width
+                    if (DataBytes_c < AxiBytes_c) and (unsigned(r.RdAlignByteVld(r.RdAlignByteVld'high downto i+DataBytes_c)) /= 0) then
+                        RdAlignReady_v := '0';		
+					-- if output is ready, new data can be accepted (back-to-back)
+                    elsif unsigned(r.RdAlignByteVld(r.RdAlignByteVld'high downto i)) /= 0 and RdFifo_Rdy = '0' then
+                        RdAlignReady_v := '0';
+                    end if;
+                 end if;
+             end loop;
+			
+			-- *** Command FSM ***
+			v.RdStartTf	:= '0';
+			v.AxiRdCmd_Vld	:= '0';			
+			case r.RdCmdFsm is 
+
+				when Idle_s =>
+				
+					v.CmdRd_Rdy			:= '1';
+					v.RdLastAddr		:= unsigned(CmdRd_Addr) + unsigned(CmdRd_Size) - 1;
+					v.RdFirstAddrOffs	:= unsigned(CmdRd_Addr(v.RdFirstAddrOffs'range));
+					v.AxiRdCmd_Addr		:= std_logic_vector(AlignedAddr_f(unsigned(CmdRd_Addr)));
+					v.AxiRdCmd_LowLat	:= CmdRd_LowLat;
+					v.RdShift			:= unsigned(CmdRd_Addr(v.RdShift'range));
+					v.RdLowIdx			:= to_unsigned(AxiBytes_c, v.RdLowIdx'length) - unsigned(CmdRd_Addr(v.RdShift'range));
+					if CmdRd_Vld = '1' then
+						v.CmdRd_Rdy		:= '0';
+						v.RdCmdFsm		:= Apply_s;						
+					end if;
+					
+				when Apply_s =>		
+					-- AXI command can be sent early
+					if (AxiRdCmd_Rdy = '1') then
+						v.AxiRdCmd_Vld	:= '1';
+						v.RdCmdFsm		:= WaitDataFsm_s;		
+						v.RdStartTf	:= '1';
+						v.AxiRdCmd_Size	:= std_logic_vector(resize(shift_right(AlignedAddr_f(r.RdLastAddr) - unsigned(r.AxiRdCmd_Addr), log2(AxiBytes_c))+1, UserTransactionSizeBits_g));
+						-- Calculate byte enables for last byte
+						for byte in 0 to AxiBytes_c-1 loop
+							if r.RdLastAddr(log2(AxiBytes_c)-1 downto 0) >= byte then
+								v.RdLastBe(byte) := '1';
+							else
+								v.RdLastBe(byte) := '0';
+							end if;
+						end loop;
+						-- Calculate byte enables for first byte
+						for byte in 0 to AxiBytes_c-1 loop
+							if r.RdFirstAddrOffs <= byte then
+								v.RdFirstBe(byte) := '1';
+							else
+								v.RdFirstBe(byte) := '0';
+							end if;
+						end loop;						
+					end if;
+					
+				-- Start data FSM before sending next command to avoid owerwriting data before it was latched
+				when WaitDataFsm_s =>
+					v.RdStartTf	:= '1';
+					if r.RdDataFsm = Idle_s then
+						v.RdCmdFsm 	:= Idle_s;
+						v.CmdRd_Rdy	:= '1';	
+						v.RdStartTf	:= '0';
+					end if;
+				
+				
+				when others => null;
+			end case;
+			
+			-- *** Data FSM ***
+			v.RdDataEna	:= '0';
+			RdDatBe_v := (others => '1');
+			RdDataLast_v := '0';
+			case r.RdDataFsm is
+				
+				when Idle_s =>					
+					v.RdDatFirstBe	:= r.RdFirstBe;
+					v.RdDatLastBe	:= r.RdLastBe;
+					v.RdDataWords	:= unsigned(r.AxiRdCmd_Size);
+					v.RdCurrentWord	:= to_unsigned(1, v.RdCurrentWord'length);
+					v.RdAlignShift	:= r.RdShift;
+					v.RdAlignLowIdx	:= r.RdLowIdx;
+					if r.RdStartTf = '1' then
+						v.RdDataFsm 	:= Transfer_s;
+						v.RdDataEna 	:= '1';
+					end if;
+				
+				when Transfer_s =>
+					v.RdDataEna 	:= '1';
+					if r.RdCurrentWord = 1 then
+						RdDatBe_v 		:= RdDatBe_v and r.RdDatFirstBe;
+					end if;
+					if r.RdCurrentWord = r.RdDataWords then
+						RdDatBe_v		:= RdDatBe_v and r.RdDatLastBe;
+						RdDataLast_v	:= '1';
+					end if;
+					if (RdAlignReady_v = '1') and (AxiRdDat_Vld = '1') and (r.RdDataEna = '1') then
+						v.RdCurrentWord := r.RdCurrentWord + 1;
+						if r.RdCurrentWord = r.RdDataWords then
+							v.RdDataEna 	:= '0';
+							v.RdDataFsm		:= Wait_s;
+						end if;
+					end if;
+					
+				-- Wait until reception of all data is done
+				when Wait_s =>
+					if unsigned(r.RdAlignByteVld) = 0 then	
+						v.RdDataFsm		:= Idle_s;
+					end if;
+				
+				when others => null;
+			end case;
+			
+			-- *** Data Alignment ***
+			AxiRdDat_Rdy <= RdAlignReady_v;
+			RdFifo_Vld <= '0';
+			-- shift
+			if (RdFifo_Rdy = '1') and (RdAlignReady_v = '0' or AxiRdDat_Vld = '1' or r.RdAlignLast = '1') then
+				-- Shift is only done if data can be consumed (RdFifo_Rdy) and either no new data is required for the next shift (RdAlignReady_v = '0'),
+				-- .. the data is available (AxiRdDat_Vld = '1') or we are at the end of a transfer (r.RdAlignLast = '1')
+				v.RdAlignReg		:= ZerosVector(DataWidth_g) & r.RdAlignReg(r.RdAlignReg'left downto DataWidth_g);
+				v.RdAlignByteVld 	:= ZerosVector(DataBytes_c) & r.RdAlignByteVld(r.RdAlignByteVld'left downto DataBytes_c);
+				if r.RdAlignLast = '1' then
+					RdFifo_Vld <= ReduceOr(r.RdAlignByteVld(DataBytes_c-1 downto 0));
+				else
+					RdFifo_Vld <= ReduceAnd(r.RdAlignByteVld(DataBytes_c-1 downto 0));
+				end if;
+			end if;
+			-- get new data
+			if RdAlignReady_v = '1' and AxiRdDat_Vld = '1' then
+				v.RdAlignReg(RdLowIdxInt_v*8+AxiDataWidth_g-1 downto RdLowIdxInt_v*8)	:= AxiRdDat_Data;
+				v.RdAlignByteVld(RdLowIdxInt_v+AxiBytes_c-1 downto RdLowIdxInt_v)		:= RdDatBe_v;
+				v.RdAlignLast	:= RdDataLast_v;
+			end if;
+			
+			-- Send data to FIFO
+			RdFifo_Data <= r.RdAlignReg(DataWidth_g-1 downto 0);
+
+			
 		end if;
 		
 		
@@ -406,7 +594,13 @@ begin
 				end if;
 				-- *** Read Related Registers ***
 				if ImplRead_g then
-
+					r.RdCmdFsm			<= Idle_s;
+					r.CmdRd_Rdy			<= '0';
+					r.AxiRdCmd_Vld		<= '0';
+					r.RdDataFsm			<= Idle_s;
+					r.RdStartTf			<= '0';
+					r.RdDataEna			<= '0';
+					r.RdAlignByteVld	<= (others => '0');
 				end if;
 			end if;
 		end if;
@@ -416,7 +610,7 @@ begin
 	-- Outputs
 	------------------------------------------------------------------------------		
 	CmdWr_Rdy	<= r.CmdWr_Rdy;
-	CmdRd_Rdy	<= '0';
+	CmdRd_Rdy	<= r.CmdRd_Rdy;
 
 	
 	------------------------------------------------------------------------------
@@ -456,20 +650,20 @@ begin
 			CmdWr_Vld		=> r.AxiWrCmd_Vld,
 			CmdWr_Rdy		=> AxiWrCmd_Rdy,			
 			-- User Command Interface
-			CmdRd_Addr		=> (others => '0'), 	-- TODO
-			CmdRd_Size		=> (others => '0'), 	-- TODO
-			CmdRd_LowLat	=> '0',					-- TODO
-			CmdRd_Vld		=> '0',					-- TODO
-			CmdRd_Rdy		=> open,				-- TODO		
+			CmdRd_Addr		=> r.AxiRdCmd_Addr,
+			CmdRd_Size		=> r.AxiRdCmd_Size,
+			CmdRd_LowLat	=> r.AxiRdCmd_LowLat,
+			CmdRd_Vld		=> r.AxiRdCmd_Vld,
+			CmdRd_Rdy		=> AxiRdCmd_Rdy,		
 			-- Write Data
 			WrDat_Data		=> AxiWrDat_Data,
 			WrDat_Be		=> AxiWrDat_Be,
 			WrDat_Vld		=> r.WrAlignVld,
 			WrDat_Rdy		=> AxiWrDat_Rdy,
 			-- Read Data
-			RdDat_Data		=> open,				-- TODO
-			RdDat_Vld		=> open,				-- TODO
-			RdDat_Rdy		=> '0',					-- TODO
+			RdDat_Data		=> AxiRdDat_Data,
+			RdDat_Vld		=> AxiRdDat_Vld,
+			RdDat_Rdy		=> AxiRdDat_Rdy,
 			-- Response
 			Wr_Done			=> Wr_Done,
 			Wr_Error		=> Wr_Error,
@@ -565,25 +759,32 @@ begin
 	end generate;
 
 	
-	-- Read Data FIFO
-	fifo_rd_data : entity work.psi_common_sync_fifo
-	generic map (
-		Width_g			=> DataWidth_g,
-		Depth_g			=> DataFifoDepth_g,
-		AlmFullOn_g		=> false,
-		AlmEmptyOn_g	=> false,
-		RamStyle_g		=> "auto",
-		RamBehavior_g	=> RamBehavior_g
-	)
-	port map (
-		Clk		=> M_Axi_Aclk,
-		Rst		=> Rst,
-		InData	=> (others => '0'),		-- TODO
-		InVld	=> '0',					-- TODO
-		InRdy	=> open,				-- TODO
-		OutData	=> RdDat_Data,
-		OutVld	=> RdDat_Vld,
-		OutRdy	=> RdDat_Rdy
-	);
+	-- *** Read Releated Code ***
+	g_read : if ImplRead_g generate			
+		-- Read Data FIFO
+		fifo_rd_data : entity work.psi_common_sync_fifo
+		generic map (
+			Width_g			=> DataWidth_g,
+			Depth_g			=> DataFifoDepth_g,
+			AlmFullOn_g		=> false,
+			AlmEmptyOn_g	=> false,
+			RamStyle_g		=> "auto",
+			RamBehavior_g	=> RamBehavior_g
+		)
+		port map (
+			Clk		=> M_Axi_Aclk,
+			Rst		=> Rst,
+			InData	=> RdFifo_Data,
+			InVld	=> RdFifo_Vld,
+			InRdy	=> RdFifo_Rdy,
+			OutData	=> RdDat_Data,
+			OutVld	=> RdDat_Vld,
+			OutRdy	=> RdDat_Rdy
+		);
+	end generate;
+	g_nread : if not ImplRead_g generate
+		RdDat_Vld 	<= '0';
+		RdDat_Data	<= (others => '0');
+	end generate;	
  
 end rtl;

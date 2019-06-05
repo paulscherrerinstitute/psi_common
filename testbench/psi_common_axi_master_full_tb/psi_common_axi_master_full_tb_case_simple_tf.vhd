@@ -105,13 +105,13 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 		
 		print("*** Tet Group 1: Simple Transfer ***");
 		------------------------------------------------------------------
-		-- High Latency Writes
+		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** 1-8 bytes, shifted by 0-3 ***
-			DbgPrint(DebugPrints, ">> 1-8 bytes, shifted by 0-3");
+			-- *** Write 1-8 bytes, shifted by 0-7 ***
+			DbgPrint(DebugPrints, ">> Write 1-8 bytes, shifted by 0-7");
 			for size in 1 to 8 loop
-				for offs in 0 to 3 loop
+				for offs in 0 to 7 loop
 					TestCase_v := TestCase_v + 1;
 					-- Debug helper string
 					-- print("Addr=" & hstr(to_unsigned(16#02000000#+offs, 32)) & ", size=" & str(size));
@@ -121,7 +121,25 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 			end loop;
 			wait for DelayBetweenTests;					
 		end if;
+		wait for 10 us;
 
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------		
+		if Generics_c.ImplRead_g then
+			-- *** Read 1-8 bytes, shifted by 0-7 ***
+			DbgPrint(DebugPrints, ">> Read 1-8 bytes, shifted by 0-7");
+			for size in 1 to 8 loop
+				for offs in 0 to 7 loop
+					TestCase_v := TestCase_v + 1;
+					-- Debug helper string
+					-- print("Addr=" & hstr(to_unsigned(16#02000000#+offs, 32)) & ", size=" & str(size));
+					ApplyCommand(16#02000000#+offs, size, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+					wait for DelayBetweenTests;
+				end loop;
+			end loop;
+			wait for DelayBetweenTests;					
+		end if;
 		
 	end procedure;
 	
@@ -137,18 +155,32 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 		variable LastCase_v : integer := -1;
 	begin
 		------------------------------------------------------------------
-		-- High Latency Writes
+		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** 1-8 bytes, shifted by 0-3  ***
+			-- *** Write 1-8 bytes, shifted by 0-7  ***
 			for size in 1 to 8 loop
-				for offs in 0 to 3 loop
+				for offs in 0 to 7 loop
 					WaitCase(LastCase_v+1, Clk);
 					LastCase_v := TestCase_v;
 					ApplyWrData(16#10#, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk);
 				end loop;
 			end loop;			
 		end if;
+		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** Read 1-8 bytes, shifted by 0-7  ***
+			for size in 1 to 8 loop
+				for offs in 0 to 7 loop
+					WaitCase(LastCase_v+1, Clk);
+					LastCase_v := TestCase_v;					
+					CheckRdData(16#10#, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);
+				end loop;
+			end loop;			
+		end if;		
 	end procedure;
 	
 	procedure user_resp (
@@ -161,18 +193,33 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 		variable LastCase_v : integer := -1;
 	begin
 		------------------------------------------------------------------
-		-- High Latency Writes
+		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** 1-8 bytes, shifted by 0-3  ***	
+			-- *** Write 1-8 bytes, shifted by 0-7  ***	
 			for size in 1 to 8 loop
-				for offs in 0 to 3 loop
+				for offs in 0 to 7 loop
 					WaitCase(LastCase_v+1, Clk);
 					LastCase_v := TestCase_v;
 					WaitForCompletion(true, DelayBetweenTests + 1 us, Wr_Done, Wr_Error, Clk);	
 				end loop;
 			end loop;
 		end if;
+		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** Read 1-8 bytes, shifted by 0-7  ***	
+			for size in 1 to 8 loop
+				for offs in 0 to 7 loop
+					WaitCase(LastCase_v+1, Clk);
+					LastCase_v := TestCase_v;
+					WaitForCompletion(true, DelayBetweenTests + 1 us, Rd_Done, Rd_Error, Clk);	
+				end loop;
+			end loop;
+		end if;	
+		
 	end procedure;
 	
 	procedure axi (
@@ -185,18 +232,32 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 		axi_slave_init(axi_sm);
 		
 		------------------------------------------------------------------
-		-- High Latency Writes
+		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
-			-- *** 1-8 bytes, shifted by 0-3 ***
+			-- *** Write 1-8 bytes, shifted by 0-7 ***
 			for size in 1 to 8 loop
-				for offs in 0 to 3 loop	
+				for offs in 0 to 7 loop	
 					WaitCase(LastCase_v+1, Clk);
 					LastCase_v := TestCase_v;
 					CheckAxiWrite(16#02000000#+offs, 16#10#, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
 				end loop;
 			end loop;
 		end if;
+		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** Read 1-8 bytes, shifted by 0-7 ***
+			for size in 1 to 8 loop
+				for offs in 0 to 7 loop	
+					WaitCase(LastCase_v+1, Clk);
+					LastCase_v := TestCase_v;
+					DoAxiRead(16#02000000#+offs, 16#10#, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+				end loop;
+			end loop;
+		end if;		
 	end procedure;
 	
 end;

@@ -69,7 +69,7 @@ package psi_common_axi_master_full_tb_case_user_hs is
 	shared variable TestCase_v 	: integer := -1;
 	shared variable AllDone_v	: integer := -1;
 	constant DebugPrints 		: boolean := false;	
-	constant DelayBetweenTests 	: time := 1 us;	-- Minimum is 0.2 us (because of test implementation...)			
+	constant DelayBetweenTests 	: time := 0 us;		
 		
 end package;
 
@@ -139,6 +139,33 @@ package body psi_common_axi_master_full_tb_case_user_hs is
 			WaitDone(1, Clk);
 			wait for DelayBetweenTests;				
 		end if;		
+		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** Lo Latency read with delay ***
+			DbgPrint(DebugPrints, ">> Lo Latency read with delay ");
+			TestCase_v := 2;
+			for size in 40 to 44 loop
+				for offs in 0 to 3 loop
+					ApplyCommand(16#02000000#+offs, size, true, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+				end loop;
+			end loop;
+			WaitDone(2, Clk);
+			wait for DelayBetweenTests;	
+
+			-- *** Hi Latency read with delay ***
+			DbgPrint(DebugPrints, ">> Hi Latency read with delay ");
+			TestCase_v := 3;
+			for size in 40 to 44 loop
+				for offs in 0 to 3 loop
+					ApplyCommand(16#02000000#+offs, size, true, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+				end loop;
+			end loop;
+			WaitDone(3, Clk);
+			wait for DelayBetweenTests;				
+		end if;		
 	end procedure;
 	
 	procedure user_data (
@@ -159,7 +186,7 @@ package body psi_common_axi_master_full_tb_case_user_hs is
 			WaitCase(0, Clk);
 			for size in 20 to 24 loop
 				for offs in 0 to 3 loop
-					ApplyWrData(16#10#, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk, 100 ns);
+					ApplyWrData(16#10#+offs*16, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk, 100 ns);
 				end loop;
 			end loop;	
 
@@ -167,10 +194,31 @@ package body psi_common_axi_master_full_tb_case_user_hs is
 			WaitCase(1, Clk);
 			for size in 20 to 24 loop
 				for offs in 0 to 3 loop
-					ApplyWrData(16#10#, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk, 100 ns);
+					ApplyWrData(16#10#+offs*16, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk, 100 ns);
 				end loop;
 			end loop;				
 		end if;
+		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** Lo Latency read with delay ***
+			WaitCase(2, Clk);
+			for size in 40 to 44 loop
+				for offs in 0 to 3 loop				
+					CheckRdData(16#10#+offs*16, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 100 ns);
+				end loop;
+			end loop;	
+
+			-- *** Hi Latency read with delay ***
+			WaitCase(3, Clk);
+			for size in 40 to 44 loop
+				for offs in 0 to 3 loop
+					CheckRdData(16#10#+offs*16, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 100 ns);
+				end loop;
+			end loop;				
+		end if;		
 	end procedure;
 	
 	procedure user_resp (
@@ -203,6 +251,29 @@ package body psi_common_axi_master_full_tb_case_user_hs is
 			end loop;
 			AllDone_v := 1;					
 		end if;
+		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** Lo Latency read with delay ***
+			WaitCase(2, Clk);
+			for size in 40 to 44 loop
+				for offs in 0 to 3 loop
+					WaitForCompletion(true, DelayBetweenTests + 50 us, Rd_Done, Rd_Error, Clk);	
+				end loop;
+			end loop;
+			AllDone_v := 2;
+			
+			-- *** Hi Latency read with delay ***
+			WaitCase(3, Clk);
+			for size in 40 to 44 loop
+				for offs in 0 to 3 loop
+					WaitForCompletion(true, DelayBetweenTests + 50 us, Rd_Done, Rd_Error, Clk);	
+				end loop;
+			end loop;
+			AllDone_v := 3;					
+		end if;		
 	end procedure;
 	
 	procedure axi (
@@ -220,7 +291,7 @@ package body psi_common_axi_master_full_tb_case_user_hs is
 			for size in 20 to 24 loop	
 				-- Execute transfer
 				for offs in 0 to 3 loop	
-					CheckAxiWrite(16#02000000#+offs, 16#10#, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+					CheckAxiWrite(16#02000000#+offs, 16#10#+offs*16, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
 				end loop;
 			end loop;
 			
@@ -229,10 +300,33 @@ package body psi_common_axi_master_full_tb_case_user_hs is
 			for size in 20 to 24 loop
 				-- Execute transfer
 				for offs in 0 to 3 loop	
-					CheckAxiWrite(16#02000000#+offs, 16#10#, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+					CheckAxiWrite(16#02000000#+offs, 16#10#+offs*16, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
 				end loop;
 			end loop;	
 		end if;
+		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** Lo Latency read with delay ***
+			WaitCase(2, Clk);
+			for size in 40 to 44 loop	
+				-- Execute transfer
+				for offs in 0 to 3 loop	
+					DoAxiRead(16#02000000#+offs, 16#10#+offs*16, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+				end loop;
+			end loop;
+			
+			-- *** Hi Latency read with delay ***
+			WaitCase(3, Clk);
+			for size in 40 to 44 loop
+				-- Execute transfer
+				for offs in 0 to 3 loop
+					DoAxiRead(16#02000000#+offs, 16#10#+offs*16, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
+				end loop;
+			end loop;	
+		end if;		
 	end procedure;
 	
 end;

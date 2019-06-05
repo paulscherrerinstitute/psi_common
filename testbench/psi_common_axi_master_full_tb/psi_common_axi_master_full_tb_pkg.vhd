@@ -97,7 +97,16 @@ package psi_common_axi_master_full_tb_pkg is
 					signal	WrDat_Vld	: out	std_logic;
 					signal	WrDat_Rdy	: in	std_logic;
 					signal	Clk			: in	std_logic;
-							VldDelay	: in	time	:= 0 ns);		
+							VldDelay	: in	time	:= 0 ns);	
+
+	procedure CheckRdData(	DataStart	: in 	integer;
+							NrBytes		: in	integer;
+					signal	RdDat_Data	: in	std_logic_vector;
+					signal	RdDat_Vld	: in	std_logic;
+					signal	RdDat_Rdy	: out	std_logic;
+					signal	Clk			: in	std_logic;
+							RdyDelay	: in	time	:= 0 ns;
+							msg			: in	string  := "");							
 
 	procedure CheckAxiWrite(		Addr		: in	integer;
 									DataStart	: in	integer;
@@ -107,7 +116,17 @@ package psi_common_axi_master_full_tb_pkg is
 							signal 	axi_sm 		: out 	axi_sm_t;
 							signal 	Clk 		: in 	std_logic;
 									AwRdyDelay	: in	time	:= 0 ns;
-									WRdyDelay	: in	time	:= 0 ns);					
+									WRdyDelay	: in	time	:= 0 ns);		
+
+	procedure DoAxiRead(		Addr		: in	integer;
+								DataStart	: in	integer;
+								NrBytes		: in	integer;
+								Resp		: in	std_logic_vector;
+						signal 	axi_ms 		: in 	axi_ms_t;
+						signal 	axi_sm 		: out 	axi_sm_t;
+						signal 	Clk 		: in 	std_logic;
+								ArRdyDelay	: in	time	:= 0 ns;
+								RVldDelay	: in	time	:= 0 ns);									
 	
 	
 end package;
@@ -211,6 +230,41 @@ package body psi_common_axi_master_full_tb_pkg is
 		WrDat_Vld <= '0';
 	end procedure;
 	
+	procedure CheckRdData(	DataStart	: in 	integer;
+							NrBytes		: in	integer;
+					signal	RdDat_Data	: in	std_logic_vector;
+					signal	RdDat_Vld	: in	std_logic;
+					signal	RdDat_Rdy	: out	std_logic;
+					signal	Clk			: in	std_logic;
+							RdyDelay	: in	time	:= 0 ns;
+							msg			: in	string  := "") is
+		constant DataWidth_c 	: integer := RdDat_Data'length;
+		variable BitsDone_v		: integer := 0;
+		variable Data_v			: integer := DataStart;
+	begin
+		assert DataWidth_c = 16 or DataWidth_c = 32 report "###ERROR###: CheckRdData() only works for 16 or 32 bits data width {" & msg & "}" severity error;
+		RdDat_Rdy <= '0';
+		while BitsDone_v < NrBytes*8 loop
+			if RdyDelay > 0 ns then
+				RdDat_Rdy <= '0';
+				wait for RdyDelay;
+				wait until rising_edge(Clk);
+				RdDat_Rdy <= '1';
+			else
+				RdDat_Rdy <= '1';
+			end if;
+			wait until rising_edge(Clk) and RdDat_Vld = '1';
+			for byte in 0 to DataWidth_c/8-1 loop
+				if BitsDone_v < NrBytes*8 then
+					StdlvCompareInt (Data_v, RdDat_Data((byte+1)*8-1 downto byte*8), "Wrong read data byte " & str(BitsDone_v/8) &" {" & msg & "}" , false);
+					Data_v := (Data_v + 1) mod 256;
+					BitsDone_v := BitsDone_v + 8;
+				end if;
+			end loop;
+		end loop;
+		RdDat_Rdy <= '0';
+	end procedure;	
+	
 	procedure CheckAxiWrite(		Addr		: in	integer;
 									DataStart	: in	integer;
 									NrBytes		: in	integer;
@@ -292,4 +346,75 @@ package body psi_common_axi_master_full_tb_pkg is
 		-- Apply BRESP
 		axi_apply_bresp(Resp, axi_ms, axi_sm, Clk);
 	end procedure;
+	
+	procedure DoAxiRead(		Addr		: in	integer;
+								DataStart	: in	integer;
+								NrBytes		: in	integer;
+								Resp		: in	std_logic_vector;
+						signal 	axi_ms 		: in 	axi_ms_t;
+						signal 	axi_sm 		: out 	axi_sm_t;
+						signal 	Clk 		: in 	std_logic;
+								ArRdyDelay	: in	time	:= 0 ns;
+								RVldDelay	: in	time	:= 0 ns) is	
+		constant AxiBytes_c 	: integer	:= axi_ms.wdata'length/8;
+		constant LastAddr_c		: integer	:= Addr+NrBytes-1;
+		constant WordAddr_c		: integer	:= Addr/4*4;
+		constant Beats_c		: integer	:= (LastAddr_c-WordAddr_c)/AxiBytes_c+1; 
+		variable Data_v			: integer 	:= DataStart;
+		variable BytesDone_v	: integer	:= 0;
+		constant AddrOffs		: integer	:= Addr mod 4;
+		
+	begin
+		-- Check AW
+		if ArRdyDelay > 0 ns then
+			wait for ArRdyDelay;
+			wait until rising_edge(Clk);
+		end if;
+		axi_expect_ar(	WordAddr_c, AxSize(AxiBytes_c*8), Beats_c-1, xBURST_INCR_c, axi_ms, axi_sm, Clk);
+		-- Apply R
+		for beat in 1 to Beats_c loop	
+			-- Wait until valid is asserted
+			if RVldDelay > 0 ns then
+				axi_sm.rvalid <= '0';
+				wait for RVldDelay;
+				wait until rising_edge(Clk);
+				axi_sm.rvalid <= '1';
+			else
+				axi_sm.rvalid <= '1';
+			end if;
+			-- last transfer
+			if beat = Beats_c then
+				axi_sm.rlast <= '1';
+				axi_sm.rresp <= Resp;
+			else
+				axi_sm.rlast <= '0';
+				axi_sm.rresp <= "00";
+			end if;
+			-- Apply First Beat
+			if beat = 1 then
+				axi_sm.rdata <= (others => '0');
+				-- used bytes
+				for byte in AddrOffs to 3 loop
+					if BytesDone_v < NrBytes then
+						axi_sm.rdata((byte+1)*8-1 downto byte*8) <= std_logic_vector(to_unsigned(Data_v, 8));
+						Data_v := (Data_v + 1) mod 256;
+						BytesDone_v := BytesDone_v + 1;
+					end if;
+				end loop;
+			-- Apply other beats
+			else
+				axi_sm.rdata <= (others => '0');
+				for byte in 0 to 3 loop
+					if BytesDone_v < NrBytes then
+						axi_sm.rdata((byte+1)*8-1 downto byte*8) <= std_logic_vector(to_unsigned(Data_v, 8));
+						Data_v := (Data_v + 1) mod 256;
+						BytesDone_v := BytesDone_v + 1;	
+					end if;
+				end loop;
+			end if;
+			-- de-assert valid
+			wait until rising_edge(Clk) and axi_ms.rready = '1';
+		end loop;
+		axi_sm.rvalid <= '0';	
+	end procedure;	
 end;

@@ -69,7 +69,7 @@ package psi_common_axi_master_full_tb_case_axi_hs is
 	shared variable TestCase_v 	: integer := -1;
 	shared variable AllDone_v	: integer := -1;
 	constant DebugPrints 		: boolean := false;	
-	constant DelayBetweenTests 	: time := 1 us;	-- Minimum is 0.2 us (because of test implementation...)	
+	constant DelayBetweenTests 	: time := 0 us;	
 		
 end package;
 
@@ -113,11 +113,11 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 		
 		print("*** Tet Group 2: Axi Handshaking ***");
 		------------------------------------------------------------------
-		-- High Latency Writes
+		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
 			-- *** No Delay ***
-			DbgPrint(DebugPrints, ">> No Delay");
+			DbgPrint(DebugPrints, ">> Write No Delay");
 			TestCase_v := 0;
 			for size in 1 to 4 loop
 				for offs in 0 to 3 loop
@@ -128,7 +128,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 			wait for DelayBetweenTests;	
 
 			-- *** AW Delay only ***
-			DbgPrint(DebugPrints, ">> AW Delay only");
+			DbgPrint(DebugPrints, ">> Write AW Delay only");
 			TestCase_v := 1;
 			for size in 1 to 4 loop
 				for offs in 0 to 3 loop
@@ -139,7 +139,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 			wait for DelayBetweenTests;		
 
 			-- *** W Delay only ***	
-			DbgPrint(DebugPrints, ">> W Delay only");
+			DbgPrint(DebugPrints, ">> Write W Delay only");
 			TestCase_v := 2;
 			for size in 1 to 4 loop
 				for offs in 0 to 3 loop
@@ -150,7 +150,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 			wait for DelayBetweenTests;		
 
 			-- *** AW and W Delay ***	
-			DbgPrint(DebugPrints, ">> AW and W Delay");
+			DbgPrint(DebugPrints, ">> Write AW and W Delay");
 			TestCase_v := 3;
 			for size in 1 to 4 loop
 				for offs in 0 to 3 loop
@@ -160,6 +160,55 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 			WaitDone(3, Clk);
 			wait for DelayBetweenTests;				
 		end if;
+		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** No Delay ***
+			DbgPrint(DebugPrints, ">> Read No Delay");
+			TestCase_v := 4;
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					ApplyCommand(16#02000000#+offs, size, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+				end loop;
+			end loop;
+			WaitDone(4, Clk);
+			wait for DelayBetweenTests;	
+
+			-- *** AR Delay only ***
+			DbgPrint(DebugPrints, ">> Read AR Delay only");
+			TestCase_v := 5;
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					ApplyCommand(16#02000000#+offs, size, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);					
+				end loop;
+			end loop;
+			WaitDone(5, Clk);
+			wait for DelayBetweenTests;		
+
+			-- *** R Delay only ***	
+			DbgPrint(DebugPrints, ">> Read R Delay only");
+			TestCase_v := 6;
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					ApplyCommand(16#02000000#+offs, size, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);				
+				end loop;
+			end loop;
+			WaitDone(6, Clk);
+			wait for DelayBetweenTests;		
+
+			-- *** AR and R Delay ***	
+			DbgPrint(DebugPrints, ">> Read AR and R Delay");
+			TestCase_v := 7;
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					ApplyCommand(16#02000000#+offs, size, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);					
+				end loop;
+			end loop;
+			WaitDone(7, Clk);
+			wait for DelayBetweenTests;				
+		end if;		
 	end procedure;
 	
 	procedure user_data (
@@ -173,7 +222,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 		constant Generics_c : Generics_t) is
 	begin
 		------------------------------------------------------------------
-		-- High Latency Writes
+		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
 			-- *** No Delay  ***
@@ -208,6 +257,43 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 				end loop;
 			end loop;				
 		end if;
+		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** No Delay  ***
+			WaitCase(4, Clk);
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					CheckRdData(16#10#+offs*16, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 0 ns, "No Delay s=" & str(size) & ", o=" & str(offs));
+				end loop;
+			end loop;	
+
+			-- *** AR Delay only ***
+			WaitCase(5, Clk);
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					CheckRdData(16#10#+offs*16, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 0 ns, "AR Delay only s=" & str(size) & ", o=" & str(offs));
+				end loop;
+			end loop;	
+
+			-- *** R Delay only ***	
+			WaitCase(6, Clk);
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					CheckRdData(16#10#+offs*16, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 0 ns, "R Delay only s=" & str(size) & ", o=" & str(offs));
+				end loop;
+			end loop;	
+
+			-- *** AR and R Delay ***	
+			WaitCase(7, Clk);
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					CheckRdData(16#10#+offs*16, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 0 ns, "AR and R Delay s=" & str(size) & ", o=" & str(offs));
+				end loop;
+			end loop;				
+		end if;		
 	end procedure;
 	
 	procedure user_resp (
@@ -219,7 +305,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 		constant Generics_c : Generics_t) is
 	begin
 		------------------------------------------------------------------
-		-- High Latency Writes
+		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
 			-- *** No Delay  ***	
@@ -258,6 +344,47 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 			end loop;		
 			AllDone_v := 3;			
 		end if;
+		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** No Delay  ***	
+			WaitCase(4, Clk);
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					WaitForCompletion(true, DelayBetweenTests + 50 us, Rd_Done, Rd_Error, Clk);	
+				end loop;
+			end loop;
+			AllDone_v := 4;
+			
+			-- *** AR Delay only ***
+			WaitCase(5, Clk);
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					WaitForCompletion(true, DelayBetweenTests + 50 us, Rd_Done, Rd_Error, Clk);	
+				end loop;
+			end loop;
+			AllDone_v := 5;			
+
+			-- *** R Delay only ***	
+			WaitCase(6, Clk);
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					WaitForCompletion(true, DelayBetweenTests + 50 us, Rd_Done, Rd_Error, Clk);	
+				end loop;
+			end loop;		
+			AllDone_v := 6;
+			
+			-- *** AR and R Delay ***	
+			WaitCase(7, Clk);
+			for size in 1 to 4 loop
+				for offs in 0 to 3 loop
+					WaitForCompletion(true, DelayBetweenTests + 50 us, Rd_Done, Rd_Error, Clk);	
+				end loop;
+			end loop;		
+			AllDone_v := 7;			
+		end if;		
 	end procedure;
 	
 	procedure axi (
@@ -266,9 +393,10 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 		signal axi_sm : out axi_sm_t;
 		constant Generics_c : Generics_t) is
 		variable AwDelay, WDelay : time := 0 ns;
+		variable ArDelay, RDelay : time := 0 ns;
 	begin
 		------------------------------------------------------------------
-		-- High Latency Writes
+		-- Writes
 		------------------------------------------------------------------	
 		if Generics_c.ImplWrite_g then
 			-- *** No Delay ***
@@ -315,6 +443,55 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 				end loop;
 			end loop;			
 		end if;
+		
+		------------------------------------------------------------------
+		-- Reads
+		------------------------------------------------------------------	
+		if Generics_c.ImplRead_g then
+			-- *** No Delay ***
+			WaitCase(4, Clk);
+			for size in 1 to 4 loop
+				ArDelay := 0 ns;
+				RDelay := 0 ns;		
+				-- Execute transfer
+				for offs in 0 to 3 loop	
+					DoAxiRead(16#02000000#+offs, 16#10#+offs*16, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk, ArDelay, RDelay);
+				end loop;
+			end loop;
+			
+			-- *** AW Delay only ***
+			WaitCase(5, Clk);
+			for size in 1 to 4 loop
+				ArDelay := 1000 ns;
+				RDelay := 0 ns;		
+				-- Execute transfer
+				for offs in 0 to 3 loop	
+					DoAxiRead(16#02000000#+offs, 16#10#+offs*16, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk, ArDelay, RDelay);
+				end loop;
+			end loop;	
+
+			-- *** W Delay only ***	
+			WaitCase(6, Clk);
+			for size in 1 to 4 loop
+				ArDelay := 0 ns;
+				RDelay := 1000 ns;		
+				-- Execute transfer
+				for offs in 0 to 3 loop	
+					DoAxiRead(16#02000000#+offs, 16#10#+offs*16, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk, ArDelay, RDelay);
+				end loop;
+			end loop;	
+
+			-- *** AW and W Delay ***	
+			WaitCase(7, Clk);
+			for size in 1 to 4 loop
+				ArDelay := 0 ns;
+				RDelay := 1000 ns;		
+				-- Execute transfer
+				for offs in 0 to 3 loop	
+					DoAxiRead(16#02000000#+offs, 16#10#+offs*16, size, xRESP_OKAY_c, axi_ms, axi_sm, Clk, ArDelay, RDelay);
+				end loop;
+			end loop;			
+		end if;		
 	end procedure;
 	
 end;

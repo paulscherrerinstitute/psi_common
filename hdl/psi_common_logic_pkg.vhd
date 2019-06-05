@@ -50,6 +50,12 @@ package psi_common_logic_pkg is
 					
 	function IntToStdLogic(	int 	: in	integer)
 							return std_logic;
+							
+	function ReduceOr(	vec : in std_logic_vector)
+						return std_logic;
+						
+	function ReduceAnd(	vec : in std_logic_vector)
+						return std_logic;						
 
 end psi_common_logic_pkg;	 
 
@@ -163,6 +169,28 @@ package body psi_common_logic_pkg is
 		else
 			return 'X';
 		end if;
+	end function;
+	
+	function ReduceOr(	vec : in std_logic_vector)
+						return std_logic is
+		variable tmp : std_logic;
+	begin
+		tmp := '0';
+		for i in 0 to vec'high loop
+			tmp := tmp or vec(i);
+		end loop;
+		return tmp;
+	end function;
+		
+	function ReduceAnd(	vec : in std_logic_vector)
+						return std_logic is
+		variable tmp : std_logic;
+	begin
+		tmp := '1';
+		for i in 0 to vec'high loop
+			tmp := tmp and vec(i);
+		end loop;
+		return tmp;
 	end function;
 	
 end psi_common_logic_pkg;

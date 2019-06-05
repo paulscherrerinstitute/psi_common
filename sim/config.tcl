@@ -237,8 +237,10 @@ add_tb_run
 
 create_tb_run "psi_common_axi_master_full_tb"
 tb_run_add_arguments \
-	"-gDataWidth_g=16" \
-	"-gDataWidth_g=32"
+	"-gDataWidth_g=16 -gImplRead_g=true -gImplWrite_g=true" \
+	"-gDataWidth_g=32 -gImplRead_g=true -gImplWrite_g=true" \
+   "-gDataWidth_g=16 -gImplRead_g=false -gImplWrite_g=true" \
+   "-gDataWidth_g=16 -gImplRead_g=true -gImplWrite_g=false"
 add_tb_run
 
 
