@@ -37,6 +37,7 @@ package psi_common_axi_master_full_tb_pkg is
 	------------------------------------------------------------
 	constant AxiAddrWidth_g : natural := 32;
 	constant DataFifoDepth_g : natural := 10;
+	constant AxiFifoDepth_g : natural := 32;
 	constant UserTransactionSizeBits_g : natural := 10;
 	constant RamBehavior_g : string := "RBW";
 	constant AxiMaxOpenTrasactions_g : natural := 3;

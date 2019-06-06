@@ -41,6 +41,7 @@ entity psi_common_axi_master_full is
 		AxiMaxOpenTrasactions_g		: natural range 1 to 8		:= 8;			-- $$ constant=3 $$
 		UserTransactionSizeBits_g	: natural					:= 32;			-- $$ constant=10 $$
 		DataFifoDepth_g				: natural					:= 1024;		-- $$ constant=10 $$
+		AxiFifoDepth_g				: natural					:= 512;			-- $$ constant=32 $$
 		DataWidth_g					: natural					:= 32;			-- $$ constant=16 $$
 		ImplRead_g					: boolean					:= true;		-- $$ export=true $$
 		ImplWrite_g					: boolean					:= true;		-- $$ export=true $$
@@ -633,7 +634,7 @@ begin
 			AxiMaxBeats_g				=> AxiMaxBeats_g,
 			AxiMaxOpenTrasactions_g		=> AxiMaxOpenTrasactions_g,
 			UserTransactionSizeBits_g	=> UserTransactionSizeBits_g,
-			DataFifoDepth_g				=> AxiMaxBeats_g*2,
+			DataFifoDepth_g				=> AxiFifoDepth_g,
 			ImplRead_g					=> ImplRead_g,
 			ImplWrite_g					=> ImplWrite_g,
 			RamBehavior_g				=> RamBehavior_g

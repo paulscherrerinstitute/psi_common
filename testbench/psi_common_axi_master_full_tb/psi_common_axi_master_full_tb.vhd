@@ -52,6 +52,7 @@ architecture sim of psi_common_axi_master_full_tb is
 	-- *** Fixed Generics ***
 	constant AxiAddrWidth_g : natural := 32;
 	constant AxiMaxBeats_g : natural := 16;
+	constant AxiFifoDepth_g : natural := 32;
 	constant AxiMaxOpenTrasactions_g : natural := 3;
 	constant UserTransactionSizeBits_g : natural := 10;
 	constant DataFifoDepth_g : natural := 10;
@@ -122,6 +123,7 @@ begin
 			AxiMaxOpenTrasactions_g => AxiMaxOpenTrasactions_g,
 			UserTransactionSizeBits_g => UserTransactionSizeBits_g,
 			DataFifoDepth_g => DataFifoDepth_g,
+			AxiFifoDepth_g => AxiFifoDepth_g,
 			DataWidth_g => DataWidth_g,
 			RamBehavior_g => RamBehavior_g
 		)
