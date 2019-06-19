@@ -1,3 +1,11 @@
+## 2.4.0
+* Added Features
+  * Added integer to std\_logic converstion to *psi\_common\_logic\_pkg* 
+  * Added Last handling to *psi\_common\_wconv\_...* entities
+  * Added full AXI master (incl. unaligned transfers) *psi\_common\_axi\_master\_full*
+* Bugfixes 
+  * Made All Testbenches compatible with GHDL
+
 ## 2.3.0
 * Added Features
   * Added generator scripts for wrappers to ease usage of *psi\_common\_par\_tdm*, *psi\_common\_tdm\_par*, *psi\_common\_simple\_cc* and *psi\_common\_status\_cc*
