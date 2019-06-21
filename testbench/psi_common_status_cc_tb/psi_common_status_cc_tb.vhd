@@ -10,6 +10,7 @@
 library ieee;
 	use ieee.std_logic_1164.all;
 	use ieee.numeric_std.all;
+	use ieee.math_real.all;
 	
 library work;
 	use work.psi_tb_txt_util.all;
@@ -38,7 +39,7 @@ architecture sim of psi_common_status_cc_tb is
 	constant 	ClockBFrequency_c	: real 		:= ClockAFrequency_c*ClockRatio_c;
 	constant	ClockBPeriod_c		: time		:= (1 sec)/ClockBFrequency_c;	
 	signal 		TbRunning			: boolean 	:= True;
-	constant 	SlowerClockPeriod_c	: time		:= maximum(ClockAPeriod_c, ClockBPeriod_c);
+	constant 	SlowerClockPeriod_c	: time		:= (1 sec)/realmin(ClockAFrequency_c, ClockBFrequency_c);
 
 	
 

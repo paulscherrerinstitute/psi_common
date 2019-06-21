@@ -20,6 +20,8 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 use work.psi_common_math_pkg.all;
+use work.psi_tb_txt_util.all;
+
 ------------------------------------------------------------
 -- Entity Declaration
 ------------------------------------------------------------

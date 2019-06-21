@@ -125,8 +125,8 @@ begin
 			-- Period must match to +/- one clock cycle
 			assert abs(period-periodExp) < clockPeriod 
 				report "###ERROR###: Received wrong clock period " & 
-					to_string(period, ns) & " instead of " & to_string(periodExp, ns) & 
-					" +/- " & to_string(clockPeriod, ns) 
+					to_string(period / 1 ns) & " ns instead of " & to_string(periodExp / 1 ns) & " ns" & 
+					" +/- " & to_string(clockPeriod / 1ns) & " ns" 
 				severity error; 
 			
 		end loop;
@@ -149,8 +149,8 @@ begin
 		last_edge := now;			
 		assert abs(period-periodExp) < clockPeriod 
 			report "###ERROR###: Received wrong clock period " & 
-				to_string(period, ns) & " instead of " & to_string(periodExp, ns) & 
-				" +/- " & to_string(clockPeriod, ns) 
+				to_string(period / 1 ns) & " ns instead of " & to_string(periodExp / 1 ns) & " ns" & 
+				" +/- " & to_string(clockPeriod / 1ns) & " ns" 			
 			severity error; 
 
 
@@ -171,8 +171,8 @@ begin
 		last_edge := now;			
 		assert abs(period-periodExp) < clockPeriod 
 			report "###ERROR###: Received wrong clock period " & 
-				to_string(period, ns) & " instead of " & to_string(periodExp, ns) & 
-				" +/- " & to_string(clockPeriod, ns) 
+				to_string(period / 1 ns) & " ns instead of " & to_string(periodExp / 1 ns) & " ns" & 
+				" +/- " & to_string(clockPeriod / 1ns) & " ns" 			
 			severity error; 				
 		
 		-- end of process !DO NOT EDIT!

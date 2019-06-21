@@ -122,7 +122,7 @@ tb_run_add_arguments \
 	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32 -gRdyRstState_g=1" \
 	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32 -gRdyRstState_g=0" \
 	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=RBW" \
-	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=WBR" \	
+	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=WBR"
 add_tb_run
 
 create_tb_run "psi_common_async_fifo_tb"
@@ -229,6 +229,8 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_axi_master_simple_tb"
+#Vivado does not support unconstrained records as required by this TB
+tb_run_skip Vivado
 tb_run_add_arguments \
 	"-gImplWrite_g=true -gImplRead_g=true" \
 	"-gImplWrite_g=true -gImplRead_g=false" \
@@ -236,6 +238,8 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_axi_master_full_tb"
+#Vivado does not support unconstrained records as required by this TB
+tb_run_skip Vivado
 tb_run_add_arguments \
 	"-gDataWidth_g=16 -gImplRead_g=true -gImplWrite_g=true" \
 	"-gDataWidth_g=32 -gImplRead_g=true -gImplWrite_g=true" \

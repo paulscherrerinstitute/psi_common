@@ -8,7 +8,23 @@
 */_vmake
 */_*/**/*
 */@_opt/**/*
+psi_common
 
 #Ignore transcripts
 *.transcript
 *.wlf
+
+#Ignore files from Vivado simulator
+webtalk*
+xsim*
+xelab.*
+xvhdl.*
+
+#Ignore Vivado specific files from PsiSim
+psi_sim_output.txt
+psi_sim_run.tcl
+psi_sim_snapshot.*
+psi_vivado_init.ini
+
+#Ingnore files from GHDL
+*.cf
