@@ -126,7 +126,7 @@ begin
 			assert abs(period-periodExp) < clockPeriod 
 				report "###ERROR###: Received wrong clock period " & 
 					to_string(period / 1 ns) & " ns instead of " & to_string(periodExp / 1 ns) & " ns" & 
-					" +/- " & to_string(clockPeriod / 1ns) & " ns" 
+					" +/- " & to_string(clockPeriod / 1 ns) & " ns" 
 				severity error; 
 			
 		end loop;
@@ -150,7 +150,7 @@ begin
 		assert abs(period-periodExp) < clockPeriod 
 			report "###ERROR###: Received wrong clock period " & 
 				to_string(period / 1 ns) & " ns instead of " & to_string(periodExp / 1 ns) & " ns" & 
-				" +/- " & to_string(clockPeriod / 1ns) & " ns" 			
+				" +/- " & to_string(clockPeriod / 1 ns) & " ns" 			
 			severity error; 
 
 
@@ -172,7 +172,7 @@ begin
 		assert abs(period-periodExp) < clockPeriod 
 			report "###ERROR###: Received wrong clock period " & 
 				to_string(period / 1 ns) & " ns instead of " & to_string(periodExp / 1 ns) & " ns" & 
-				" +/- " & to_string(clockPeriod / 1ns) & " ns" 			
+				" +/- " & to_string(clockPeriod / 1 ns) & " ns" 			
 			severity error; 				
 		
 		-- end of process !DO NOT EDIT!
