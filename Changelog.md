@@ -1,3 +1,10 @@
+## 2.4.1
+* Added Features
+  * None
+* Bugfixes
+  * Update PDF Documentation
+  * Made compatible with Vivado simulator
+
 ## 2.4.0
 * Added Features
   * Added integer to std\_logic converstion to *psi\_common\_logic\_pkg* 
