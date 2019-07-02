@@ -23,6 +23,8 @@ package psi_common_math_pkg is
 	
 	function log2ceil(arg : in natural) return natural;
 	
+	function log2ceil(arg : in real) return natural;	
+	
 	function max(	a : in integer;
 					b : in integer) return integer;
 					
@@ -67,7 +69,7 @@ end psi_common_math_pkg;
 ------------------------------------------------------------------------------
 package body psi_common_math_pkg is 
   
-	-- *** Log2 ***
+	-- *** Log2 integer ***
 	function log2(arg : in natural) return natural is
 		variable v : natural := arg;
 		variable r : natural := 0;
@@ -79,7 +81,7 @@ package body psi_common_math_pkg is
 		return r;
 	end function;
 	
-	-- *** Log2Ceil ***
+	-- *** Log2Ceil integer ***
 	function log2ceil(arg : in natural) return natural is
 	begin
 		if arg = 0 then
@@ -87,6 +89,18 @@ package body psi_common_math_pkg is
 		end if;
 		return log2(arg*2-1);
 	end function;
+	
+	-- *** Log2Ceil real ***
+	function log2ceil(arg : in real) return natural is
+		variable v : real := arg;
+		variable r : natural := 0;
+	begin
+		while v > 1.0 loop
+			v := v/2.0;
+			r := r+1;
+		end loop;
+		return r;
+	end function;	
 	
 	-- *** Max ***
 	function max(	a : in integer;
