@@ -38,6 +38,8 @@ Stable releases are tagged in the form *major*.*minor*.*bugfix*.
 * Whenever new features are added, the *minor* version number is incremented
 * If only bugs are fixed (i.e. no functional changes are applied), the *bugfix* version is incremented
  
+<!-- DO NOT CHANGE FORMAT: this section is parsed to resolve dependencies -->
+
 # Dependencies
 
 The required folder structure looks as given below (folder names must be matched exactly). 
@@ -48,6 +50,16 @@ Alternatively the repository [psi\_fpga\_all](https://github.com/paulscherrerins
 * VHDL
   * [**psi\_common**](https://github.com/paulscherrerinstitute/psi_common)
   * [psi\_tb](https://github.com/paulscherrerinstitute/psi_tb) (2.2.2 or higher)
+  
+<!-- END OF PARSED SECTION -->
+
+Dependencies can also be checked out using the python script *scripts/dependencies.py*. For details, refer to the help of the script:
+
+```
+python dependencies.py -help
+```
+
+Note that the [dependencies package](https://github.com/paulscherrerinstitute/PsiFpgaLibDependencies) must be installed in order to run the script.
 
 # Simulations and Testbenches
 
