@@ -9,7 +9,7 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 os.chdir(THIS_DIR + "/../sim")
 
-os.system("vsim -c -do ci.do -logfile Transcript.transcript")
+os.system("vsim -batch -do ci.do -logfile Transcript.transcript")
 
 with open("Transcript.transcript") as f:
 	content = f.read()
