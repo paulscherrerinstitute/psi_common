@@ -57,8 +57,6 @@ entity psi_common_axi_slave_ipif is
 		s_axi_arlock					: in	std_logic;		                                    -- $$ proc=axi $$
 		s_axi_arcache					: in	std_logic_vector(3 downto 0);		                -- $$ proc=axi $$
 		s_axi_arprot					: in	std_logic_vector(2 downto 0);		                -- $$ proc=axi $$
-		s_axi_arqos						: in	std_logic_vector(3 downto 0);		                -- $$ proc=axi $$
-		s_axi_arregion					: in	std_logic_vector(3 downto 0);		                -- $$ proc=axi $$
 		s_axi_arvalid					: in	std_logic;		                                    -- $$ proc=axi $$
 		s_axi_arready					: out	std_logic;		                                    -- $$ proc=axi $$
 		-- Read data channel
@@ -77,8 +75,6 @@ entity psi_common_axi_slave_ipif is
 		s_axi_awlock					: in	std_logic;                                          -- $$ proc=axi $$
 		s_axi_awcache					: in	std_logic_vector(3 downto 0);                       -- $$ proc=axi $$
 		s_axi_awprot					: in	std_logic_vector(2 downto 0);                       -- $$ proc=axi $$
-		s_axi_awqos						: in	std_logic_vector(3 downto 0);                       -- $$ proc=axi $$
-		s_axi_awregion					: in	std_logic_vector(3 downto 0);                       -- $$ proc=axi $$
 		s_axi_awvalid					: in	std_logic;                                          -- $$ proc=axi $$
 		s_axi_awready					: out	std_logic;                                          -- $$ proc=axi $$
 		-- Write data channel
