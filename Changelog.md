@@ -1,3 +1,11 @@
+## 2.5.0
+* Added Features
+  * Added functions to *psi\_common\_math\_pkg*: log2ceil() for real, isLog2()
+  * Added dependency resolution script
+  * Added *psi\_common\_axi\_slave\_ipif*: Full AXI slave interface for IP-Cores
+* Bugfixes
+  * Fixed modelsim call in continuous integration script
+
 ## 2.4.1
 * Added Features
   * None
