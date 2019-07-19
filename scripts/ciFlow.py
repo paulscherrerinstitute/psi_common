@@ -5,6 +5,10 @@
 ##############################################################################
 import os
 
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+
+os.chdir(THIS_DIR + "/../sim")
+
 os.system("vsim -batch -do ci.do -logfile Transcript.transcript")
 
 with open("Transcript.transcript") as f:
@@ -16,6 +20,7 @@ if "###ERROR###" in content:
 #Unexpected Errors
 if "SIMULATIONS COMPLETED SUCCESSFULLY" not in content:
 	exit(-2)
+	
+	
 #Success
-else:
-	exit(0)
+exit(0)
