@@ -1,9 +1,3 @@
-## 2.6.0
-* Added Features
-  * Allow setting display name in gui_create_user_parameter
-* Bugfixes 
-  * Change relative paths to not include "./" as required by 2019.1
-
 ## 2.5.0
 * Added Features
   * Added functions to *psi\_common\_math\_pkg*: log2ceil() for real, isLog2()
