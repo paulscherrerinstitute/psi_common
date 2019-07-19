@@ -57,6 +57,7 @@ add_sources "../hdl" {
 	psi_common_spi_master.vhd \
 	psi_common_axi_master_simple.vhd \
 	psi_common_axi_master_full.vhd \
+	psi_common_axi_slave_ipif.vhd \
 } -tag src
 
 # testbenches
@@ -92,12 +93,13 @@ add_sources "../testbench" {
 	psi_common_axi_master_simple_tb/psi_common_axi_master_simple_tb_case_special.vhd \
 	psi_common_axi_master_simple_tb/psi_common_axi_master_simple_tb_case_internals.vhd \
 	psi_common_axi_master_simple_tb/psi_common_axi_master_simple_tb.vhd \
-   psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_pkg.vhd \
-   psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_simple_tf.vhd \
-   psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_axi_hs.vhd \
-   psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_user_hs.vhd \
-   psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_large.vhd \
-   psi_common_axi_master_full_tb/psi_common_axi_master_full_tb.vhd \
+	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_pkg.vhd \
+	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_simple_tf.vhd \
+	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_axi_hs.vhd \
+	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_user_hs.vhd \
+	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_large.vhd \
+	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb.vhd \
+	psi_common_axi_slave_ipif_tb/psi_common_axi_slave_ipif_tb.vhd \
 } -tag tb
 	
 #TB Runs
@@ -245,6 +247,13 @@ tb_run_add_arguments \
 	"-gDataWidth_g=32 -gImplRead_g=true -gImplWrite_g=true" \
    "-gDataWidth_g=16 -gImplRead_g=false -gImplWrite_g=true" \
    "-gDataWidth_g=16 -gImplRead_g=true -gImplWrite_g=false"
+add_tb_run
+
+create_tb_run "psi_common_axi_slave_ipif_tb"
+tb_run_add_arguments \
+	"-gNumReg_g=4 -gUseMem_g=true -gAxiThrottling_g=0" \
+	"-gNumReg_g=4 -gUseMem_g=true -gAxiThrottling_g=3" \
+	"-gNumReg_g=4 -gUseMem_g=false -gAxiThrottling_g=0"
 add_tb_run
 
 
