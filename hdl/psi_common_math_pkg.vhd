@@ -25,6 +25,8 @@ package psi_common_math_pkg is
 	
 	function log2ceil(arg : in real) return natural;	
 	
+	function isLog2(arg : in natural) return boolean;
+	
 	function max(	a : in integer;
 					b : in integer) return integer;
 					
@@ -101,6 +103,16 @@ package body psi_common_math_pkg is
 		end loop;
 		return r;
 	end function;	
+	
+	-- *** isLog2 ***
+	function isLog2(arg : in natural) return boolean is
+	begin
+		if log2(arg) = log2ceil(arg) then
+			return true;
+		else
+			return false;
+		end if;
+	end function;
 	
 	-- *** Max ***
 	function max(	a : in integer;
