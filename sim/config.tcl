@@ -250,6 +250,8 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_axi_slave_ipif_tb"
+#Vivado does not support unconstrained records as required by this TB
+tb_run_skip Vivado
 tb_run_add_arguments \
 	"-gNumReg_g=4 -gUseMem_g=true -gAxiThrottling_g=0" \
 	"-gNumReg_g=4 -gUseMem_g=true -gAxiThrottling_g=3" \

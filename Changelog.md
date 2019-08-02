@@ -1,3 +1,9 @@
+## 2.5.1
+* Added Features
+  * None
+* Bugfixes
+  * Disable *psi_commonaxi_slave_ipif_tb* for vivado simulator because it uses constructs not supported by the Vivado simulator
+
 ## 2.5.0
 * Added Features
   * Added functions to *psi\_common\_math\_pkg*: log2ceil() for real, isLog2()
