@@ -164,7 +164,6 @@ architecture behavioral of psi_common_axi_slave_ipif is
 	signal	reg_rlast				: std_logic := '0';
 	signal	reg_rdata				: std_logic_vector(31 downto	0) := (others => '0');
 	signal	reg_rvalid				: std_logic := '0';
-	signal	reg_byte_index			: integer := 0;
 	signal	mem_rlast				: std_logic := '0';
 	signal	mem_rvalid				: std_logic := '0';
 	-- R-channel pipeline stage
