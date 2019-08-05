@@ -58,6 +58,7 @@ add_sources "../hdl" {
 	psi_common_axi_master_simple.vhd \
 	psi_common_axi_master_full.vhd \
 	psi_common_axi_slave_ipif.vhd \
+	psi_common_tdp_ram_be.vhd \
 } -tag src
 
 # testbenches
@@ -100,6 +101,7 @@ add_sources "../testbench" {
 	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_large.vhd \
 	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb.vhd \
 	psi_common_axi_slave_ipif_tb/psi_common_axi_slave_ipif_tb.vhd \
+	psi_common_tdp_ram_be_tb/psi_common_tdp_ram_be_tb.vhd \
 } -tag tb
 	
 #TB Runs
@@ -257,5 +259,9 @@ tb_run_add_arguments \
 	"-gNumReg_g=4 -gUseMem_g=true -gAxiThrottling_g=3" \
 	"-gNumReg_g=4 -gUseMem_g=false -gAxiThrottling_g=0"
 add_tb_run
+
+create_tb_run "psi_common_tdp_ram_be_tb"
+add_tb_run
+
 
 
