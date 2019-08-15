@@ -199,7 +199,7 @@ architecture rtl of psi_common_axi_master_simple is
 		-- Write Response
 		WrRespError		: std_logic;
 		-- Write General
-		WrOpenTrans		: integer range 0 to AxiMaxOpenTrasactions_g;
+		WrOpenTrans		: integer range -1 to AxiMaxOpenTrasactions_g;
 		WrBeatsNoCmd	: signed(log2ceil(MaxBeatsNoCmd_c+1) downto 0);
 		-- AXI Signals
 		M_Axi_AwAddr	: std_logic_vector(M_Axi_AwAddr'range);
