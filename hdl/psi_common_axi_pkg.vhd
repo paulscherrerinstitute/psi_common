@@ -195,5 +195,26 @@ package psi_common_axi_pkg is
     constant C_AXI_STRM_SRC_INP_DEF : axi_strm_src_inp := (
                 ready => '0'
                 );
- 
+                
+
+    --------------------------------------------------------------------------
+    -- Legacy Typedef: DO NOT USE FOR NEW CODE!! 
+    -- Will be removed in future major release.
+    --------------------------------------------------------------------------
+    subtype axi_slv_rd_addr_inp is axi_ms_rd_addr;
+    subtype axi_slv_rd_addr_oup is axi_sm_rd_addr;
+    subtype axi_slv_rd_data_inp is axi_ms_rd_data;
+    subtype axi_slv_rd_data_oup is axi_sm_rd_data;
+    subtype axi_slv_wr_addr_inp is axi_ms_wr_addr;
+    subtype axi_slv_wr_addr_oup is axi_sm_wr_addr;
+    subtype axi_slv_wr_data_inp is axi_ms_wr_data;
+    subtype axi_slv_wr_data_oup is axi_sm_wr_data;
+    subtype axi_slv_wr_resp_inp is axi_ms_wr_resp;
+    subtype axi_slv_wr_resp_oup is axi_sm_wr_resp;
+    subtype axi_slv_inp is rec_axi_ms;
+    subtype axi_slv_oup is rec_axi_sm;
+    constant C_AXI_SLV_INP_DEF : rec_axi_ms := C_AXI_MS_DEF;
+    constant C_AXI_SLV_OUP_DEF : rec_axi_sm := C_AXI_SM_DEF;
+    
+    
 end psi_common_axi_pkg;
