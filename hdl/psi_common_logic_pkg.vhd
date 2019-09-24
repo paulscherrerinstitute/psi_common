@@ -55,7 +55,13 @@ package psi_common_logic_pkg is
 						return std_logic;
 						
 	function ReduceAnd(	vec : in std_logic_vector)
-						return std_logic;						
+						return std_logic;
+						
+	function To01X(	inp : in std_logic) 
+					return std_logic;
+	
+	function To01X(	inp : in std_logic_vector)
+					return std_logic_vector;
 
 end psi_common_logic_pkg;	 
 
@@ -189,6 +195,26 @@ package body psi_common_logic_pkg is
 		tmp := '1';
 		for i in 0 to vec'high loop
 			tmp := tmp and vec(i);
+		end loop;
+		return tmp;
+	end function;
+	
+	function To01X(	inp : in std_logic) 
+					return std_logic is
+	begin
+		case inp is
+			when '0' | 'L' => return '0';
+			when '1' | 'H' => return '1';
+			when others => return 'X';
+		end case;
+	end function;
+	
+	function To01X(	inp : in std_logic_vector)
+					return std_logic_vector is
+		variable tmp : std_logic_vector(inp'range);
+	begin
+		for i in inp'low to inp'high loop
+			tmp(i) := to01X(inp(i));
 		end loop;
 		return tmp;
 	end function;
