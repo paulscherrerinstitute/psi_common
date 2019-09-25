@@ -14,17 +14,19 @@ namespace import psi::sim::*
 add_library psi_common
 
 #suppress messages
-compile_suppress 135,1236
+compile_suppress 135,1236,1370
 run_suppress 8684,3479,3813,8009,3812
 
 # Library
 add_sources $LibPath {
 	psi_common/hdl/psi_common_array_pkg.vhd \
 	psi_common/hdl/psi_common_math_pkg.vhd \
+	psi_common/hdl/psi_common_logic_pkg.vhd \
 	psi_tb/hdl/psi_tb_txt_util.vhd \
 	psi_tb/hdl/psi_tb_compare_pkg.vhd \
 	psi_tb/hdl/psi_tb_activity_pkg.vhd \
 	psi_tb/hdl/psi_tb_axi_pkg.vhd \
+	psi_tb/hdl/psi_tb_i2c_pkg.vhd \
 } -tag lib
 
 # project sources
@@ -33,6 +35,7 @@ add_sources "../hdl" {
 	psi_common_pulse_cc.vhd \
 	psi_common_simple_cc.vhd \
 	psi_common_status_cc.vhd \
+	psi_common_bit_cc.vhd \
 	psi_common_tdp_ram.vhd \
 	psi_common_sdp_ram.vhd \
 	psi_common_sync_fifo.vhd \
@@ -59,6 +62,7 @@ add_sources "../hdl" {
 	psi_common_axi_master_full.vhd \
 	psi_common_axi_slave_ipif.vhd \
 	psi_common_tdp_ram_be.vhd \
+	psi_common_i2c_master.vhd \
 } -tag src
 
 # testbenches
@@ -102,6 +106,7 @@ add_sources "../testbench" {
 	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb.vhd \
 	psi_common_axi_slave_ipif_tb/psi_common_axi_slave_ipif_tb.vhd \
 	psi_common_tdp_ram_be_tb/psi_common_tdp_ram_be_tb.vhd \
+	psi_common_i2c_master_tb/psi_common_i2c_master_tb.vhd \
 } -tag tb
 	
 #TB Runs
@@ -262,6 +267,16 @@ add_tb_run
 
 create_tb_run "psi_common_tdp_ram_be_tb"
 add_tb_run
+
+create_tb_run "psi_common_i2c_master_tb"
+#Vivado does not support unconstrained records as required by this TB
+tb_run_skip Vivado
+tb_run_add_arguments \
+	"-gInternalTriState_g=true" \
+	"-gInternalTriState_g=false"
+add_tb_run
+
+
 
 
 
