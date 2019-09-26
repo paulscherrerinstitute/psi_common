@@ -276,7 +276,7 @@ begin
 			-- **********************************************************************************************
 			
 			when Start1_s =>
-				if r.QPeriodTick then
+				if r.QPeriodTick = '1' then
 					v.Fsm := Start2_s;
 				end if;
 				
@@ -294,7 +294,7 @@ begin
 				v.SdaOut		:= '1';	
 				
 			when Start2_s =>
-				if r.QPeriodTick then
+				if r.QPeriodTick = '1' then
 					v.Fsm 		:= WaitCmd_s;
 					v.RspVld	:= '1';
 				end if;
@@ -339,7 +339,7 @@ begin
 				v.BitCnt		:= 0;
 			
 				-- Switch to commands
-				if r.QPeriodTick then
+				if r.QPeriodTick = '1' then
 					-- In timeout case, send a STOP to free the bus
 					if r.CmdTimeout = '1' then
 						v.Fsm	:= Stop1_s;
@@ -367,7 +367,7 @@ begin
 			-- States after RepStart1_s are shared with normal start condition
 			
 			when RepStart1_s =>
-				if r.QPeriodTick then
+				if r.QPeriodTick = '1' then
 					-- The rest of the sequence is same as for START
 					v.Fsm := Start1_s;
 					
@@ -394,7 +394,7 @@ begin
 			-- period is executed (DataBit4_s) before the next bit starts (DataBit1_s)
 				
 			when DataBit1_s =>
-				if r.QPeriodTick then
+				if r.QPeriodTick = '1' then
 					v.Fsm := DataBit2_s;
 				end if;	
 				v.SclOut := '0';		
@@ -424,7 +424,7 @@ begin
 				end if;
 
 			when DataBit2_s =>
-				if r.QPeriodTick then
+				if r.QPeriodTick = '1' then
 					v.Fsm := DataBit3_s;
 					-- Shift register in the middle of the CLK pulse
 					v.ShReg := r.ShReg(7 downto 0) & I2cSda_Sync;	
@@ -446,7 +446,7 @@ begin
 				
 
 			when DataBit3_s =>
-				if r.QPeriodTick then
+				if r.QPeriodTick = '1' then
 					-- Command Done after 9 bits (8 Data + 1 Ack)
 					if r.BitCnt = 8 then
 						v.Fsm 		:= WaitCmd_s;
@@ -467,7 +467,7 @@ begin
 				end if;
 				
 			when DataBit4_s =>
-				if r.QPeriodTick then
+				if r.QPeriodTick = '1' then
 					v.Fsm := DataBit1_s;
 					v.BitCnt:= r.BitCnt + 1;
 				end if;	
@@ -484,14 +484,14 @@ begin
 			-- **********************************************************************************************
 			
 			when Stop1_s => 
-				if r.QPeriodTick then
+				if r.QPeriodTick = '1' then
 					v.Fsm := Stop2_s;
 				end if;
 				v.SclOut		:= '0';
 				v.SdaOut		:= '0';			
 
 			when Stop2_s => 
-				if r.QPeriodTick then
+				if r.QPeriodTick = '1' then
 					v.Fsm := Stop3_s;
 				end if;
 				v.SclOut		:= '1';
@@ -503,7 +503,7 @@ begin
 				end if;
 
 			when Stop3_s => 
-				if r.QPeriodTick then
+				if r.QPeriodTick = '1' then
 					-- Handle Arbitration
 					if I2cSda_Sync = '0' then
 						v.Fsm := ArbitLost_s;
