@@ -1,3 +1,12 @@
+## 2.6.0
+* Added Features
+  * Added *psi\_common\_i2c\_master*: Multi-master capable I2C master
+  * Added *psi\_common\_tdp\_ram\_be*: True dual port RAM with byte enables
+* Bugfixes
+  * Fixed bug in *psi\_common\_axi\_master\_simple* that led to errors in simulations (no problen in HW)
+* Others
+  * Changed AXI record names in *psi\_common\_axi\_pkg* to be clear for master and slave ports 
+
 ## 2.5.1
 * Added Features
   * None
