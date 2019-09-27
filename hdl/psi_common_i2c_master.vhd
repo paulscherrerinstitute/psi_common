@@ -210,7 +210,8 @@ begin
 		v.RspData		:= r.ShReg(8 downto 1);
 		v.RspSeq		:= '0';	
 		v.RspArbLost	:= '0';	
-		v.TimeoutCmd			:= '0';
+		v.TimeoutCmd	:= '0';
+		v.CmdRdy		:= '0';
 			
 		-- *** FSM ***
 		case r.Fsm is
@@ -242,7 +243,8 @@ begin
 					end if;	
 				-- Detect Busy from other master
 				elsif (I2cScl_Sync = '0') or (I2cStart_v = '1') then
-					v.Fsm := BusBusy_s;					
+					v.Fsm 		:= BusBusy_s;	
+					v.CmdRdy 	:= '0';
 				end if;
 
 			-- **********************************************************************************************
