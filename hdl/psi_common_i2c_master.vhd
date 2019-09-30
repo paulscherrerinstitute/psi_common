@@ -110,7 +110,7 @@ architecture rtl of psi_common_i2c_master is
 	constant CmdTimeoutLimit_c		: integer	:= integer(ClockFrequency_g*CmdTimeout_g)-1;
 	
 	-- *** Types ***
-	type Fsm_t is (	BusIdle_s, BusBusy_s, Start1_s, Start2_s, WaitCmd_s, WaitLowCenter_s, Stop1_s, Stop2_s, Stop3_s, RepStart1_s, 
+	type Fsm_t is (	BusIdle_s, BusBusy_s, MinIdle_s, Start1_s, Start2_s, WaitCmd_s, WaitLowCenter_s, Stop1_s, Stop2_s, Stop3_s, RepStart1_s, 
 					DataBit1_s, DataBit2_s, DataBit3_s, DataBit4_s, ArbitLost_s);
 
 	-- *** Two Process Method ***
@@ -175,7 +175,7 @@ begin
 		-- *** Quarter Period Counter ***
 		-- The FSM may overwrite the counter in some cases!
 		v.QPeriodTick := '0';
-		if r.Fsm = BusIdle_s then
+		if (r.Fsm = BusIdle_s) or (r.Fsm = BusBusy_s) then
 			v.QuartPeriodCnt 	:= 0;
 		elsif r.QuartPeriodCnt = QuarterPeriodLimit_c then
 			v.QuartPeriodCnt 	:= 0;
@@ -253,7 +253,7 @@ begin
 			when BusBusy_s =>
 				-- Bus released
 				if I2cStop_v = '1' then
-					v.Fsm := BusIdle_s;
+					v.Fsm := MinIdle_s;
 				end if;
 				-- Timeout Handling
 				if I2cScl_Sync = '0' then
@@ -266,6 +266,15 @@ begin
 				
 				v.SclOut		:= '1';
 				v.SdaOut		:= '1';	
+				
+			-- Ensure that SDA stays low for at least half a clock period
+			when MinIdle_s => 
+				if r.QPeriodTick = '1' then
+					v.Fsm := BusIdle_s;
+				end if;		
+
+				v.SclOut		:= '1';
+				v.SdaOut		:= '1';					
 				
 			-- **********************************************************************************************
 			-- Start Condition
