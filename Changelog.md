@@ -1,3 +1,10 @@
+## 2.6.1
+* Added Features
+  * None
+* Bugfixes
+  * In *psi\_common\_i2c\_master*: Pull CmdRdy low when bus is busy
+  * In *psi\_common\_i2c\_master*: Make sure SDA is always high for at least half an SCL clock cycle
+
 ## 2.6.0
 * Added Features
   * Added *psi\_common\_i2c\_master*: Multi-master capable I2C master
