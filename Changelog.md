@@ -2,7 +2,7 @@
 * Added Features
   * None
 * Bugfixes
-  * In *psi\_common\_i2c\_master*: replace ranged integers by unsigned numbers because of Vivado synthesis error
+  * In *psi\_common\_i2c\_master*: replace ranged integers by unsigned numbers and added attribute because of Vivado synthesis error
 
 ## 2.6.1
 * Added Features
