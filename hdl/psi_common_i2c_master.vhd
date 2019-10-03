@@ -82,7 +82,7 @@ entity psi_common_i2c_master is
 		
 		-- Status Interface 
 		BusBusy		: out	std_logic;
-		TimeoutCmd		: out	std_logic;
+		TimeoutCmd	: out	std_logic;
 
 		-- I2c Interface with internal Tri-State (InternalTriState_g = true)
 		I2cScl		: inout	std_logic	:= 'Z';
@@ -119,9 +119,9 @@ architecture rtl of psi_common_i2c_master is
 		CmdRdy			: std_logic;
 		SclLast			: std_logic;
 		SdaLast			: std_logic;
-		BusBusyToCnt	: integer range 0 to BusyTimoutLimit_c;
-		TimeoutCmdCnt	: integer range 0 to CmdTimeoutLimit_c;
-		QuartPeriodCnt	: integer range 0 to QuarterPeriodLimit_c;
+		BusBusyToCnt	: unsigned(log2ceil(BusyTimoutLimit_c+1)-1 downto 0);
+		TimeoutCmdCnt	: unsigned(log2ceil(CmdTimeoutLimit_c+1)-1 downto 0);
+		QuartPeriodCnt	: unsigned(log2ceil(QuarterPeriodLimit_c+1)-1 downto 0);
 		QPeriodTick		: std_logic;
 		CmdTypeLatch	: std_logic_vector(CmdType'range);
 		CmdAckLatch		: std_logic;
@@ -133,7 +133,7 @@ architecture rtl of psi_common_i2c_master is
 		RspSeq			: std_logic;
 		RspData			: std_logic_vector(7 downto 0);
 		RspArbLost		: std_logic;
-		BitCnt			: integer range 0 to 8; -- 8 Data + 1 Ack
+		BitCnt			: unsigned(3 downto 0);   -- 8 Data + 1 Ack = 9 = 4 bits
 		ShReg			: std_logic_vector(8 downto 0);
 		CmdTimeout		: std_logic;
 		TimeoutCmd		: std_logic;
@@ -176,9 +176,9 @@ begin
 		-- The FSM may overwrite the counter in some cases!
 		v.QPeriodTick := '0';
 		if (r.Fsm = BusIdle_s) or (r.Fsm = BusBusy_s) then
-			v.QuartPeriodCnt 	:= 0;
+			v.QuartPeriodCnt 	:= (others => '0');
 		elsif r.QuartPeriodCnt = QuarterPeriodLimit_c then
-			v.QuartPeriodCnt 	:= 0;
+			v.QuartPeriodCnt 	:= (others => '0');
 			v.QPeriodTick		:= '1';
 		else
 			v.QuartPeriodCnt 	:= r.QuartPeriodCnt + 1;
@@ -195,7 +195,7 @@ begin
 			end if;
 		-- In all states except waiting for command, reset the timer
 		else
-			v.TimeoutCmdCnt := 0;
+			v.TimeoutCmdCnt := (others => '0');
 		end if;
 		
 		-- *** Latch Command ***
@@ -222,7 +222,7 @@ begin
 			when BusIdle_s =>
 				-- Default Outputs
 				v.CmdRdy		:= '1';
-				v.BusBusyToCnt	:= 0;
+				v.BusBusyToCnt	:= (others => '0');
 				v.SclOut		:= '1';
 				v.SdaOut		:= '1';		
 				v.CmdTimeout	:= '0';
@@ -257,7 +257,7 @@ begin
 				end if;
 				-- Timeout Handling
 				if I2cScl_Sync = '0' then
-					v.BusBusyToCnt	:= 0;
+					v.BusBusyToCnt	:= (others => '0');
 				elsif r.BusBusyToCnt = BusyTimoutLimit_c  then
 					v.Fsm := BusIdle_s;
 				else
@@ -293,7 +293,7 @@ begin
 				
 				-- Handle Clock Stretching in case of a repeated start (slave keeps SCL low)
 				if I2cScl_Sync = '0' and r.CmdTypeLatch = CMD_REPSTART then
-					v.QuartPeriodCnt := 0;
+					v.QuartPeriodCnt := (others => '0');
 				end if;
 				
 				-- Handle Arbitration (other master transmits start condition first)
@@ -347,7 +347,7 @@ begin
 			when WaitLowCenter_s =>
 				-- State Handling
 				v.SclOut		:= '0';	
-				v.BitCnt		:= 0;
+				v.BitCnt		:= (others => '0');
 			
 				-- Switch to commands
 				if r.QPeriodTick = '1' then
@@ -444,7 +444,7 @@ begin
 				
 				-- Handle Clock Stretching (slave keeps SCL low)
 				if I2cScl_Sync = '0' then
-					v.QuartPeriodCnt := 0;
+					v.QuartPeriodCnt := (others => '0');
 				end if;
 				
 				-- Handle Arbitration for Sending (only databits, not ack)
@@ -510,7 +510,7 @@ begin
 				
 				-- Handle Clock Stretching (slave keeps SCL low)
 				if I2cScl_Sync = '0' then
-					v.QuartPeriodCnt := 0;
+					v.QuartPeriodCnt := (others => '0');
 				end if;
 
 			when Stop3_s => 
@@ -596,7 +596,7 @@ begin
 				r.CmdRdy		<= '0';
 				r.SclLast		<= '1';
 				r.SdaLast		<= '1';
-				r.BusBusyToCnt	<= 0;
+				r.BusBusyToCnt	<= (others => '0');
 				r.Fsm			<= BusIdle_s;
 				r.SclOut		<= '1';
 				r.SdaOut		<= '1';
