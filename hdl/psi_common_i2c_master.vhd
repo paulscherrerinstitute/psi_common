@@ -140,7 +140,7 @@ architecture rtl of psi_common_i2c_master is
 	end record;
 	signal r, r_next : two_process_r;
 	attribute dont_touch : string;
-	attribute dont_touch of r : signal is "true";	-- Required to Fix Vivado Synthesis Bug!
+	attribute dont_touch of r : signal is "true";	-- Required to Fix Vivado 2018.2 Synthesis Bug! Is fixed in Vivado 2019.1 according to Xilinx.
 	
 	-- Tri-state buffer muxing
 	signal I2cScl_Input : std_logic;
