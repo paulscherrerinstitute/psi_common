@@ -237,16 +237,24 @@ begin
 			WaitDone(1);
 		end if;
 
-		-- *** Test Single Read/Write to Memory ***	
-		if UseMem_g then
-			print(">> Single Read/Write to Memory");
-			TestCase <= 2;
+		-- *** Test Single Read/Write to Memory ***
+		print(">> Single Read/Write to Memory");	
+		TestCase <= 2;		
+		if UseMem_g then			
 			-- write
 			axi_single_write(4*(NumReg_g+1), 16#11112222#, axi_ms, axi_sm, s_axi_aclk);
 			-- read
 			axi_single_expect(4*(NumReg_g+3), 16#33334444#, axi_ms, axi_sm, s_axi_aclk);
-			WaitDone(2);
+		else
+			-- write
+			axi_apply_aw(4*(NumReg_g+1), AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
+			axi_apply_wd_single(X"ABCD1234", X"F", axi_ms, axi_sm, s_axi_aclk);
+			axi_expect_bresp(xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk);
+			-- read 
+			axi_apply_ar(4*(NumReg_g+1), AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
+			axi_expect_rresp_single(X"00000000", xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, IgnoreData=>true);
 		end if;
+		WaitDone(2);
 		
 		-- *** Test Burst Read/Write to Registers ***
 		if NumReg_g > 0 then
@@ -261,34 +269,62 @@ begin
 			axi_expect_rresp_burst(3, 16#100#, 1, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
 			WaitDone(3);
 		end if;
-
-		-- *** Test Burst Read/Write to Memory ***
-		if UseMem_g then
-			print(">> Burst Read/Write to Memory");
+		
+		-- *** Test Burst Read/Write to all Registers ***
+		if NumReg_g > 0 then
+			print(">> Burst Read/Write to all Registers");
 			TestCase <= 4;
 			-- write
-			axi_apply_aw(4*(NumReg_g+1), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-			axi_apply_wd_burst(4, 16#200#, 1, "1100", "0111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
+			axi_apply_aw(0, AxSIZE_4_c, NumReg_g-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
+			axi_apply_wd_burst(NumReg_g, 10, 1, "1111", "1111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
 			axi_expect_bresp(xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk);
 			-- read
-			axi_apply_ar(4*(NumReg_g+2), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-			axi_expect_rresp_burst(4, 16#302#, 1, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
+			axi_apply_ar(0, AxSIZE_4_c, NumReg_g-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
+			axi_expect_rresp_burst(NumReg_g, 16#1000#, 1, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
 			WaitDone(4);
 		end if;
+
+		-- *** Test Burst Read/Write to Memory ***		
+		print(">> Burst Read/Write to Memory");
+		TestCase <= 5;
+		-- write
+		axi_apply_aw(4*(NumReg_g+1), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
+		axi_apply_wd_burst(4, 16#200#, 1, "1100", "0111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
+		if UseMem_g then
+			axi_expect_bresp(xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk);
+		else	
+			-- Expect error if memory interface is not implemented
+			axi_expect_bresp(xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk);
+		end if;
+		-- read
+		axi_apply_ar(4*(NumReg_g+2), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
+		if UseMem_g then
+			axi_expect_rresp_burst(4, 16#302#, 1, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);	
+		else
+			axi_expect_rresp_burst(4, 16#302#, 1, xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, true, false, AxiThrottling_g);	
+		end if;
+		WaitDone(5);
 		
 		-- *** Test Burst over Reg/Mem Boundary***
-		if UseMem_g and NumReg_g > 0 then
-			print(">> Burst over Reg/Mem Boundary");
-			TestCase <= 5;
-			-- write
-			axi_apply_aw(4*(NumReg_g-2), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-			axi_apply_wd_burst(4, 16#400#, 1, "1111", "1111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
+		print(">> Burst over Reg/Mem Boundary");
+		TestCase <= 6;
+		-- write
+		axi_apply_aw(4*(NumReg_g-2), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
+		axi_apply_wd_burst(4, 16#400#, 1, "1111", "1111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
+		if UseMem_g then
 			axi_expect_bresp(xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk);
-			-- read
-			axi_apply_ar(4*(NumReg_g-2), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-			axi_expect_rresp_burst(4, 16#500#, 1, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
-			WaitDone(5);
+		else	
+			-- Expect error if memory interface is not implemented
+			axi_expect_bresp(xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk);
 		end if;
+		-- read
+		axi_apply_ar(4*(NumReg_g-2), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
+		if UseMem_g then
+			axi_expect_rresp_burst(4, 16#500#, 1, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);	
+		else
+			axi_expect_rresp_burst(4, 16#500#, 1, xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, true, false, AxiThrottling_g);	
+		end if;
+		WaitDone(6);
 		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_axi_c) <= '1';
@@ -327,9 +363,9 @@ begin
 			CaseDone <= 1;
 		end if;
 		
-		-- *** Test Single Read/Write to Memory ***
+		-- *** Test Single Read/Write to Memory ***		
+		WaitCase(2);
 		if UseMem_g then
-			WaitCase(2);
 			wait until rising_edge(s_axi_aclk) and o_mem_wr = "1111" for 1 us;
 			StdlvCompareStdlv("1111", o_mem_wr, "Write did not arrive");
 			StdlvCompareStdlv(X"11112222", o_mem_wdata, "Received wrong data");
@@ -339,8 +375,8 @@ begin
 			i_mem_rdata <= X"33334444";
 			wait until rising_edge(s_axi_aclk);
 			i_mem_rdata <= (others => '0');
-			CaseDone <= 2;
 		end if;
+		CaseDone <= 2;		
 		
 		-- *** Test Burst Read/Write to Registers ***
 		if NumReg_g > 0 then
@@ -351,15 +387,29 @@ begin
 			for i in 1 to 3 loop
 				wait until rising_edge(s_axi_aclk) and o_reg_wr(i) = '1' for 1 us;
 				StdlCompare(1, o_reg_wr(i), "Write did not arrive");
-				StdlvCompareInt(i, o_reg_wdata(i), "Wrong reset data");		
+				StdlvCompareInt(i, o_reg_wdata(i), "Wrong write data");		
 			end loop;
 			CaseDone <= 3;
 		end if;
 		
-		-- *** Test Burst Read/Write to Memory ***
-		if UseMem_g then
+		-- *** Test Burst Read/Write to all Registers ***
+		if NumReg_g > 0 then
 			WaitCase(4);
-			-- Write
+			for i in 0 to NumReg_g-1 loop
+				i_reg_rdata(i) <= std_logic_vector(to_unsigned(16#00001000#+i, 32));
+			end loop;
+			for i in 0 to NumReg_g-1 loop
+				wait until rising_edge(s_axi_aclk) and o_reg_wr(i) = '1' for 1 us;
+				StdlCompare(1, o_reg_wr(i), "Write did not arrive");
+				StdlvCompareInt(10+i, o_reg_wdata(i), "Wrong write data");		
+			end loop;
+			CaseDone <= 4;
+		end if;
+		
+		-- *** Test Burst Read/Write to Memory ***		
+		WaitCase(5);
+		-- Write
+		if UseMem_g then
 			wait until rising_edge(s_axi_aclk) and o_mem_wr /= "0000" for 1 us;
 			StdlvCompareStdlv("1100", o_mem_wr, "o_mem_wr[0] wrong");
 			StdlvCompareStdlv(X"00000200", o_mem_wdata, "o_mem_wdata[0] wrong");
@@ -372,21 +422,23 @@ begin
 			wait until rising_edge(s_axi_aclk) and o_mem_wr /= "0000" for 1 us;
 			StdlvCompareStdlv("0111", o_mem_wr, "o_mem_wr[3] wrong");
 			StdlvCompareStdlv(X"00000203", o_mem_wdata, "o_mem_wdata[3] wrong");	
-			-- Read
+		end if;
+		-- Read
+		if UseMem_g then
 			StartTime_v := now;
 			while now < StartTime_v + 1 us loop
 				wait until rising_edge(s_axi_aclk);
 				i_mem_rdata <= std_logic_vector(to_unsigned(16#300#+to_integer(unsigned(o_mem_addr))/4,32));	
 			end loop;
 			wait until rising_edge(s_axi_aclk);
-			i_mem_rdata <= (others => '0');
-			CaseDone <= 4;	
+			i_mem_rdata <= (others => '0');			
 		end if;
+		CaseDone <= 5;	
 		
 		-- *** Test Burst over Reg/Mem Boundary***
-		if NumReg_g > 0 and UseMem_g then
-			WaitCase(5);
-			-- write (check each word in parallel since accesses to registers/memory have different timing and can happen at the same time)
+		WaitCase(6);
+		-- write (check each word in parallel since accesses to registers/memory have different timing and can happen at the same time)
+		if UseMem_g then
 			RecWords_v := (others => '0');
 			MemWord_v := 0;
 			while RecWords_v(3 downto 0) /= "1111" loop
@@ -406,7 +458,9 @@ begin
 					MemWord_v := MemWord_v + 1;				
 				end if;
 			end loop;	
-			-- read
+		end if;
+		-- read
+		if UseMem_g then
 			i_reg_rdata(NumReg_g-2)	<= X"00000500";
 			i_reg_rdata(NumReg_g-1)	<= X"00000501";
 			RecWords_v := (others => '0');
@@ -422,8 +476,8 @@ begin
 				i_mem_rdata <= std_logic_vector(to_unsigned(16#502#+to_integer(unsigned(o_mem_addr))/4,32));
 			end loop;
 			StdlvCompareStdlv("11", RecWords_v(1 downto 0), "Not all registers read as expected");
-			CaseDone <= 5;	
 		end if;
+		CaseDone <= 6;	
 		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_ip_c) <= '1';

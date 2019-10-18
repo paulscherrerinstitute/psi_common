@@ -115,6 +115,7 @@ architecture behavioral of psi_common_axi_slave_ipif is
 		axi_fsm_idle,
 		axi_fsm_rd_data,
 		axi_fsm_wr_data,
+		axi_fsm_wr_resp_delay,
 		axi_fsm_wr_done
 	);
 	signal rst						: std_logic;
@@ -127,6 +128,10 @@ architecture behavioral of psi_common_axi_slave_ipif is
 	constant REG_ADDR_WIDTH			: integer := integer(log2ceil(NumReg_g)) + REG_ADDR_INDEX_LOW;
 	constant REG_ADDR_INDEX_HIGH	: integer := REG_ADDR_WIDTH - 1;
 	constant MEM_ADDR_START			: unsigned(AxiAddrWidth_g - 1 downto	 0) := to_unsigned(2**(REG_ADDR_WIDTH), AxiAddrWidth_g);
+	constant RESP_OKAY_c 			: std_logic_vector(1 downto 0) 		:= "00";
+	constant RESP_EXOKAY_c 			: std_logic_vector(1 downto 0) 		:= "01";
+	constant RESP_SLVERR_c 			: std_logic_vector(1 downto 0) 		:= "10";
+	constant RESP_DECERR_c 			: std_logic_vector(1 downto 0) 		:= "11";
 	-- Read address channel
 	signal	axi_arid				: std_logic_vector(AxiIdWidth_g - 1 downto 0) := (others => '0');
 	signal	axi_araddr				: unsigned(AxiAddrWidth_g - 1 downto	 0) := (others => '0');
@@ -138,7 +143,7 @@ architecture behavioral of psi_common_axi_slave_ipif is
 	signal	axi_arwrap_en			: std_logic := '0';
 	signal	axi_arwrap				: unsigned(AxiAddrWidth_g - 1 downto	 0) := (others => '0');
 	-- Read data channel
-	constant axi_rresp				: std_logic_vector( 1 downto	 0) := "00"; -- 'OKAY' response
+	signal axi_rresp				: std_logic_vector( 1 downto 0);
 	signal	axi_rlast				: std_logic := '0';
 	signal	axi_rready				: std_logic := '0';
 	signal	axi_rvalid				: std_logic := '0';
@@ -155,16 +160,14 @@ architecture behavioral of psi_common_axi_slave_ipif is
 	signal	axi_wlast				: std_logic := '0';
 	signal	axi_wready				: std_logic := '0';
 	-- Write response channel
-	constant axi_bresp				: std_logic_vector( 1 downto	 0) := "00"; -- 'OKAY' response
+	signal  axi_bresp				: std_logic_vector(1 downto 0);
 	-- Derived signals
 	signal	axi_raddr_sel			: std_logic := '0';
 	signal	axi_waddr_sel			: std_logic := '0';
 	signal	reg_rd					: std_logic_vector(NumReg_g-1 downto	 0) := (others => '0');
 	signal	reg_wr					: std_logic_vector(NumReg_g-1 downto	 0) := (others => '0');
-	signal	reg_rlast				: std_logic := '0';
 	signal	reg_rdata				: std_logic_vector(31 downto	0) := (others => '0');
 	signal	reg_rvalid				: std_logic := '0';
-	signal	mem_rlast				: std_logic := '0';
 	signal	mem_rvalid				: std_logic := '0';
 	-- R-channel pipeline stage
 	signal rpl_rready				: std_logic;
@@ -181,6 +184,7 @@ begin
 	-- Assertions
 	-----------------------------------------------------------------------------
 	assert isLog2(NumReg_g) report "###ERROR###: psi_common_axi_slave_ipif: NumReg_g must be a power of two!" severity error;
+	assert not (not UseMem_g and NumReg_g = 0) report "###ERROR###: psi_common_axi_slave_ipif: NumReg_g must be > 0 if UseMem_g = true" severity error;
 
 	-----------------------------------------------------------------------------
 	-- AXI fsm
@@ -206,8 +210,10 @@ begin
 				end if;
 			when axi_fsm_wr_data =>
 				if		((axi_wlast = '1') and (s_axi_wvalid = '1')) then
-					axi_fsm_comb		 <= axi_fsm_wr_done;
+					axi_fsm_comb		 <= axi_fsm_wr_resp_delay;
 				end if;
+			when axi_fsm_wr_resp_delay => 
+				axi_fsm_comb <= axi_fsm_wr_done;
 			when axi_fsm_wr_done =>
 				if (s_axi_bready = '1') then
 					axi_fsm_comb		 <= axi_fsm_idle;
@@ -235,6 +241,7 @@ begin
 		if rising_edge(s_axi_aclk) then
 			case axi_fsm is
 			when axi_fsm_idle =>
+				axi_rresp <= RESP_OKAY_c;
 				if (axi_fsm_comb = axi_fsm_rd_data) then
 					axi_araddr			 <= unsigned(s_axi_araddr);
 					axi_araddr_last	 <= unsigned(s_axi_araddr);
@@ -302,6 +309,11 @@ begin
 					end if;
 				end if;
 			when axi_fsm_rd_data =>
+				-- Produce decoding error if memory is accessed but not enabled
+				if unsigned(axi_araddr) >= (NumReg_g*4) and not UseMem_g then
+					axi_rresp <= RESP_DECERR_c;
+				end if;
+				-- Do access
 				if (rpl_rready = '1') then
 					case (axi_arburst) is
 					when "00" => -- Fixed burst
@@ -375,15 +387,13 @@ begin
 	-----------------------------------------------------------------------------
 	-- AXI RVALID
 	-----------------------------------------------------------------------------
-	axi_rvalid							 <= reg_rvalid or mem_rvalid	when UseMem_g else
-											reg_rvalid;
-	rpl_rvalid						 <= axi_rvalid;
+	axi_rvalid							 <= reg_rvalid or mem_rvalid;
+	rpl_rvalid						 	<= axi_rvalid;
 
 	-----------------------------------------------------------------------------
 	-- AXI RLAST
 	-----------------------------------------------------------------------------
-	axi_rlast							 <= reg_rlast or mem_rlast		when UseMem_g else			
-											reg_rlast;
+	axi_rlast							 <= '1' when (((mem_rvalid = '1') or (reg_rvalid = '1')) and (axi_arlen = X"00")) else '0';
 	rpl_rlast							 <= axi_rlast;
 
 	-----------------------------------------------------------------------------
@@ -401,9 +411,9 @@ begin
 		if rising_edge(s_axi_aclk) then
 			case axi_fsm is
 			when axi_fsm_idle =>
+				axi_bresp <= RESP_OKAY_c;
 				if (axi_fsm_comb = axi_fsm_wr_data) then
 					axi_awaddr			 <= unsigned(s_axi_awaddr);
-
 					case (s_axi_awsize) is
 					when "000" =>
 						axi_awsize		 <= to_unsigned( 1, AxiAddrWidth_g);
@@ -468,7 +478,12 @@ begin
 					end if;
 				end if;
 			when axi_fsm_wr_data =>
-				if (s_axi_wvalid = '1') then
+				-- Produce decoding error if memory is accessed but not enabled
+				if unsigned(axi_awaddr) >= (NumReg_g*4) and not UseMem_g then
+					axi_bresp <= RESP_DECERR_c;
+				end if;
+				-- Do access
+				if (s_axi_wvalid = '1') then		
 					case (axi_awburst) is
 					when "00" => -- Fixed burst
 						null;
@@ -554,8 +569,6 @@ begin
 	---------------------------------------------------------------------------
 	reg_rvalid							 <= '1' when ((axi_raddr_sel = '0') and (axi_fsm = axi_fsm_rd_data) and (axi_rready = '1') and (rpl_rready = '1')) else '0';
 
-	reg_rlast							 <= '1' when ((reg_rvalid = '1') and (axi_arlen = X"00")) else '0';
-
 	b_rdreg : block
 		signal rd_data_ext : t_aslv32(0 to NumReg_g+1) := (others => (others => '0'));
 	begin
@@ -622,13 +635,10 @@ begin
 	-----------------------------------------------------------------------------
 	-- Memory read/write
 	-----------------------------------------------------------------------------
+	mem_rvalid							 <= '1' when ((axi_raddr_sel = '1') and (axi_fsm = axi_fsm_rd_data) and (axi_rready = '1') and (rpl_rready = '1')) else '0';
 	g_mem : if UseMem_g generate
-		mem_rvalid							 <= '1' when ((axi_raddr_sel = '1') and (axi_fsm = axi_fsm_rd_data) and (axi_rready = '1') and (rpl_rready = '1')) else '0';
-
-		mem_rlast							 <= '1' when ((mem_rvalid = '1') and (axi_arlen = X"00")) else '0';
-
 		o_mem_addr							 <= std_logic_vector(axi_awaddr - MEM_ADDR_START) when (axi_waddr_sel = '1') else
-													 std_logic_vector(axi_araddr - MEM_ADDR_START);
+												std_logic_vector(axi_araddr - MEM_ADDR_START);
 		o_mem_wr(0)							 <= '1' when ((axi_waddr_sel = '1') and (axi_fsm = axi_fsm_wr_data) and (s_axi_wvalid = '1') and (s_axi_wstrb(0) = '1')) else '0';
 		o_mem_wr(1)							 <= '1' when ((axi_waddr_sel = '1') and (axi_fsm = axi_fsm_wr_data) and (s_axi_wvalid = '1') and (s_axi_wstrb(1) = '1')) else '0';
 		o_mem_wr(2)							 <= '1' when ((axi_waddr_sel = '1') and (axi_fsm = axi_fsm_wr_data) and (s_axi_wvalid = '1') and (s_axi_wstrb(2) = '1')) else '0';
