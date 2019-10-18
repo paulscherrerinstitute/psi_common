@@ -1,3 +1,9 @@
+## 2.6.3
+* Added Features
+  * None
+* Bugfixes
+  * In *psi\_common\_axi\_slave\_ipif*: fixed behavior when writing to memory address if memory is disabled
+
 ## 2.6.2
 * Added Features
   * None
