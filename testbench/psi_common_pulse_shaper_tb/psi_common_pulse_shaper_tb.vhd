@@ -46,6 +46,10 @@ architecture sim of psi_common_pulse_shaper_tb is
 	signal Rst : std_logic := '1';
 	signal InPulse : std_logic := '0';
 	signal OutPulse : std_logic := '0';
+	signal OutPulse2 : std_logic := '0';
+	
+	-- *** Helpers ***
+	signal InPulseDff : std_logic;
 	
 begin
 	------------------------------------------------------------
@@ -54,6 +58,7 @@ begin
 	i_dut : entity work.psi_common_pulse_shaper
 		generic map (
 			Duration_g => Duration_g,
+			HoldIn_g => false,
 			HoldOff_g => HoldOff_g
 		)
 		port map (
@@ -62,6 +67,23 @@ begin
 			InPulse => InPulse,
 			OutPulse => OutPulse
 		);
+		
+	------------------------------------------------------------
+	-- Added to check quickly hold input value
+	------------------------------------------------------------
+	i_dut2 : entity work.psi_common_pulse_shaper
+		generic map (
+			Duration_g => Duration_g,
+			HoldIn_g => true,
+			HoldOff_g => 0
+		)
+		port map (
+			Clk => Clk,
+			Rst => Rst,
+			InPulse => InPulse,
+			OutPulse => OutPulse2
+		);
+	
 	
 	------------------------------------------------------------
 	-- Testbench Control !DO NOT EDIT!
@@ -206,5 +228,16 @@ begin
 		wait;
 	end process;
 	
-	
+	------------------------------------------------------------
+	-- Check Hold value in the second flavour of the pulse shaper
+	------------------------------------------------------------
+	p_check2 : process(Clk)
+	begin
+		if rising_edge(Clk) then
+			InPulseDff <= InPulse;
+			if InPulseDff = '1' then
+				StdlCompare(1, OutPulse2, "Did not hold InPulse on second flavour of DUT");
+			end if;
+		end if;	
+	end process;
 end;

@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
---  Authors: Oliver Bruendler
+--  Authors: Oliver Bruendler, Benoit Stef
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -10,7 +10,8 @@
 -- This is a pulse shaping block allowing to generate pulses of a fixed length
 -- from pulses with an unknown length. Additionally input pulses occuring 
 -- during a configurable hold-off time can be ignored after one pulse was detected.
-
+-- A new parameter has been added in order to hold, if wanted, the pulse value
+-- when this mode is used the holdoff parameter is not releveant anymore -> 0
 ------------------------------------------------------------------------------
 -- Libraries
 ------------------------------------------------------------------------------
@@ -23,8 +24,9 @@ use ieee.numeric_std.all;
 -- $$ processes=stimuli $$
 entity psi_common_pulse_shaper is
 	generic (
-		Duration_g	: positive	:= 3;		-- Output pulse duration in clock cycles															$$ constant=3 $$
-		HoldOff_g	: natural	:= 0		-- Minimum number of clock cycles between input pulses, if pulses arrive faster, they are ignored	$$ constant=20 $$
+		Duration_g		: positive	:= 3;		-- Output pulse duration in clock cycles															$$ constant=3 $$
+		HoldIn_g		: boolean	:= false;	-- Hold input pulse to the output																	
+		HoldOff_g		: natural	:= 0		-- Minimum number of clock cycles between input pulses, if pulses arrive faster, they are ignored	$$ constant=20 $$
 	);
 	port (
 		Clk			: in	std_logic;			-- $$ type=clk; freq=100e6 $$
@@ -61,7 +63,11 @@ begin
 		-- *** Implementation ***
 		v.PulseLast	:= InPulse;
 		if r.DurCnt = 0 then
-			v.OutPulse	:= '0';
+			if HoldIn_g then
+				v.OutPulse	:= InPulse;	--keep the value of the input pulse
+			else
+				v.OutPulse 	:= '0';
+			end if;
 		else
 			v.DurCnt := r.DurCnt - 1;
 		end if;		
