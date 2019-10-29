@@ -222,6 +222,9 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_pulse_shaper_tb"
+tb_run_add_arguments \
+	"-gHoldIn_g=true" \
+	"-gHoldIn_g=false"
 add_tb_run
 
 create_tb_run "psi_common_clk_meas_tb"

@@ -22,6 +22,9 @@ library ieee;
 -- Entity Declaration
 ------------------------------------------------------------
 entity psi_common_pulse_shaper_tb is
+	generic (
+		HoldIn_g	: boolean := false
+	);
 end entity;
 
 ------------------------------------------------------------
@@ -46,7 +49,6 @@ architecture sim of psi_common_pulse_shaper_tb is
 	signal Rst : std_logic := '1';
 	signal InPulse : std_logic := '0';
 	signal OutPulse : std_logic := '0';
-	signal OutPulse2 : std_logic := '0';
 	
 	-- *** Helpers ***
 	signal InPulseDff : std_logic;
@@ -58,7 +60,7 @@ begin
 	i_dut : entity work.psi_common_pulse_shaper
 		generic map (
 			Duration_g => Duration_g,
-			HoldIn_g => false,
+			HoldIn_g => HoldIn_g,
 			HoldOff_g => HoldOff_g
 		)
 		port map (
@@ -68,23 +70,6 @@ begin
 			OutPulse => OutPulse
 		);
 		
-	------------------------------------------------------------
-	-- Added to check quickly hold input value
-	------------------------------------------------------------
-	i_dut2 : entity work.psi_common_pulse_shaper
-		generic map (
-			Duration_g => Duration_g,
-			HoldIn_g => true,
-			HoldOff_g => 0
-		)
-		port map (
-			Clk => Clk,
-			Rst => Rst,
-			InPulse => InPulse,
-			OutPulse => OutPulse2
-		);
-	
-	
 	------------------------------------------------------------
 	-- Testbench Control !DO NOT EDIT!
 	------------------------------------------------------------
@@ -129,6 +114,7 @@ begin
 	------------------------------------------------------------
 	-- *** stimuli ***
 	p_stimuli : process
+		variable ExpectedInt_v : integer;
 	begin
 		-- start of process !DO NOT EDIT
 		wait until Rst = '0';
@@ -163,13 +149,21 @@ begin
 		wait until falling_edge(Clk);
 		StdlCompare(1, OutPulse, "Not asserted 3");
 		wait until falling_edge(Clk);
-		StdlCompare(0, OutPulse, "Not deasserted");
+		-- expected output depends on HoldIn_g
+		if HoldIn_g then
+			ExpectedInt_v := 1;
+		else
+			ExpectedInt_v := 0;
+		end if;
+		-- Test 
+		StdlCompare(ExpectedInt_v, OutPulse, "Not deasserted");
 		for i in 0 to 50 loop
 			wait until falling_edge(Clk);
-			StdlCompare(0, OutPulse, "Did not stay low");
+			StdlCompare(ExpectedInt_v, OutPulse, "Did not stay low");
 		end loop;
 		InPulse <= '0';
-		wait for 200 ns;		
+		wait for 200 ns;
+		StdlCompare(0, OutPulse, "Too early");		
 		
 		-- *** Test holdoff with large deviation ***
 		for pair in 0 to 2 loop
@@ -221,23 +215,8 @@ begin
 		InPulse <= '0';
 		StdlCompare(1, OutPulse, "Did not detect pulse directly after holdoff time");			
 		
-		
-		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_stimuli_c) <= '1';
 		wait;
-	end process;
-	
-	------------------------------------------------------------
-	-- Check Hold value in the second flavour of the pulse shaper
-	------------------------------------------------------------
-	p_check2 : process(Clk)
-	begin
-		if rising_edge(Clk) then
-			InPulseDff <= InPulse;
-			if InPulseDff = '1' then
-				StdlCompare(1, OutPulse2, "Did not hold InPulse on second flavour of DUT");
-			end if;
-		end if;	
 	end process;
 end;

@@ -64,7 +64,7 @@ begin
 		v.PulseLast	:= InPulse;
 		if r.DurCnt = 0 then
 			if HoldIn_g then
-				v.OutPulse	:= InPulse;	--keep the value of the input pulse
+				v.OutPulse	:= r.OutPulse and InPulse;	--keep the value of the input pulse
 			else
 				v.OutPulse 	:= '0';
 			end if;
