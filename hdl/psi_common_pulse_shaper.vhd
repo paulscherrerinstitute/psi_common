@@ -50,11 +50,7 @@ architecture rtl of psi_common_pulse_shaper is
 	signal r, r_next : two_process_r;
 	
 begin
-	--------------------------------------------------------------------------
-	-- Assertions
-	--------------------------------------------------------------------------
-	assert (HoldIn_g = false) or (HoldOff_g = 0) report "###ERROR###: psi_common_pulse_shaper: HoldOff_g must be zero when using HoldIn_g = true" severity error;
-	
+
 	--------------------------------------------------------------------------
 	-- Combinatorial Process
 	--------------------------------------------------------------------------
