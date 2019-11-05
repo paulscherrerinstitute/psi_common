@@ -38,25 +38,25 @@ end entity;
 
 architecture rtl of psi_common_pp_buf is
 -- internals
-attribute keep              : string;	
-constant ram_depth_c		: integer := 2*ch_nb_g*2**(log2ceil(sample_nb_g/2))-1 ;	-- cst to define the ram depth
-signal dat_s 				: std_logic_vector(dat_length_g-1 downto 0);			-- pipe entry stage for data
-signal str_s 				: std_logic;											-- pipe entry stage for strobe
-signal dpram_data_write_s	: std_logic_vector(dat_length_g-1 downto 0);			-- data to write within RAMs
-signal ch_offs_count_s 		: unsigned(log2ceil(2*ch_nb_g) downto 0);				-- channel counter <=> helper
-signal ch_offs_s 			: unsigned(log2ceil(2*ch_nb_g)-1 downto 0);				-- channel counter <=> offset 	RAM addres (MSB)
-signal sample_s 			: unsigned(log2ceil(sample_nb_g)-1 downto 0);			-- sample counter  <=> base 	RAM address (LSB)
-signal dpram_add_s			: std_logic_vector(log2ceil(ram_depth_c) downto 0);		-- RAMs address
-signal irq_s				: std_logic;											-- used to make edge detect
-signal toggle_s				: std_logic;											-- toggle bit for ping & pong
-signal cdc_toggle_s			: std_logic_vector(1 downto 0);							-- select
-signal wren_s 				: std_logic;											-- write enable RAM1
-signal str_dff_s			: std_logic;
-signal dat_dff_s			: std_logic_vector(dat_length_g-1 downto 0);
-signal tmem_read_add_s 		: std_logic_vector(log2ceil(ram_depth_c) downto 0);
+attribute keep              		: string;	
+constant ram_depth_c				: integer := 2*ch_nb_g*2**(log2ceil(sample_nb_g)) ;		-- cst to define the ram depth
+signal str_s,str_dff_s, str_dff1_s	: std_logic;											-- pipe entry stage for strobe
+signal dpram_data_write_s			: std_logic_vector(dat_length_g-1 downto 0);			-- data to write within RAMs
+signal ch_offs_count_s 				: unsigned(log2ceil(ch_nb_g)-1 downto 0);				-- channel counter <=> helper
+signal sample_s 					: unsigned(log2ceil(sample_nb_g)-1 downto 0);			-- sample counter  <=> base 	RAM address (LSB)
+signal dpram_add_s					: std_logic_vector(log2ceil(ram_depth_c)-1 downto 0);	-- RAMs address
+signal flag_s, flag_dff_s			: std_logic;
+signal irq_s						: std_logic;											-- used to make edge detect
+signal toggle_s						: std_logic;											-- toggle bit for ping & pong
+signal cdc_toggle_s					: std_logic_vector(1 downto 0);							-- select
+signal dpram_wren_s 				: std_logic;											-- write enable RAM1
+signal dpram_read_add_s 			: std_logic_vector(log2ceil(ram_depth_c)-1 downto 0):=(others=>'0');
+--
+type data_array_t is array (0 to ch_nb_g-1) of std_logic_vector(dat_length_g-1 downto 0);
+signal data_array_s : data_array_t;
 
 begin
-
+	
 	--=================================================================
 	-- TAG Process CTRL
 	--=================================================================
@@ -67,73 +67,79 @@ begin
 				--*** init ***
 				sample_s			<= to_unsigned(sample_nb_g-1,sample_s'length);
 				irq_s        		<= '0';
-				toggle_s     		<= '0';			
-				wren_s 	<= '0';	
+				toggle_s     		<= '0';	
+				str_s				<= '0';
+				str_dff_s 		 	<= '0';		
+				dpram_wren_s 		<= '0';	
 				ch_offs_count_s 	<= (others=>'0');
 				dpram_add_s 		<= (others=>'0');
-				dat_s 				<= (others=>'0');
-				str_s				<= '0' ;
-				str_dff_s 		 	<= '0';
-				dat_dff_s  			<= (others=>'0');
-				
+							
 			else
-				--*** 1 pipe ***
-				irq_s 		<= irq_i;
-				dat_s 		<= dat_i;
-				str_s		<= str_i;
-				
+				--*** 1 pipe Entry gates ***
+				irq_s 	<= irq_i;
+				str_s	<= str_i;
+				for i in 0 to ch_nb_g-1 loop
+					data_array_s(i) <= dat_i(i*dat_length_g+dat_length_g-1 downto i*dat_length_g);
+				end loop;
+								
 				--*** additional pipe to manage counter and logic properly ***
-				str_dff_s <= str_s;
-				dat_dff_s <= dat_s;
+				--dat_dff_s <= data_array_s;
 				
 				--*** reset the counter upon IRQ 50Hz & toggle buffer & page counter ***
+				str_dff1_s <= str_dff_s;
 				if irq_i = '1' and irq_s='0' then
-					toggle_s 	 		<= not toggle_s;
+					flag_s <= '1';
+				elsif str_dff_s = '0' and str_dff1_s = '1' then
+					flag_s <= '0';
 				end if;
 								
-				--*** channel counter  ***				
-				if  ch_offs_count_s = 2*ch_nb_g then
+				--*** channel counter and WREN  ***				
+				if  str_s = '1' then
 					ch_offs_count_s <= (others=>'0');
+					str_dff_s <= '1';
 				else		
-					if str_s = '1' then
+					if ch_offs_count_s = ch_nb_g-1 then
+						ch_offs_count_s <= ch_offs_count_s;
+						str_dff_s <= '0';
+					else
 						ch_offs_count_s <= ch_offs_count_s+1;
+						str_dff_s <= '1';
 					end if;			
 				end if;
 				
 				--*** sample counter ***
-				if sample_s = sample_nb_g-1 and str_s='1' and ch_offs_count_s = 0  then
+				if sample_s = sample_nb_g-1 and str_s='1' then
 					sample_s <= (others => '0');	
 				else
-					if str_s = '1' and ch_offs_count_s = 0 then
+					if str_s = '1' then
 						sample_s <= sample_s+1;
 					end if;
 				end if; 
 			
 				--*** DPRAM address write ***
-				dpram_add_s <= toggle_s & std_logic_vector(ch_offs_s) & std_logic_vector(sample_s(sample_s'high downto 1));
+				dpram_add_s 	<= toggle_s & std_logic_vector(ch_offs_count_s) & std_logic_vector(sample_s(sample_s'high downto 0));
+				dpram_wren_s 	<= str_dff_s;
 				
-				--*** concat 16 -> 32 bits for tosca ***
-				if ch_offs_s(0) = '0' and str_dff_s = '1' then
-					dpram_data_write_s <= dat_dff_s;
+				--*** align data prior to write ***
+				if str_dff_s = '1' then
+					for i in 0 to ch_nb_g-1 loop
+						if i = ch_offs_count_s then
+							dpram_data_write_s <= data_array_s(i);
+						end if;
+					end loop;
 				end if;
-								
-				--*** wrena RAM1 ***
-				if 	str_dff_s = '1' and sample_s(0) = '0' then
-					wren_s <= '1';
-				else
-					wren_s <= '0';
-				end if;
-					
+				
+				--*** prevent error of sync ***
+				flag_dff_s <= flag_s ;
+				if flag_dff_s = '1' and flag_s = '0' then
+					toggle_s <= not toggle_s;
+				end if;				
 			end if;
 		end if;		
 	end process;
-	
-	--*** keep as logic non clocked ***
-	ch_offs_s 	<= ch_offs_count_s(log2ceil(2*ch_nb_g)-1 downto 0)-1 	when ch_offs_count_s > 0 else (others=>'0');
 
 	--=================================================================
-	-- TAG cdc for toggle 
-	-- double stage synchronizer
+	-- TAG cdc for toggle - double stage synchronizer
 	--=================================================================
 	proc_cdc : process(mem_clk_i)
 	begin
@@ -142,23 +148,24 @@ begin
 			cdc_toggle_s(1) <= cdc_toggle_s(0);
 		end if;
 	end process;
-	tmem_read_add_s <= not cdc_toggle_s(1) & mem_addr_i;
+	
+	dpram_read_add_s <= not cdc_toggle_s(1) & mem_addr_i;
 	
 	--=================================================================
 	-- TAG PING PONG Buffer
 	--=================================================================
-	inst_dpram_pp_15to0 : entity work.psi_common_tdp_ram
-		generic map(Depth_g    	=> 2**log2ceil(2*ram_depth_c),
+	inst_dpram_pp : entity work.psi_common_tdp_ram
+		generic map(Depth_g    	=> ram_depth_c,
 					Width_g    	=> dat_length_g,
 					Behavior_g 	=> behavior_g)
 		port map(	ClkA  		=> clk_i,
 					AddrA 		=> dpram_add_s,
-					WrA   		=> wren_s,
+					WrA   		=> dpram_wren_s,
 					DinA  		=> dpram_data_write_s,
 					DoutA 		=> open,
 					--
 					ClkB  		=> mem_clk_i,
-					AddrB 		=> tmem_read_add_s,
+					AddrB 		=> dpram_read_add_s,
 					WrB   		=> '0',
 					DinB  		=> (others=>'0'),
 					DoutB 		=> mem_dat_o);

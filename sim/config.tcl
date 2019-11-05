@@ -63,6 +63,7 @@ add_sources "../hdl" {
 	psi_common_axi_slave_ipif.vhd \
 	psi_common_tdp_ram_be.vhd \
 	psi_common_i2c_master.vhd \
+	psi_common_pp_buf.vhd \
 } -tag src
 
 # testbenches
