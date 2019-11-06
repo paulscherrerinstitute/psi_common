@@ -1,14 +1,23 @@
 ------------------------------------------------------------------------------
 --	Copyright (c) 2019 by Paul Scherrer Institute, Switzerland
 --	All rights reserved.
---  Authors: Benoit Stef, Oliver Bruendler
+--  Authors: Benoit Stef
 ------------------------------------------------------------------------------
-
+-- (choose(tdm_g, dat_length_g-1, ch_nb_g*dat_length_g-1) downto 0);
 ------------------------------------------------------------------------------
 -- Description
 ------------------------------------------------------------------------------
-
-
+-- This component is a generic Ping Pong buffer which consists in having 
+-- two buffers in a single RAM block that alternates. The system flips back 
+-- and forth between the buffers, letting run the algorithm on one buffer. Once
+-- the number of samples to read is reached, the IRQ output is set to one 
+-- This allows acquiring constant data flow without losing, generally in use 
+-- when transfer occurs at lowest ratio than processing.  
+-- It is possible to send data in TDM mode or in parallel
+-- ! Beware: if one channel preferably use parallel implementation
+-- dat:--|---|---|xxx|xxx|xxx|---|---|---|xxx|xxx|xxx|---|---|---|xxx|xxx|xxx|
+--       Ping        Pong        Ping        Pong        Ping        Pong
+-- irq:          |           |           |           |           |           |
 ------------------------------------------------------------------------------
 -- Libraries
 ------------------------------------------------------------------------------
@@ -22,13 +31,14 @@ entity psi_common_pp_buf  is
 	generic(ch_nb_g  			: natural 	:= 16;															-- Channel number -> master 8
 			sample_nb_g 		: natural 	:= 1012;														-- sample number per memory space 
 			dat_length_g		: positive	:= 16;															-- data width in bits
-			behavior_g			: string	:= "RBW";														-- ram behavior "RBW"|"WBR" -> cf RAM
+			tdm_g				: boolean	:= false;														-- TDM* behavior if false PAR
+			ram_behavior_g		: string	:= "RBW";														-- ram behavior "RBW"|"WBR" -> cf RAM
 			rst_pol_g			: std_logic	:= '1');														-- reset polarity
 	port(	clk_i  				: in  std_logic;															-- clock data
 	     	rst_i  				: in  std_logic;															-- rst data
-	     	irq_i				: in  std_logic;															-- array strobe (ie expect freq -> ratio str & sample number)
-	     	dat_i 				: in  std_logic_vector(ch_nb_g*dat_length_g-1 downto 0);					-- data input
+	     	dat_i 				: in  std_logic_vector(choose(tdm_g, dat_length_g-1, ch_nb_g*dat_length_g-1) downto 0);-- data input
 			str_i				: in  std_logic;															-- strobe input (ie valid)
+			irq_o				: out std_logic;															-- indicate when a set of buffer has been filled
 			--*** mem read interface ***
 			mem_clk_i 			: in  std_logic;															-- clock mem 
 			mem_addr_i			: in  std_logic_vector(log2ceil(ch_nb_g)+log2ceil(sample_nb_g)-1 downto 0); -- address mem read
@@ -37,36 +47,35 @@ entity psi_common_pp_buf  is
 end entity;
 
 architecture rtl of psi_common_pp_buf is
--- internals
-attribute keep              		: string;	
+-- internals	
 constant ram_depth_c				: integer := 2*ch_nb_g*2**(log2ceil(sample_nb_g)) ;		-- cst to define the ram depth
-signal str_s,str_dff_s, str_dff1_s	: std_logic;											-- pipe entry stage for strobe
+signal str_s,str_dff_s				: std_logic;											-- pipe entry stage for strobe
 signal dpram_data_write_s			: std_logic_vector(dat_length_g-1 downto 0);			-- data to write within RAMs
 signal ch_offs_count_s 				: unsigned(log2ceil(ch_nb_g)-1 downto 0);				-- channel counter <=> helper
 signal sample_s 					: unsigned(log2ceil(sample_nb_g)-1 downto 0);			-- sample counter  <=> base 	RAM address (LSB)
 signal dpram_add_s					: std_logic_vector(log2ceil(ram_depth_c)-1 downto 0);	-- RAMs address
-signal flag_s, flag_dff_s			: std_logic;
-signal irq_s						: std_logic;											-- used to make edge detect
 signal toggle_s						: std_logic;											-- toggle bit for ping & pong
 signal cdc_toggle_s					: std_logic_vector(1 downto 0);							-- select
 signal dpram_wren_s 				: std_logic;											-- write enable RAM1
 signal dpram_read_add_s 			: std_logic_vector(log2ceil(ram_depth_c)-1 downto 0):=(others=>'0');
+signal dat_s 						: std_logic_vector(dat_length_g-1 downto 0);
 --
 type data_array_t is array (0 to ch_nb_g-1) of std_logic_vector(dat_length_g-1 downto 0);
 signal data_array_s : data_array_t;
 
 begin
+	--*** General ASSERT ***
+	assert not (tdm_g and ch_nb_g = 1)
+	report "###ERROR###: preferably use no tdm mode for one channel"
+	severity failure;
 	
-	--=================================================================
-	-- TAG Process CTRL
-	--=================================================================
+	--*** TAG Process CTRL ***
 	proc_ctrl : process(clk_i)
 	begin
 		if rising_edge(clk_i) then
 			if rst_i = rst_pol_g then
 				--*** init ***
 				sample_s			<= to_unsigned(sample_nb_g-1,sample_s'length);
-				irq_s        		<= '0';
 				toggle_s     		<= '0';	
 				str_s				<= '0';
 				str_dff_s 		 	<= '0';		
@@ -75,72 +84,102 @@ begin
 				dpram_add_s 		<= (others=>'0');
 							
 			else
-				--*** 1 pipe Entry gates ***
-				irq_s 	<= irq_i;
+				
 				str_s	<= str_i;
-				for i in 0 to ch_nb_g-1 loop
-					data_array_s(i) <= dat_i(i*dat_length_g+dat_length_g-1 downto i*dat_length_g);
-				end loop;
-								
-				--*** additional pipe to manage counter and logic properly ***
-				--dat_dff_s <= data_array_s;
-				
-				--*** reset the counter upon IRQ 50Hz & toggle buffer & page counter ***
-				str_dff1_s <= str_dff_s;
-				if irq_i = '1' and irq_s='0' then
-					flag_s <= '1';
-				elsif str_dff_s = '0' and str_dff1_s = '1' then
-					flag_s <= '0';
-				end if;
-								
-				--*** channel counter and WREN  ***				
-				if  str_s = '1' then
-					ch_offs_count_s <= (others=>'0');
-					str_dff_s <= '1';
-				else		
-					if ch_offs_count_s = ch_nb_g-1 then
-						ch_offs_count_s <= ch_offs_count_s;
-						str_dff_s <= '0';
+				--*** 1 pipe Entry gates PAR ***
+				if not tdm_g then
+					if ch_nb_g > 1 then
+						for i in 0 to ch_nb_g-1 loop
+							data_array_s(i) <= dat_i(i*dat_length_g+dat_length_g-1 downto i*dat_length_g);
+						end loop;
 					else
-						ch_offs_count_s <= ch_offs_count_s+1;
-						str_dff_s <= '1';
-					end if;			
+						dat_s <= dat_i;
+					end if;
+				--*** 1 pipe Entry gates TDM ***	
+				else
+					dat_s <= dat_i;
 				end if;
 				
-				--*** sample counter ***
-				if sample_s = sample_nb_g-1 and str_s='1' then
-					sample_s <= (others => '0');	
+				--*** channel counter PAR ***		
+				if not tdm_g then		
+					if  str_s = '1' then
+						ch_offs_count_s <= (others=>'0');
+						str_dff_s <= '1';
+					else		
+						if ch_offs_count_s = ch_nb_g-1 then
+							ch_offs_count_s <= ch_offs_count_s;
+							str_dff_s <= '0';
+						else
+							ch_offs_count_s <= ch_offs_count_s+1;
+							str_dff_s <= '1';
+						end if;			
+					end if;
+					
+				--*** channel counter TDM ***		
 				else
 					if str_s = '1' then
-						sample_s <= sample_s+1;
+						ch_offs_count_s <= ch_offs_count_s+1;
+					else
+						ch_offs_count_s <= (others=>'0');
 					end if;
-				end if; 
-			
-				--*** DPRAM address write ***
-				dpram_add_s 	<= toggle_s & std_logic_vector(ch_offs_count_s) & std_logic_vector(sample_s(sample_s'high downto 0));
-				dpram_wren_s 	<= str_dff_s;
-				
-				--*** align data prior to write ***
-				if str_dff_s = '1' then
-					for i in 0 to ch_nb_g-1 loop
-						if i = ch_offs_count_s then
-							dpram_data_write_s <= data_array_s(i);
-						end if;
-					end loop;
 				end if;
 				
-				--*** prevent error of sync ***
-				flag_dff_s <= flag_s ;
-				if flag_dff_s = '1' and flag_s = '0' then
-					toggle_s <= not toggle_s;
-				end if;				
+				--*** sample counter PAR ***
+				if not tdm_g then
+					if sample_s = sample_nb_g-1 and str_s='1' then
+						sample_s <= (others => '0');	
+						toggle_s <= not toggle_s;
+					else
+						if str_s = '1' then
+							sample_s <= sample_s+1;
+						end if;
+					end if; 
+				else
+				--*** sample counter TDM ***	
+					if sample_s = sample_nb_g-1 and dpram_wren_s ='1' and str_s='0'then	
+						toggle_s <= not toggle_s;
+					end if;
+					if sample_s = sample_nb_g-1 and str_i = '1' and str_s='0' then
+						sample_s <= (others => '0');
+					else
+						if str_i = '1' and str_s='0' then
+							sample_s <= sample_s+1;
+						end if;
+					end if; 
+				end if;
+			
+				--*** DPRAM address write & ena ***
+				dpram_add_s 	<= toggle_s & std_logic_vector(ch_offs_count_s) & std_logic_vector(sample_s(sample_s'high downto 0));
+				dpram_wren_s 	<= choose(tdm_g,str_s,str_dff_s);
+				
+				--*** align data prior to write for PAR ***
+				if not tdm_g then
+					if str_dff_s = '1' then
+						if ch_nb_g > 1 then
+							for i in 0 to ch_nb_g-1 loop
+								if i = ch_offs_count_s then
+									dpram_data_write_s <= data_array_s(i);
+								end if;
+							end loop;
+						else
+							dpram_data_write_s <= dat_s;
+						end if;
+					end if;
+				else
+				--*** align data prior to write for TDM ***
+					if str_s = '1' then 
+						for i in 0 to ch_nb_g-1 loop
+							if i = ch_offs_count_s then
+								dpram_data_write_s <= dat_s;
+							end if;
+						end loop;
+					end if;
+				end if;
 			end if;
 		end if;		
 	end process;
 
-	--=================================================================
-	-- TAG cdc for toggle - double stage synchronizer
-	--=================================================================
+	--*** TAG cdc for toggle - double stage synchronizer ***
 	proc_cdc : process(mem_clk_i)
 	begin
 		if rising_edge(mem_clk_i) then
@@ -148,16 +187,14 @@ begin
 			cdc_toggle_s(1) <= cdc_toggle_s(0);
 		end if;
 	end process;
-	
+	irq_o <= cdc_toggle_s(0) xor toggle_s;
 	dpram_read_add_s <= not cdc_toggle_s(1) & mem_addr_i;
 	
-	--=================================================================
-	-- TAG PING PONG Buffer
-	--=================================================================
+	--*** TAG PING PONG Buffer ***
 	inst_dpram_pp : entity work.psi_common_tdp_ram
 		generic map(Depth_g    	=> ram_depth_c,
 					Width_g    	=> dat_length_g,
-					Behavior_g 	=> behavior_g)
+					Behavior_g 	=> ram_behavior_g)
 		port map(	ClkA  		=> clk_i,
 					AddrA 		=> dpram_add_s,
 					WrA   		=> dpram_wren_s,
