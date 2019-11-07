@@ -34,14 +34,15 @@ architecture sim of psi_common_ping_pong_tdm_burst_tb is
 	constant TbProcNr_outp_c	: integer					:= 1;	
 	signal TbRunning			: boolean					:= true;
 
-	signal clk_i		: std_logic 					:= '0';
-	signal rst_i 		: std_logic						:= '1';
-	signal dat_i		: std_logic_vector(15 downto 0)	:= (others => '0');
-	signal str_i		: std_logic						:= '0';
-	signal irq_o		: std_logic						:= '0';
-	signal mem_clk_i	: std_logic						:= '0';
-	signal mem_addr_i	: std_logic_vector(4 downto 0)	:= (others => '0');
-	signal mem_dat_o	: std_logic_vector(15 downto 0)	:= (others => '0');
+	signal clk_i			: std_logic 					:= '0';
+	signal rst_i 			: std_logic						:= '1';
+	signal dat_i			: std_logic_vector(15 downto 0)	:= (others => '0');
+	signal str_i			: std_logic						:= '0';
+	signal mem_irq_o		: std_logic						:= '0';
+	signal mem_clk_i		: std_logic						:= '0';
+	signal mem_addr_spl_i	: std_logic_vector(2 downto 0)	:= (others => '0');
+	signal mem_addr_ch_i	: std_logic_vector(1 downto 0)	:= (others => '0');
+	signal mem_dat_o		: std_logic_vector(15 downto 0)	:= (others => '0');
 	
 	
 begin
@@ -55,14 +56,15 @@ begin
 						tdm_g          => true,
 						ram_behavior_g => "RBW",
 						rst_pol_g      => '1')
-		port map (	clk_i      => clk_i,
-					 rst_i      => rst_i,
-					 dat_i      => dat_i,
-					 str_i      => str_i,
-					 irq_o      => irq_o,
-					 mem_clk_i  => mem_clk_i,   
-					 mem_addr_i => mem_addr_i,
-					 mem_dat_o  => mem_dat_o
+		port map (	clk_i      		=> clk_i,
+					 rst_i      	=> rst_i,
+					 dat_i      	=> dat_i,
+					 str_i      	=> str_i,
+					 mem_irq_o  	=> mem_irq_o,
+					 mem_clk_i  	=> mem_clk_i,   
+					 mem_addr_spl_i => mem_addr_spl_i,
+					 mem_addr_ch_i 	=> mem_addr_ch_i,
+					 mem_dat_o  	=> mem_dat_o
 			);
 			
 
@@ -160,11 +162,12 @@ begin
 		
 		-- We expect four buffers comming in
 		for buf in 0 to 3 loop
-			wait until rising_edge(mem_clk_i) and irq_o = '1';
+			wait until rising_edge(mem_clk_i) and mem_irq_o = '1';
 			for sample in 0 to 5 loop
 				for channel in 0 to 2 loop				
 					wait until rising_edge(mem_clk_i);
-					mem_addr_i <= std_logic_vector(to_unsigned(channel, 2) & to_unsigned(sample, 3));
+					mem_addr_ch_i <= std_logic_vector(to_unsigned(channel, 2));
+					mem_addr_spl_i <= std_logic_vector(to_unsigned(sample, 3));
 					wait until rising_edge(mem_clk_i);
 					wait until falling_edge(mem_clk_i);
 					StdlvCompareStdlv(std_logic_vector(to_unsigned(channel, 8) & to_unsigned(SampleNr_v, 8)), mem_dat_o, 

@@ -51,6 +51,8 @@ architecture tb of psi_common_ping_pong_tb is
 	signal proc_str_sti     : std_logic                                                                := '0';
 	signal mem_addr_s       : integer                                                                  := 0;
 	signal mem_addr_sti     : std_logic_vector(log2ceil(ch_nb_g) + log2ceil(sample_nb_g) - 1 downto 0) := (others => '0');
+	signal mem_addr_ch_sti	: std_logic_vector(log2ceil(ch_nb_g) - 1 downto 0) 						   := (others => '0');
+	signal mem_addr_spl_sti : std_logic_vector(log2ceil(sample_nb_g) - 1 downto 0) 					   := (others => '0');
 	signal mem_irq_obs      : std_logic;
 	signal mem_dat_obs      : std_logic_vector(dat_length_g - 1 downto 0);
 	signal mem_dat_check_s  : integer                                                                  := 0;
@@ -165,6 +167,8 @@ begin
 	mem_addr_sti <= std_logic_vector(to_unsigned(mem_addr_s, mem_addr_sti'length));
 
 	--*** TAG DUT***
+	mem_addr_ch_sti		<= mem_addr_sti(mem_addr_sti'high downto mem_addr_spl_sti'length);
+	mem_addr_spl_sti	<= mem_addr_sti(mem_addr_spl_sti'range);
 	inst_dut : entity work.psi_common_ping_pong
 		generic map(ch_nb_g        => ch_nb_g,
 		            sample_nb_g    => sample_nb_g,
@@ -172,14 +176,15 @@ begin
 		            tdm_g          => tdm_g,
 		            ram_behavior_g => "RBW", --fixed read before write
 		            rst_pol_g      => '1') --fixed active high
-		port map(clk_i      => proc_clk_sti,
-		         rst_i      => proc_rst_sti,
-		         dat_i      => proc_dat_sti,
-		         str_i      => proc_str_sti,
-		         irq_o      => mem_irq_obs,
-		         mem_clk_i  => mem_clk_sti,
-		         mem_addr_i => mem_addr_sti,
-		         mem_dat_o  => mem_dat_obs);
+		port map(clk_i      	=> proc_clk_sti,
+		         rst_i      	=> proc_rst_sti,
+		         dat_i      	=> proc_dat_sti,
+		         str_i      	=> proc_str_sti,
+		         mem_irq_o  	=> mem_irq_obs,
+		         mem_clk_i  	=> mem_clk_sti,
+		         mem_addr_ch_i 	=> mem_addr_ch_sti,
+				 mem_addr_spl_i => mem_addr_spl_sti,
+		         mem_dat_o  	=> mem_dat_obs);
 
 	--*** TAG stimuli process generate data to write ***
 	proc_stim_dat : process(proc_clk_sti)

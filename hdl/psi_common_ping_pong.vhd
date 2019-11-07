@@ -37,12 +37,13 @@ entity psi_common_ping_pong is
 	port(clk_i      : in  std_logic;               -- clock data
 	     rst_i      : in  std_logic;               -- rst data
 	     dat_i      : in  std_logic_vector(choose(tdm_g, dat_length_g - 1, ch_nb_g * dat_length_g - 1) downto 0); -- data input
-	     str_i      : in  std_logic;               -- strobe input (ie valid)
-	     irq_o      : out std_logic;               -- indicate when a set of buffer has been filled
+	     str_i      : in  std_logic;               -- strobe input (ie valid)            
 	     --*** mem read interface ***
-	     mem_clk_i  : in  std_logic;                                                                -- clock mem
-	     mem_addr_i : in  std_logic_vector(log2ceil(ch_nb_g) + log2ceil(sample_nb_g) - 1 downto 0); -- address mem read
-	     mem_dat_o  : out std_logic_vector(dat_length_g - 1 downto 0)                               -- data mem read
+		 mem_irq_o		: out std_logic;																-- indicate when a set of buffer has been filled
+	     mem_clk_i  	: in  std_logic;                                                                -- clock mem
+		 mem_addr_ch_i	: in  std_logic_vector(log2ceil(ch_nb_g)-1 downto 0);							-- Channel selection for mem read
+		 mem_addr_spl_i	: in  std_logic_vector(log2ceil(sample_nb_g)-1 downto 0);					    -- Sample selection for mem read
+	     mem_dat_o  	: out std_logic_vector(dat_length_g - 1 downto 0)                               -- data mem read
 	    );
 end entity;
 
@@ -56,7 +57,7 @@ architecture rtl of psi_common_ping_pong is
 	signal sample_s           : unsigned(log2ceil(sample_nb_g) - 1 downto 0);         -- sample counter  <=> base 	RAM address (LSB)
 	signal dpram_add_s        : std_logic_vector(log2ceil(ram_depth_c) - 1 downto 0); -- RAMs address
 	signal toggle_s           : std_logic;                                            -- toggle bit for ping & pong
-	signal cdc_toggle_s       : std_logic_vector(1 downto 0);                         -- select
+	signal cdc_toggle_s       : std_logic_vector(2 downto 0);                         -- select
 	signal dpram_wren_s       : std_logic;                                            -- write enable RAM1
 	signal dpram_read_add_s   : std_logic_vector(log2ceil(ram_depth_c) - 1 downto 0) := (others => '0');
 	signal dat_s              : std_logic_vector(dat_length_g - 1 downto 0);
@@ -176,10 +177,11 @@ begin
 		if rising_edge(mem_clk_i) then
 			cdc_toggle_s(0) <= toggle_s;
 			cdc_toggle_s(1) <= cdc_toggle_s(0);
+			cdc_toggle_s(2) <= cdc_toggle_s(1);
 		end if;
 	end process;
-	irq_o            <= cdc_toggle_s(0) xor cdc_toggle_s(1);
-	dpram_read_add_s <= not cdc_toggle_s(1) & mem_addr_i;
+	mem_irq_o  <= cdc_toggle_s(1) xor cdc_toggle_s(2);
+	dpram_read_add_s <= not cdc_toggle_s(1) & mem_addr_ch_i & mem_addr_spl_i;
 
 	--*** TAG PING PONG Buffer ***
 	inst_dpram_pp : entity work.psi_common_tdp_ram
