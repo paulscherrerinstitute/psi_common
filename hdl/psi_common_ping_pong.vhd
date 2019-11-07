@@ -157,8 +157,9 @@ begin
 
 				--*** align data prior to write for PAR ***
 				if not tdm_g then
-					 if ch_nb_g > 1 then						
-						dpram_data_write_s <= data_array_s(to_integer(unsigned(ch_offs_count_s)));
+					 if ch_nb_g > 1 and str_dff_s = '1' then						
+						dpram_data_write_s 				<= data_array_s(0);
+						data_array_s(0 to ch_nb_g-2)	<= data_array_s(1 to ch_nb_g-1);
 					else
 						dpram_data_write_s <= dat_s;
 					end if;
