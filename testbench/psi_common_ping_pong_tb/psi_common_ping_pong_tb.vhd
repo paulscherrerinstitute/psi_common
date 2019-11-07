@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
---	Copyright (c) 2019 by Paul Scherrer Institute, Switzerland
---	All rights reserved.
---  Authors: Benoit Stef
+-- Copyright (c) 2019 by Paul Scherrer Institute, Switzerland
+-- All rights reserved.
+-- Authors: Benoit Stef
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -25,17 +25,17 @@ use work.psi_tb_activity_pkg.all;
 use work.psi_common_math_pkg.all;
 use work.psi_tb_compare_pkg.all;
 
-entity psi_common_pp_buf_tb is
+entity psi_common_ping_pong_tb is
 	generic(freq_data_clk_g : real    := 100.0E6; -- data clock frequency <=> Hz
 	        ratio_str_g     : real    := 10.0; -- ratio  between clock and data to write <=> clock cycle
 	        freq_mem_clk_g  : real    := 120.0E6; -- read clock frequency <=> Hz
 	        ch_nb_g         : natural := 4; -- number of channels <=> n/a
 	        sample_nb_g     : natural := 6; -- number of sample per buffer <=> n/a
-	        dat_length_g    : natural := 16; -- number of bit per data <=> n/a
+	        dat_length_g    : natural := 14; -- number of bit per data <=> n/a
 	        tdm_g           : boolean := true); -- using the buffer in time division multiplexed mode
 end entity;
 
-architecture tb of psi_common_pp_buf_tb is
+architecture tb of psi_common_ping_pong_tb is
 	
 	constant period_w_c     : time                                                                     := (1 sec) / freq_data_clk_g;
 	constant period_r_c     : time                                                                     := (1 sec) / freq_mem_clk_g;
@@ -165,7 +165,7 @@ begin
 	mem_addr_sti <= std_logic_vector(to_unsigned(mem_addr_s, mem_addr_sti'length));
 
 	--*** TAG DUT***
-	inst_dut : entity work.psi_common_pp_buf
+	inst_dut : entity work.psi_common_ping_pong
 		generic map(ch_nb_g        => ch_nb_g,
 		            sample_nb_g    => sample_nb_g,
 		            dat_length_g   => dat_length_g,
@@ -223,16 +223,7 @@ begin
 
 				--*** counter channel depending on address read ***
 				count_ch_s <= mem_addr_s / (2**log2ceil(sample_nb_g));
-				
-				--*** calculate expected value ***
-				if count_sp_s >= sample_nb_g then
-					mem_dat_check_s <= 0;
-				else
-					mem_dat_check_s <= count_sp_s + count_ch_s;
-				end if;
-		
 			else
-				mem_dat_check_s <= 0;
 				count_ch_s      <= 0;
 				count_sp_s      <= 0;
 			end if;
@@ -240,6 +231,19 @@ begin
 		end if;
 	end process;
 	
+	--*** TAG calculate expected value ***
+	process (count_ch_s, count_sp_s, flag_s)
+		begin
+			if flag_s = '1' then
+				if count_sp_s >= sample_nb_g then
+					mem_dat_check_s <= 0;
+				else
+					mem_dat_check_s <= count_sp_s + count_ch_s;
+				end if;
+			else
+				mem_dat_check_s <= 0;
+		end if;
+	end process;
 	
 	--*** TAG check process ***
 	proc_check : process
