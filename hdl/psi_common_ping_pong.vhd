@@ -48,7 +48,7 @@ end entity;
 
 architecture rtl of psi_common_ping_pong is
 	-- internals
-	constant ram_depth_c      : integer := 2 * ch_nb_g * 2**(log2ceil(sample_nb_g));  -- cst to define the ram depth
+	constant ram_depth_c      : integer := 2 * 2**log2ceil(ch_nb_g) * 2**(log2ceil(sample_nb_g));  -- cst to define the ram depth
 	
 	signal str_s, str_dff_s   : std_logic;                                            -- pipe entry stage for strobe
 	signal dpram_data_write_s : std_logic_vector(dat_length_g - 1 downto 0);          -- data to write within RAMs
@@ -76,7 +76,7 @@ begin
 		if rising_edge(clk_i) then
 			if rst_i = rst_pol_g then
 				--*** init ***
-				sample_s        <= to_unsigned(sample_nb_g - 1, sample_s'length);
+				sample_s        <= choose(tdm_g, to_unsigned(0, sample_s'length), to_unsigned(sample_nb_g - 1, sample_s'length));
 				toggle_s        <= '0';
 				str_s           <= '0';
 				str_dff_s       <= '0';
@@ -138,14 +138,11 @@ begin
 						end if;
 					end if;
 				else
-					--*** sample counter TDM ***
-					if sample_s = sample_nb_g - 1 and dpram_wren_s = '1' and str_s = '0' then
-						toggle_s <= not toggle_s;
-					end if;
-					if sample_s = sample_nb_g - 1 and str_i = '1' and str_s = '0' then
-						sample_s <= (others => '0');
-					else
-						if str_i = '1' and str_s = '0' then
+					if  ch_offs_count_s = ch_nb_g-1 and str_s = '1' then
+						if sample_s = sample_nb_g - 1 then
+							sample_s <= (others => '0');
+							toggle_s <= not toggle_s;
+						else
 							sample_s <= sample_s + 1;
 						end if;
 					end if;

@@ -53,7 +53,11 @@ package psi_common_math_pkg is
 	function choose(	s : in 	boolean;
 						t : in 	real;
 						f : in 	real) return real;	
-
+						
+	function choose(	s : in 	boolean;
+						t : in 	unsigned;
+						f : in 	unsigned) return unsigned;	
+						
 	-- count occurence of a value inside an array
 	function count(	a : in t_ainteger;
 					v : in integer) return integer;
@@ -188,6 +192,18 @@ package body psi_common_math_pkg is
 	function choose(	s : in 	boolean;
 						t : in 	real;
 						f : in 	real) return real is
+	begin
+		if s then
+			return t;
+		else
+			return f;
+		end if;
+	end function;
+	
+	-- *** Choose (unsigned) ***	
+	function choose(	s : in 	boolean;
+						t : in 	unsigned;
+						f : in 	unsigned) return unsigned is
 	begin
 		if s then
 			return t;
