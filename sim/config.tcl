@@ -109,6 +109,7 @@ add_sources "../testbench" {
 	psi_common_tdp_ram_be_tb/psi_common_tdp_ram_be_tb.vhd \
 	psi_common_i2c_master_tb/psi_common_i2c_master_tb.vhd \
 	psi_common_ping_pong_tb/psi_common_ping_pong_tb.vhd \
+	psi_common_ping_pong_tb/psi_common_ping_pong_tdm_burst_tb.vhd \
 } -tag tb
 
 #TB Runs
@@ -284,4 +285,7 @@ tb_run_skip Vivado
 tb_run_add_arguments \
 	"-gInternalTriState_g=true" \
 	"-gInternalTriState_g=false"
+add_tb_run
+
+create_tb_run "psi_common_ping_pong_tdm_burst_tb"
 add_tb_run
