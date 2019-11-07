@@ -36,7 +36,7 @@ entity psi_common_ping_pong_tb is
 end entity;
 
 architecture tb of psi_common_ping_pong_tb is
-	
+
 	constant period_w_c     : time                                                                     := (1 sec) / freq_data_clk_g;
 	constant period_r_c     : time                                                                     := (1 sec) / freq_mem_clk_g;
 	signal proc_clk_sti     : std_logic                                                                := '0';
@@ -44,15 +44,15 @@ architecture tb of psi_common_ping_pong_tb is
 	signal proc_rst_sti     : std_logic                                                                := '1';
 	signal proc_dat_par_sti : std_logic_vector(ch_nb_g * dat_length_g - 1 downto 0)                    := (others => 'L');
 	signal proc_dat_tdm_sti : std_logic_vector(dat_length_g - 1 downto 0)                              := (others => 'L');
-	signal proc_dat_sti     : std_logic_vector(choose(tdm_g, dat_length_g-1, ch_nb_g*dat_length_g-1) downto 0);
+	signal proc_dat_sti     : std_logic_vector(choose(tdm_g, dat_length_g - 1, ch_nb_g * dat_length_g - 1) downto 0);
 	signal proc_str_s       : std_logic                                                                := '0';
 	signal proc_str_par_sti : std_logic                                                                := '0';
 	signal proc_str_tdm_sti : std_logic                                                                := '0';
 	signal proc_str_sti     : std_logic                                                                := '0';
 	signal mem_addr_s       : integer                                                                  := 0;
 	signal mem_addr_sti     : std_logic_vector(log2ceil(ch_nb_g) + log2ceil(sample_nb_g) - 1 downto 0) := (others => '0');
-	signal mem_addr_ch_sti	: std_logic_vector(log2ceil(ch_nb_g) - 1 downto 0) 						   := (others => '0');
-	signal mem_addr_spl_sti : std_logic_vector(log2ceil(sample_nb_g) - 1 downto 0) 					   := (others => '0');
+	signal mem_addr_ch_sti  : std_logic_vector(log2ceil(ch_nb_g) - 1 downto 0)                         := (others => '0');
+	signal mem_addr_spl_sti : std_logic_vector(log2ceil(sample_nb_g) - 1 downto 0)                     := (others => '0');
 	signal mem_irq_obs      : std_logic;
 	signal mem_dat_obs      : std_logic_vector(dat_length_g - 1 downto 0);
 	signal mem_dat_check_s  : integer                                                                  := 0;
@@ -167,8 +167,8 @@ begin
 	mem_addr_sti <= std_logic_vector(to_unsigned(mem_addr_s, mem_addr_sti'length));
 
 	--*** TAG DUT***
-	mem_addr_ch_sti		<= mem_addr_sti(mem_addr_sti'high downto mem_addr_spl_sti'length);
-	mem_addr_spl_sti	<= mem_addr_sti(mem_addr_spl_sti'range);
+	mem_addr_ch_sti  <= mem_addr_sti(mem_addr_sti'high downto mem_addr_spl_sti'length);
+	mem_addr_spl_sti <= mem_addr_sti(mem_addr_spl_sti'range);
 	inst_dut : entity work.psi_common_ping_pong
 		generic map(ch_nb_g        => ch_nb_g,
 		            sample_nb_g    => sample_nb_g,
@@ -176,15 +176,15 @@ begin
 		            tdm_g          => tdm_g,
 		            ram_behavior_g => "RBW", --fixed read before write
 		            rst_pol_g      => '1') --fixed active high
-		port map(clk_i      	=> proc_clk_sti,
-		         rst_i      	=> proc_rst_sti,
-		         dat_i      	=> proc_dat_sti,
-		         str_i      	=> proc_str_sti,
-		         mem_irq_o  	=> mem_irq_obs,
-		         mem_clk_i  	=> mem_clk_sti,
-		         mem_addr_ch_i 	=> mem_addr_ch_sti,
-				 mem_addr_spl_i => mem_addr_spl_sti,
-		         mem_dat_o  	=> mem_dat_obs);
+		port map(clk_i          => proc_clk_sti,
+		         rst_i          => proc_rst_sti,
+		         dat_i          => proc_dat_sti,
+		         str_i          => proc_str_sti,
+		         mem_irq_o      => mem_irq_obs,
+		         mem_clk_i      => mem_clk_sti,
+		         mem_addr_ch_i  => mem_addr_ch_sti,
+		         mem_addr_spl_i => mem_addr_spl_sti,
+		         mem_dat_o      => mem_dat_obs);
 
 	--*** TAG stimuli process generate data to write ***
 	proc_stim_dat : process(proc_clk_sti)
@@ -229,27 +229,27 @@ begin
 				--*** counter channel depending on address read ***
 				count_ch_s <= mem_addr_s / (2**log2ceil(sample_nb_g));
 			else
-				count_ch_s      <= 0;
-				count_sp_s      <= 0;
+				count_ch_s <= 0;
+				count_sp_s <= 0;
 			end if;
 
 		end if;
 	end process;
-	
+
 	--*** TAG calculate expected value ***
-	process (count_ch_s, count_sp_s, flag_s)
-		begin
-			if flag_s = '1' then
-				if count_sp_s >= sample_nb_g then
-					mem_dat_check_s <= 0;
-				else
-					mem_dat_check_s <= count_sp_s + count_ch_s;
-				end if;
-			else
+	process(count_ch_s, count_sp_s, flag_s)
+	begin
+		if flag_s = '1' then
+			if count_sp_s >= sample_nb_g then
 				mem_dat_check_s <= 0;
+			else
+				mem_dat_check_s <= count_sp_s + count_ch_s;
+			end if;
+		else
+			mem_dat_check_s <= 0;
 		end if;
 	end process;
-	
+
 	--*** TAG check process ***
 	proc_check : process
 		variable lout_v : line;
@@ -265,7 +265,7 @@ begin
 		writeline(output, lout_v);
 		-------------------------------------------------------------------------------
 		wait until mem_irq_obs = '1' and rising_edge(mem_clk_sti);
-		
+
 		for i in 0 to 7 loop
 			wait until mem_irq_obs = '1' and rising_edge(mem_clk_sti);
 			report "Burst Read Start" severity note;
