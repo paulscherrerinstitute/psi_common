@@ -22,9 +22,9 @@
   * Added *psi\_common\_i2c\_master*: Multi-master capable I2C master
   * Added *psi\_common\_tdp\_ram\_be*: True dual port RAM with byte enables
 * Bugfixes
-  * Fixed bug in *psi\_common\_axi\_master\_simple* that led to errors in simulations (no problen in HW)
+  * Fixed bug in *psi\_common\_axi\_master\_simple* that led to errors in simulations (no problem in HW)
 * Others
-  * Changed AXI record names in *psi\_common\_axi\_pkg* to be clear for master and slave ports 
+  * Changed AXI record names in *psi\_common\_axi\_pkg* to be clear for master and slave ports
 
 ## 2.5.1
 * Added Features
@@ -49,30 +49,30 @@
 
 ## 2.4.0
 * Added Features
-  * Added integer to std\_logic converstion to *psi\_common\_logic\_pkg* 
+  * Added integer to std\_logic converstion to *psi\_common\_logic\_pkg*
   * Added Last handling to *psi\_common\_wconv\_...* entities
   * Added full AXI master (incl. unaligned transfers) *psi\_common\_axi\_master\_full*
-* Bugfixes 
+* Bugfixes
   * Made All Testbenches compatible with GHDL
 
 ## 2.3.0
 * Added Features
   * Added generator scripts for wrappers to ease usage of *psi\_common\_par\_tdm*, *psi\_common\_tdm\_par*, *psi\_common\_simple\_cc* and *psi\_common\_status\_cc*
   * Added *psi\_common\_axi\_master\_simple* (AXI-Master, supporting aligned transfers only)
-* Bugfixes 
+* Bugfixes
   * None
- 
+
 ## 2.2.0
 * Added Features
   * Added generic to control Rdy-behavior during reset
-* Bugfixes 
+* Bugfixes
   * None
 
 ## 2.1.0
 * Added Features
-  * Added psi\_common\_spi\_master 
+  * Added psi\_common\_spi\_master
   * Added FrequencyVld signals to psi\_common\_clk\_meas
-* Bugfixes 
+* Bugfixes
   * Fixed bug for psi\_common\_strobe\_divider Ratio\_g=1
 * Documentation
   * Added power point presentation about the library
@@ -98,7 +98,7 @@
   * psi\_common\_tdm\_mux did not work correctly if input Vld was not kept asserted during a whole TDM run (i.e. all samples of a TDM run had to arrive back-to-back for the mux to work)
   * psi\_common\_async\_fifo timing optimization (from 1.11.0) did not work for OutRdy asserted when a single input sample arrives
 
-## 1.11.0 
+## 1.11.0
 * Added Features
   * Added clock measurement logic (psi\_common\_clk\_meas)
   * Added pulse shaper (create fixed duration pulse with limited frequency) (psi\_common\_pulse\_shaper)
@@ -137,7 +137,7 @@
   * The ready-path (Rdy-handling) can now optionally be disabled for the pipelilne stages
   * The implementation style of RAMs (block or distributed) is now accessible via Generic
 * Changes
-  * FIFOs are now using psi\_common\_sdp\_ram\_rbw (instead of psi\_common\_tdp\_ram\_rbw) to allow using distributed RAM for memory. 
+  * FIFOs are now using psi\_common\_sdp\_ram\_rbw (instead of psi\_common\_tdp\_ram\_rbw) to allow using distributed RAM for memory.
 * Bugfixes
   * None
 
@@ -151,7 +151,7 @@
   * Added psi\_common\_pl\_stage: Pipelinestage with handshaking (incl. Back-Pressure handling) that registers all signals in both directions (incl. handshaking signals)
 * Bugfixes
  * None
- 
+
 ## 1.6.0
 
 * Added Features

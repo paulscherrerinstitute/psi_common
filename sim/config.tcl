@@ -30,7 +30,7 @@ add_sources $LibPath {
 } -tag lib
 
 # project sources
-add_sources "../hdl" {	
+add_sources "../hdl" {
 	psi_common_logic_pkg.vhd \
 	psi_common_pulse_cc.vhd \
 	psi_common_simple_cc.vhd \
@@ -63,6 +63,7 @@ add_sources "../hdl" {
 	psi_common_axi_slave_ipif.vhd \
 	psi_common_tdp_ram_be.vhd \
 	psi_common_i2c_master.vhd \
+	psi_common_ping_pong.vhd \
 } -tag src
 
 # testbenches
@@ -107,8 +108,10 @@ add_sources "../testbench" {
 	psi_common_axi_slave_ipif_tb/psi_common_axi_slave_ipif_tb.vhd \
 	psi_common_tdp_ram_be_tb/psi_common_tdp_ram_be_tb.vhd \
 	psi_common_i2c_master_tb/psi_common_i2c_master_tb.vhd \
+	psi_common_ping_pong_tb/psi_common_ping_pong_tb.vhd \
+	psi_common_ping_pong_tb/psi_common_ping_pong_tdm_burst_tb.vhd \
 } -tag tb
-	
+
 #TB Runs
 create_tb_run "psi_common_simple_cc_tb"
 tb_run_add_arguments \
@@ -240,6 +243,14 @@ tb_run_add_arguments \
 	"-gSpiCPOL_g=0 -gSpiCPHA_g=1 -gLsbFirst_g=true"
 add_tb_run
 
+create_tb_run "psi_common_ping_pong_tb"
+tb_run_add_arguments \
+	"-gfreq_data_clk_g=100.0E6 -gratio_str_g=20.0 -gfreq_mem_clk_g=120.0E6 -gch_nb_g=16 -gsample_nb_g=500 -gdat_length_g=16 -gtdm_g=false" \
+	"-gfreq_data_clk_g=100.0E6 -gratio_str_g=2.0 -gfreq_mem_clk_g=120.0E6 -gch_nb_g=1 -gsample_nb_g=500 -gdat_length_g=24 -gtdm_g=false" \
+	"-gfreq_data_clk_g=100.0E6 -gratio_str_g=10.0 -gfreq_mem_clk_g=120.0E6 -gch_nb_g=4 -gsample_nb_g=6 -gdat_length_g=16 -gtdm_g=true" \
+	"-gfreq_data_clk_g=100.0E6 -gratio_str_g=50.0 -gfreq_mem_clk_g=120.0E6 -gch_nb_g=16 -gsample_nb_g=256 -gdat_length_g=16 -gtdm_g=true"
+add_tb_run
+
 create_tb_run "psi_common_axi_master_simple_tb"
 #Vivado does not support unconstrained records as required by this TB
 tb_run_skip Vivado
@@ -279,7 +290,5 @@ tb_run_add_arguments \
 	"-gInternalTriState_g=false"
 add_tb_run
 
-
-
-
-
+create_tb_run "psi_common_ping_pong_tdm_burst_tb"
+add_tb_run
