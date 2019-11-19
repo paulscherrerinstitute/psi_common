@@ -1,3 +1,7 @@
+## 2.6.4
+* Bugfixes
+  * Made simulations working for GHDL
+
 ## 2.6.3
 * Added Features
   * None

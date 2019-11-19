@@ -31,7 +31,6 @@ add_sources $LibPath {
 
 # project sources
 add_sources "../hdl" {	
-	psi_common_logic_pkg.vhd \
 	psi_common_pulse_cc.vhd \
 	psi_common_simple_cc.vhd \
 	psi_common_status_cc.vhd \
@@ -270,7 +269,8 @@ add_tb_run
 
 create_tb_run "psi_common_i2c_master_tb"
 #Vivado does not support unconstrained records as required by this TB
-tb_run_skip Vivado
+#a GHDL bug prevents this TB to run in Version 0.36. The bug is reportet. Maybe test again in future.
+tb_run_skip "Vivado GHDL"
 tb_run_add_arguments \
 	"-gInternalTriState_g=true" \
 	"-gInternalTriState_g=false"
