@@ -30,7 +30,7 @@ add_sources $LibPath {
 } -tag lib
 
 # project sources
-add_sources "../hdl" {	
+add_sources "../hdl" {
 	psi_common_pulse_cc.vhd \
 	psi_common_simple_cc.vhd \
 	psi_common_status_cc.vhd \
@@ -244,10 +244,10 @@ add_tb_run
 
 create_tb_run "psi_common_ping_pong_tb"
 tb_run_add_arguments \
-	"-gfreq_data_clk_g=100.0E6 -gratio_str_g=20.0 -gfreq_mem_clk_g=120.0E6 -gch_nb_g=16 -gsample_nb_g=500 -gdat_length_g=16 -gtdm_g=false" \
-	"-gfreq_data_clk_g=100.0E6 -gratio_str_g=2.0 -gfreq_mem_clk_g=120.0E6 -gch_nb_g=1 -gsample_nb_g=500 -gdat_length_g=24 -gtdm_g=false" \
-	"-gfreq_data_clk_g=100.0E6 -gratio_str_g=10.0 -gfreq_mem_clk_g=120.0E6 -gch_nb_g=4 -gsample_nb_g=6 -gdat_length_g=16 -gtdm_g=true" \
-	"-gfreq_data_clk_g=100.0E6 -gratio_str_g=50.0 -gfreq_mem_clk_g=120.0E6 -gch_nb_g=16 -gsample_nb_g=256 -gdat_length_g=16 -gtdm_g=true"
+	"-gfreq_data_clk_g=100E6 -gratio_str_g=20 -gfreq_mem_clk_g=120E6 -gch_nb_g=16 -gsample_nb_g=500 -gdat_length_g=16 -gtdm_g=false" \
+	"-gfreq_data_clk_g=100E6 -gratio_str_g=2 -gfreq_mem_clk_g=120E6 -gch_nb_g=1 -gsample_nb_g=500 -gdat_length_g=24 -gtdm_g=false" \
+	"-gfreq_data_clk_g=100E6 -gratio_str_g=10 -gfreq_mem_clk_g=120E6 -gch_nb_g=4 -gsample_nb_g=6 -gdat_length_g=16 -gtdm_g=true" \
+	"-gfreq_data_clk_g=100E6 -gratio_str_g=50 -gfreq_mem_clk_g=120E6 -gch_nb_g=16 -gsample_nb_g=256 -gdat_length_g=16 -gtdm_g=true"
 add_tb_run
 
 create_tb_run "psi_common_axi_master_simple_tb"
@@ -283,7 +283,7 @@ add_tb_run
 
 create_tb_run "psi_common_i2c_master_tb"
 #Vivado does not support unconstrained records as required by this TB
-#a GHDL bug prevents this TB to run in Version 0.36. The bug is reportet. Maybe test again in future.
+#a GHDL bug prevents this TB to run in Version 0.36. The bug is reported. Maybe test again in future.
 tb_run_skip "Vivado GHDL"
 tb_run_add_arguments \
 	"-gInternalTriState_g=true" \

@@ -28,3 +28,4 @@ psi_vivado_init.ini
 
 #Ingnore files from GHDL
 *.cf
+*.vcd

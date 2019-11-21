@@ -26,12 +26,12 @@ use work.psi_common_math_pkg.all;
 use work.psi_tb_compare_pkg.all;
 
 entity psi_common_ping_pong_tb is
-	generic(freq_data_clk_g : real    := 100.0E6; -- data clock frequency <=> Hz
-	        ratio_str_g     : real    := 10.0; -- ratio  between clock and data to write <=> clock cycle
-	        freq_mem_clk_g  : real    := 120.0E6; -- read clock frequency <=> Hz
+	generic(freq_data_clk_g : integer := 100E6; -- data clock frequency <=> Hz
+	        ratio_str_g     : integer := 10; -- ratio  between clock and data to write <=> clock cycle
+	        freq_mem_clk_g  : integer := 120E6; -- read clock frequency <=> Hz
 	        ch_nb_g         : natural := 4; -- number of channels <=> n/a
-	        sample_nb_g     : natural := 6; -- number of sample per buffer <=> n/a
-	        dat_length_g    : natural := 14; -- number of bit per data <=> n/a
+	        sample_nb_g     : natural := 7; -- number of sample per buffer <=> n/a
+	        dat_length_g    : natural := 16; -- number of bit per data <=> n/a
 	        tdm_g           : boolean := true); -- using the buffer in time division multiplexed mode
 end entity;
 
@@ -75,14 +75,15 @@ architecture tb of psi_common_ping_pong_tb is
 		end loop;
 		return data_v;
 	end function;
-
+	--
+	signal check_s : integer := 0;
 begin
 	--*** General ASSERTs to use the component properly***
-	assert (real(ch_nb_g) <= ratio_str_g)
+	assert (ch_nb_g <= ratio_str_g)
 	report "###ERROR###: The number of channel is too large comapred to the data strobe frequency"
 	severity failure;
 
-	assert not (freq_data_clk_g = freq_mem_clk_g and ratio_str_g = 1.0)
+	assert not (freq_data_clk_g = freq_mem_clk_g and ratio_str_g = 1)
 	report "###ERROR###: The data ratio and reading speeding clock are equivalent, it is not feasable"
 	severity failure;
 
@@ -140,7 +141,7 @@ begin
 	proc_strob_tdm : process
 	begin
 		while tb_run_s loop
-			GenerateStrobe(freq_data_clk_g, freq_data_clk_g / ratio_str_g,
+			GenerateStrobe(real(freq_data_clk_g), real(freq_data_clk_g) / real(ratio_str_g),
 			               '1', proc_rst_sti, proc_clk_sti, proc_str_s);
 		end loop;
 		wait;
@@ -220,33 +221,33 @@ begin
 
 			if flag_s = '1' then
 				--*** count for sample ***
-				if count_sp_s = 2**log2ceil(sample_nb_g) - 1 then
+				if (sample_nb_g = (2**log2ceil(sample_nb_g)) and check_s = (2**log2ceil(sample_nb_g)-1)) or
+				   check_s > 2**log2ceil(sample_nb_g) - (2**log2ceil(sample_nb_g) - sample_nb_g) or
+				   count_sp_s = 2**log2ceil(sample_nb_g) - (2**log2ceil(sample_nb_g) - sample_nb_g) then
 					count_sp_s <= 0;
 				else
 					count_sp_s <= count_sp_s + 1;
 				end if;
 
-				--*** counter channel depending on address read ***
-				count_ch_s <= mem_addr_s / (2**log2ceil(sample_nb_g));
+				if check_s = 2**log2ceil(sample_nb_g) - 1 then
+					check_s    <= 0;
+					count_ch_s <= count_ch_s + 1;
+				else
+					check_s <= check_s + 1;
+				end if;
+
+				if check_s >= sample_nb_g then
+					mem_dat_check_s <= 0;
+				else
+					mem_dat_check_s <= count_sp_s + count_ch_s;
+				end if;
+
 			else
-				count_ch_s <= 0;
-				count_sp_s <= 0;
-			end if;
-
-		end if;
-	end process;
-
-	--*** TAG calculate expected value ***
-	process(count_ch_s, count_sp_s, flag_s)
-	begin
-		if flag_s = '1' then
-			if count_sp_s >= sample_nb_g then
 				mem_dat_check_s <= 0;
-			else
-				mem_dat_check_s <= count_sp_s + count_ch_s;
+				count_ch_s      <= 0;
+				count_sp_s      <= 0;
 			end if;
-		else
-			mem_dat_check_s <= 0;
+
 		end if;
 	end process;
 
@@ -275,7 +276,7 @@ begin
 
 			for i in 0 to ch_nb_g * 2**log2ceil(sample_nb_g) - 1 loop
 				flag_s     <= '1';
-				wait for period_r_c;
+				wait until rising_edge(mem_clk_sti);
 				mem_addr_s <= mem_addr_s + 1;
 				--*** check value, it does then check sample and channel alignment ***
 				assert mem_dat_check_s = to_integer(unsigned(mem_dat_obs)) report "###ERROR###: data expected is wrong" severity error;
