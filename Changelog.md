@@ -1,3 +1,9 @@
+## 2.7.0
+* Added Features
+  * Added *psi\_common\_ping\_pong* ping-pong buffer (also known as double buffer)
+* Bugfixes
+  * In *psi\_common\_pulse\_shaper* fixed hold-off handling for *HoldIn\_g=True*
+
 ## 2.6.4
 * Bugfixes
   * Made simulations working for GHDL
