@@ -1,3 +1,7 @@
+## 2.7.1
+* Bugfixes
+  * Made *psi\_common\_ping\_pong\_tdm\_burst\_tb* runnable in Vivado
+
 ## 2.7.0
 * Added Features
   * Added *psi\_common\_ping\_pong* ping-pong buffer (also known as double buffer)
