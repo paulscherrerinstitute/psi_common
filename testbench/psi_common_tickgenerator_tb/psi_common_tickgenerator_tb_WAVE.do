@@ -15,5 +15,9 @@ add wave -noupdate /psi_common_tickgenerator_tb/tick1us
 add wave -noupdate /psi_common_tickgenerator_tb/tick1ms
 add wave -noupdate /psi_common_tickgenerator_tb/tick1sec
 TreeUpdate [SetDefaultTree]
+configure wave -namecolwidth 150
+configure wave -valuecolwidth 60
+configure wave -signalnamewidth 1
 update
+run -all
 WaveRestoreZoom {0 ns} {10 us}
