@@ -63,6 +63,7 @@ add_sources "../hdl" {
 	psi_common_tdp_ram_be.vhd \
 	psi_common_i2c_master.vhd \
 	psi_common_ping_pong.vhd \
+	psi_common_delay2.vhd \
 } -tag src
 
 # testbenches
@@ -109,9 +110,16 @@ add_sources "../testbench" {
 	psi_common_i2c_master_tb/psi_common_i2c_master_tb.vhd \
 	psi_common_ping_pong_tb/psi_common_ping_pong_tb.vhd \
 	psi_common_ping_pong_tb/psi_common_ping_pong_tdm_burst_tb.vhd \
+	psi_common_delay2_tb/psi_common_delay2_tb.vhd \
 } -tag tb
 
 #TB Runs
+create_tb_run "psi_common_delay2_tb"
+tb_run_add_arguments \
+	"-gMaxDelay_g=50" \
+	"-gMaxDelay_g=100"
+add_tb_run
+
 create_tb_run "psi_common_simple_cc_tb"
 tb_run_add_arguments \
 	"-gClockRatioN_g=3 -gClockRatioD_g=1" \

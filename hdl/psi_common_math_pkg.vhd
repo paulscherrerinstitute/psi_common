@@ -66,8 +66,20 @@ package psi_common_math_pkg is
 					v : in boolean) return integer;	
 
 	function count(	a : in std_logic_vector;
-					v : in std_logic) return integer;	
+	  v : in std_logic) return integer;	
+	  
+	-- conversion function int to slv
+	function to_uslv(input : integer;
+	                 len   : integer) return std_logic_vector;
+	
+	function to_sslv(input : integer;
+                   len   : integer) return std_logic_vector;
+
+  -- conversion function slv to int
+  function from_uslv(input : std_logic_vector)return integer;
   
+  function from_sslv(input : std_logic_vector) return integer;
+    
 end psi_common_math_pkg;	 
 
 ------------------------------------------------------------------------------
@@ -251,9 +263,29 @@ package body psi_common_math_pkg is
 		return cnt_v;
 	end function;
 	
+	-- *** integer to unsigned slv  ***
+  function to_uslv( input : integer; 
+                    len   : integer) return std_logic_vector is
+  begin
+      return std_logic_vector(to_unsigned(input,len));
+  end function; 
+  
+	 -- *** integer to signed slv  ***
+  function to_sslv( input : integer; 
+                    len   : integer) return std_logic_vector is
+  begin
+      return std_logic_vector(to_unsigned(input,len));
+  end function; 
+  
+  -- *** integer to unsigned slv  ***
+  function from_uslv( input : std_logic_vector) return integer is
+  begin
+      return to_integer(unsigned(input));
+  end function; 
+  
+   -- *** integer to signed slv  ***
+  function from_sslv(input : std_logic_vector) return integer is
+  begin
+      return to_integer(signed(input));
+  end function;
 end psi_common_math_pkg;
-
-
-
-
-
