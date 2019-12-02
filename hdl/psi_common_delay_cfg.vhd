@@ -22,7 +22,7 @@ use work.psi_common_math_pkg.all;
 ------------------------------------------------------------------------------
 -- Entity Declaration
 ------------------------------------------------------------------------------
-entity psi_common_delay2 is
+entity psi_common_delay_cfg is
   generic(Width_g         : positive  := 16; --data vector width
           Resource_g      : string    := "AUTO"; -- AUTO, SRL or BRAM
           BramThreshold_g : positive  := 20; -- Number of delay taps to start using BRAM from (if Resource_g = AUTO)
@@ -45,7 +45,7 @@ end entity;
 ------------------------------------------------------------------------------
 -- Architecture Declaration
 ------------------------------------------------------------------------------
-architecture rtl of psi_common_delay2 is
+architecture rtl of psi_common_delay_cfg is
 
   signal mem_out_s       : std_logic_vector(Width_g - 1 downto 0);
   signal rst_state_cnt_s : integer range 0 to MaxDelay_g - 1;

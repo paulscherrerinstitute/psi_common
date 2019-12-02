@@ -17,7 +17,7 @@ use work.psi_tb_txt_util.all;
 use work.psi_tb_compare_pkg.all;
 use work.psi_common_math_pkg.all;
 
-entity psi_common_delay2_tb is
+entity psi_common_delay_cfg_tb is
   generic(freq_clk_g      : integer  := 100E6; --clock frequency in Hz 
           Width_g         : positive := 16; --data width in bits
           Resource_g      : string   := "AUTO"; --resource ram
@@ -29,21 +29,21 @@ entity psi_common_delay2_tb is
          );
 end entity;
 
-architecture tb of psi_common_delay2_tb is
-  constant period_c             : time                                                := (1 sec) / real(freq_clk_g);
+architecture tb of psi_common_delay_cfg_tb is
+  constant period_c : time                                                := (1 sec) / real(freq_clk_g);
   --*** stimuli ***
-  signal clk_sti                : std_logic                                           := '0';
-  signal rst_sti                : std_logic                                           := '1';
-  signal dat_sti                : std_logic_vector(Width_g - 1 downto 0)              := (others => '0');
-  signal str_sti                : std_logic                                           := '0';
-  signal del_sti                : std_logic_vector(log2ceil(MaxDelay_g) - 1 downto 0) := to_uslv(Delay_g, log2ceil(MaxDelay_g));
+  signal clk_sti    : std_logic                                           := '0';
+  signal rst_sti    : std_logic                                           := '1';
+  signal dat_sti    : std_logic_vector(Width_g - 1 downto 0)              := (others => '0');
+  signal str_sti    : std_logic                                           := '0';
+  signal del_sti    : std_logic_vector(log2ceil(MaxDelay_g) - 1 downto 0) := to_uslv(Delay_g, log2ceil(MaxDelay_g));
   --*** observable signals ***
-  signal dat_obs                : std_logic_vector((Width_g - 1) downto 0);
+  signal dat_obs    : std_logic_vector((Width_g - 1) downto 0);
   -- *** TB Control ***
-  signal tb_run_s               : boolean                                             := true;
- 
+  signal tb_run_s   : boolean                                             := true;
+
 begin
-  
+
   --*** clock process ***
   proc_clk : process
     variable tStop_v : time;
@@ -59,9 +59,9 @@ begin
     end loop;
     wait;
   end process;
-  
+
   --*** DUT***
-  inst_dut : entity work.psi_common_delay2
+  inst_dut : entity work.psi_common_delay_cfg
     generic map(Width_g         => Width_g,
                 Resource_g      => Resource_g,
                 BramThreshold_g => BramThreshold_g,
@@ -84,13 +84,13 @@ begin
     print(" *************************************************  ");
     print(" **          Paul Scherrer Institut             **  ");
     print(" **        psi_common_delay2_tb TestBench       **  ");
-    
+
     if MaxDelay_g > BramThreshold_g then
       print(" **                Block RAM                    **  ");
     else
       print(" **               Shift Resgiter                **  ");
-     end if;   
-    print(" *************************************************  ");   
+    end if;
+    print(" *************************************************  ");
     ----------------------------------------------------------------------------
     wait for period_c;
 
@@ -110,20 +110,20 @@ begin
       end if;
       wait until rising_edge(clk_sti);
     end loop;
-    dat_sti<= (others=>'0');
-    
+    dat_sti <= (others => '0');
+
     --*** Vld high constantaly with a delay change ***
     print(">> Vld high constantly & delay change on the fly");
-    wait for MaxDelay_g*period_c;
-    del_sti <= to_uslv(15,del_sti'length);
+    wait for MaxDelay_g * period_c;
+    del_sti <= to_uslv(15, del_sti'length);
     str_sti <= '0';
     wait for period_c;
     wait until rising_edge(clk_sti);
-    
+
     str_sti <= '1';
     for i in 0 to from_uslv(del_sti) + 30 loop
       dat_sti <= std_logic_vector(to_unsigned(i, Width_g));
-      if i < 15 + 1 then           --
+      if i < 15 + 1 then                --
         assert unsigned(dat_obs) = 0 report "###ERROR###: Out data wrong, expected " & to_string(0) & ", got " & to_string(from_uslv(dat_obs)) severity error;
       else
         -- output is latched on the  next rising edge, therefore shift by one
@@ -133,12 +133,12 @@ begin
     end loop;
 
     --re init
-    wait for from_uslv(del_sti)*period_c;
-    del_sti <= to_uslv(20,del_sti'length);
+    wait for from_uslv(del_sti) * period_c;
+    del_sti <= to_uslv(20, del_sti'length);
     str_sti <= '0';
     wait for period_c;
     wait until rising_edge(clk_sti);
-    
+
     -- *** Vld toggling ***
     print(">> Vld toggling and a new change of delay on the fly");
     rst_sti <= '1';
@@ -160,15 +160,15 @@ begin
       wait until rising_edge(clk_sti);
     end loop;
     str_sti <= '0';
-    
+
     --re init
-    wait for from_uslv(del_sti)*period_c;
-    del_sti <= to_uslv(MaxDelay_g,del_sti'length);
+    wait for from_uslv(del_sti) * period_c;
+    del_sti <= to_uslv(MaxDelay_g, del_sti'length);
     str_sti <= '0';
     wait for period_c;
     wait until rising_edge(clk_sti);
-    
-     -- *** Vld toggling with max delay ***
+
+    -- *** Vld toggling with max delay ***
     print(">> Vld toggling and a new change of delay on the fly with max delay value");
     rst_sti <= '1';
     wait until rising_edge(clk_sti);
@@ -191,7 +191,7 @@ begin
     str_sti <= '0';
 
     -- end of process !DO NOT EDIT!
-    tb_run_s <=false;
+    tb_run_s <= false;
     wait;
   end process;
 

@@ -20,25 +20,27 @@ use work.psi_common_math_pkg.all;
 ------------------------------------------------------------------------------
 -- Entity Declaration
 ------------------------------------------------------------------------------
-entity psi_common_pulse_shaper2_tb is
-  generic(freq_clk_g    : integer  := 100E6;
-          HoldIn_g      : boolean  := false;
-          MaxDuration_g : positive := 16;
-          HoldOff_g     : natural  := 20);
+entity psi_common_pulse_shaper_cfg_tb is
+  generic(freq_clk_g    : integer  := 100E6; -- clock frequency in Hz
+          HoldIn_g      : boolean  := false; -- Hold in enable (if pulse stays high)
+          HoldOffEna_g  : boolean  := false; -- Hold off enable - ignore new pulse for a number of defined clock cycles
+          MaxDuration_g : positive := 24; -- Hold off parameter in clock cycle
+          HoldOff_g     : natural  := 20); -- Hold off paramater in clock cycle
 end entity;
 
-architecture tb of psi_common_pulse_shaper2_tb is
-  
-  constant nbit_c   : integer                               := log2ceil(MaxDuration_g);
-  constant period_c : time                                  := (1 sec) / real(freq_clk_g);
+architecture tb of psi_common_pulse_shaper_cfg_tb is
+
+  constant nbit_c     : integer                                                                     := log2ceil(MaxDuration_g);
+  constant period_c   : time                                                                        := (1 sec) / real(freq_clk_g);
   --*** Stimuli ***
-  signal clk_sti    : std_logic                             := '0';
-  signal rst_sti    : std_logic                             := '1';
-  signal width_sti  : std_logic_vector(nbit_c - 1 downto 0) := to_uslv(4, nbit_c);
-  signal dat_sti    : std_logic                             := '0';
-  signal dat_obs    : std_logic;
+  signal clk_sti      : std_logic                                                                   := '0';
+  signal rst_sti      : std_logic                                                                   := '1';
+  signal width_sti    : std_logic_vector(nbit_c - 1 downto 0)                                       := to_uslv(4, nbit_c);
+  signal dat_sti      : std_logic                                                                   := '0';
+  signal dat_obs      : std_logic;
   --*** TB control ***
-  signal tb_run_s : boolean := true;
+  signal tb_run_s     : boolean                                                                     := true;
+  signal hold_off_sti : std_logic_vector(choose(HoldOffEna_g, log2ceil(HoldOff_g), 1) - 1 downto 0) := (others => '0');
 
 begin
 
@@ -69,14 +71,16 @@ begin
   end process;
 
   --*** DUT***
-  inst_dut : entity work.psi_common_pulse_shaper2
+  inst_dut : entity work.psi_common_pulse_shaper_cfg
     generic map(HoldIn_g      => HoldIn_g,
-                HoldOff_g     => HoldOff_g,
+                HoldOffEna_g  => HoldOffEna_g,
+                MaxHoldOff_g  => HoldOff_g,
                 MaxDuration_g => MaxDuration_g,
                 RstPol_g      => '1')
     port map(clk_i   => clk_sti,
              rst_i   => rst_sti,
              width_i => width_sti,
+             hold_i  => hold_off_sti,
              dat_i   => dat_sti,
              dat_o   => dat_obs);
 
@@ -92,6 +96,11 @@ begin
     ------------------------------------------------------------------
     -- start of process !DO NOT EDIT
     wait until rst_sti = '0';
+    if HoldOffEna_g then
+      hold_off_sti <= to_uslv(HoldOff_g, hold_off_sti'length);
+    else
+      hold_off_sti <= (others => '0');
+    end if;
 
     ------------------------------------------------------------------
     -- *** Test if pulse gets enlonged ***
@@ -143,65 +152,68 @@ begin
     wait for 200 ns;
     StdlCompare(0, dat_obs, "Too early");
 
-    ------------------------------------------------------------------
-    -- *** Test holdoff with large deviation ***
-    print("> Test holdoff with large deviation");
-    width_sti <= to_uslv(3, nbit_c);
-    wait until falling_edge(clk_sti);
+    if HoldOffEna_g then
+      ------------------------------------------------------------------
+      -- *** Test holdoff with large deviation ***
+      print("> Test holdoff with large deviation");
+      width_sti <= to_uslv(3, nbit_c);
+      wait until falling_edge(clk_sti);
 
-    for pair in 0 to 2 loop
-      for pulse in 1 downto 0 loop      -- first pulse is detected, second not
-        wait until falling_edge(clk_sti);
-        dat_sti <= '1';
-        StdlCompare(0, dat_obs, "Too early");
-        wait until falling_edge(clk_sti);
-        
-        dat_sti <= '0';
-        for i in 0 to from_uslv(width_sti)-1 loop
-          StdlCompare(pulse, dat_obs, "Assertion test " & integer'image(i+1));
+      for pair in 0 to 2 loop
+        for pulse in 1 downto 0 loop    -- first pulse is detected, second not
           wait until falling_edge(clk_sti);
-        end loop;
+          dat_sti <= '1';
+          StdlCompare(0, dat_obs, "Too early");
+          wait until falling_edge(clk_sti);
 
-        StdlCompare(0, dat_obs, "Not deasserted");
-        wait until falling_edge(clk_sti);
-        StdlCompare(0, dat_obs, "Not deasserted");
-        
-        for i in 0 to 10 loop
+          dat_sti <= '0';
+          for i in 0 to from_uslv(width_sti) - 1 loop
+            StdlCompare(pulse, dat_obs, "Assertion test " & integer'image(i + 1));
+            wait until falling_edge(clk_sti);
+          end loop;
+
+          StdlCompare(0, dat_obs, "Not deasserted");
           wait until falling_edge(clk_sti);
-          StdlCompare(0, dat_obs, "Did not stay low 2");
+          StdlCompare(0, dat_obs, "Not deasserted");
+
+          for i in 0 to 10 loop
+            wait until falling_edge(clk_sti);
+            StdlCompare(0, dat_obs, "Did not stay low 2");
+          end loop;
+
         end loop;
-        
       end loop;
-    end loop;
-    wait for 200 ns;
-   ------------------------------------------------------------------
-    -- *** Test holdoff (one cycle too short) ***
-    print("> Test holdoff (one cycle too short)");
-    wait until falling_edge(clk_sti);
-    dat_sti <= '1';
-    for i in 0 to HoldOff_g - 1 loop
+      wait for 200 ns;
+
+      ------------------------------------------------------------------
+      -- *** Test holdoff (one cycle too short) ***
+      print("> Test holdoff (one cycle too short)");
+      wait until falling_edge(clk_sti);
+      dat_sti <= '1';
+      for i in 0 to HoldOff_g - 1 loop
+        wait until falling_edge(clk_sti);
+        dat_sti <= '0';
+      end loop;
+      dat_sti <= '1';
       wait until falling_edge(clk_sti);
       dat_sti <= '0';
-    end loop;
-    dat_sti <= '1';
-    wait until falling_edge(clk_sti);
-    dat_sti <= '0';
-    StdlCompare(0, dat_obs, "Wrongly detected pulse in hold-off time");
-    wait for 200 ns;
-    
-    ------------------------------------------------------------------
-    -- *** Test holdoff (exactly OK) ***
-    print("> Test holdoff (exactly OK)");
-    wait until falling_edge(clk_sti);
-    dat_sti <= '1';
-    for i in 0 to HoldOff_g loop
+      StdlCompare(0, dat_obs, "Wrongly detected pulse in hold-off time");
+      wait for 200 ns;
+
+      ------------------------------------------------------------------
+      -- *** Test holdoff (exactly OK) ***
+      print("> Test holdoff (exactly OK)");
+      wait until falling_edge(clk_sti);
+      dat_sti <= '1';
+      for i in 0 to HoldOff_g loop
+        wait until falling_edge(clk_sti);
+        dat_sti <= '0';
+      end loop;
+      dat_sti <= '1';
       wait until falling_edge(clk_sti);
       dat_sti <= '0';
-    end loop;
-    dat_sti <= '1';
-    wait until falling_edge(clk_sti);
-    dat_sti <= '0';
-    StdlCompare(1, dat_obs, "Did not detect pulse directly after holdoff time");
+      StdlCompare(1, dat_obs, "Did not detect pulse directly after holdoff time");
+    end if;
 
     wait for period_c;
     tb_run_s <= false;

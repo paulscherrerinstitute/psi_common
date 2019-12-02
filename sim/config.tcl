@@ -63,8 +63,8 @@ add_sources "../hdl" {
 	psi_common_tdp_ram_be.vhd \
 	psi_common_i2c_master.vhd \
 	psi_common_ping_pong.vhd \
-	psi_common_delay2.vhd \
-	psi_common_pulse_shaper2.vhd \
+	psi_common_delay_cfg.vhd \
+	psi_common_pulse_shaper_cfg.vhd \
 } -tag src
 
 # testbenches
@@ -111,18 +111,21 @@ add_sources "../testbench" {
 	psi_common_i2c_master_tb/psi_common_i2c_master_tb.vhd \
 	psi_common_ping_pong_tb/psi_common_ping_pong_tb.vhd \
 	psi_common_ping_pong_tb/psi_common_ping_pong_tdm_burst_tb.vhd \
-	psi_common_delay2_tb/psi_common_delay2_tb.vhd \
-	psi_common_pulse_shaper2_tb/psi_common_pulse_shaper2_tb.vhd \
+	psi_common_delay_cfg_tb/psi_common_delay_cfg_tb.vhd \
+	psi_common_pulse_shaper_cfg_tb/psi_common_pulse_shaper_cfg_tb.vhd \
 } -tag tb
 
 #TB Runs
-create_tb_run "psi_common_delay2_tb"
+create_tb_run "psi_common_delay_cfg_tb"
 tb_run_add_arguments \
 	"-gMaxDelay_g=50" \
 	"-gMaxDelay_g=100"
 add_tb_run
 
-create_tb_run "psi_common_pulse_shaper2_tb"
+create_tb_run "psi_common_pulse_shaper_cfg_tb"
+tb_run_add_arguments \
+	"-gHoldOffEna_g=false -gMaxDuration_g=24" \
+	"-gHoldOffEna_g=true -gMaxDuration_g=16"
 add_tb_run
 
 create_tb_run "psi_common_simple_cc_tb"
