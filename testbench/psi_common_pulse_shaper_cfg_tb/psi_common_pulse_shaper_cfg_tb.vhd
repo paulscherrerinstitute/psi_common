@@ -23,7 +23,7 @@ use work.psi_common_math_pkg.all;
 entity psi_common_pulse_shaper_cfg_tb is
   generic(freq_clk_g    : integer  := 100E6; -- clock frequency in Hz
           HoldIn_g      : boolean  := false; -- Hold in enable (if pulse stays high)
-          HoldOffEna_g  : boolean  := false; -- Hold off enable - ignore new pulse for a number of defined clock cycles
+          HoldOffEna_g  : boolean  := true; -- Hold off enable - ignore new pulse for a number of defined clock cycles
           MaxDuration_g : positive := 24; -- Hold off parameter in clock cycle
           HoldOff_g     : natural  := 20); -- Hold off paramater in clock cycle
 end entity;
@@ -35,7 +35,7 @@ architecture tb of psi_common_pulse_shaper_cfg_tb is
   --*** Stimuli ***
   signal clk_sti      : std_logic                                                                   := '0';
   signal rst_sti      : std_logic                                                                   := '1';
-  signal width_sti    : std_logic_vector(nbit_c - 1 downto 0)                                       := to_uslv(4, nbit_c);
+  signal width_sti    : std_logic_vector(nbit_c - 1 downto 0)                                       := to_uslv(0, nbit_c);
   signal dat_sti      : std_logic                                                                   := '0';
   signal dat_obs      : std_logic;
   --*** TB control ***
@@ -96,12 +96,29 @@ begin
     ------------------------------------------------------------------
     -- start of process !DO NOT EDIT
     wait until rst_sti = '0';
-    if HoldOffEna_g then
+    
+    ------------------------------------------------------------------
+    -- *** Test if parameters are stuck to 0 ***
+    print("> Test if pulse width & hold off # set to 0");
+    wait until falling_edge(clk_sti);
+    dat_sti <= '1';
+    StdlCompare(0, dat_obs, "Too early");
+    wait until falling_edge(clk_sti);
+    dat_sti <= '0';
+    
+    StdlCompare(0, dat_obs, "Did not stay low");
+    for i in 0 to 10 loop
+      wait until falling_edge(clk_sti);
+      StdlCompare(0, dat_obs, "Did not stay low");
+    end loop;
+    wait for 200 ns;
+    
+   if HoldOffEna_g then
       hold_off_sti <= to_uslv(HoldOff_g, hold_off_sti'length);
     else
       hold_off_sti <= (others => '0');
-    end if;
-
+    end if;    
+    width_sti <= to_uslv(3,width_sti'length);
     ------------------------------------------------------------------
     -- *** Test if pulse gets enlonged ***
     print("> Test if pulse gets enlonged");

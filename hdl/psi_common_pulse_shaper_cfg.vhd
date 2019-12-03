@@ -78,10 +78,15 @@ begin
     if r.HoCnt /= 0 then
       v.HoCnt := r.HoCnt - 1;
     end if;
-    if (dat_i = '1') and (r.PulseLast = '0') and (r.HoCnt = 0) then
-      v.OutPulse := '1';
-      v.HoCnt    := from_uslv(hold_i);
-      v.DurCnt   := from_uslv(width_i) - 1;
+    if unsigned(width_i) = 0 then
+      v.DurCnt   := 0;
+      v.OutPulse := '0';
+    else
+      if (dat_i = '1') and (r.PulseLast = '0') and (r.HoCnt = 0) then
+        v.OutPulse := '1';
+        v.HoCnt    := from_uslv(hold_i);
+        v.DurCnt   := from_uslv(width_i) - 1;
+      end if;
     end if;
 
     -- Apply to record
