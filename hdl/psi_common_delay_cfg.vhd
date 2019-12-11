@@ -7,9 +7,12 @@
 ------------------------------------------------------------------------------
 -- Description
 ------------------------------------------------------------------------------
--- This is a delay element. It is either emplemented in BRAM or SRL. The output
+-- This is a delay element. It is either implemented in BRAM & SRL. The output
 -- is always a fabric register for improved timing.
 -- The delay is settable by a register and not fixed as the psi_common_delay
+-- One can choose to hold last value when a delay increase is requested via 
+-- generic
+-- NB: when a delay decrease is requested it takes 3 clock cycles to be valid 
 ------------------------------------------------------------------------------
 -- Libraries
 ------------------------------------------------------------------------------
