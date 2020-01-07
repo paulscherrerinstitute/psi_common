@@ -22,6 +22,10 @@ package psi_common_logic_pkg is
 	function ZerosVector(size : in natural) return std_logic_vector;
 	
 	function OnesVector(size : in natural) return std_logic_vector;
+	  
+  function PartiallyOnesVector(size : in natural;
+           ones_nb : in natural) 
+           return std_logic_vector;
 	
 	function ShiftLeft(	arg		: in	std_logic_vector;
 						bits	: in	integer;
@@ -82,6 +86,17 @@ package body psi_common_logic_pkg is
 		constant c : std_logic_vector(size-1 downto 0) := (others => '1');
 	begin
 		return c;
+	end function;
+	
+	-- *** PartiallyOnesVector ***
+	function PartiallyOnesVector(size : in natural;
+	         ones_nb : in natural) 
+	         return std_logic_vector is
+		variable v : std_logic_vector(size-1 downto 0);
+	begin
+	  v(size-1 downto ones_nb) := (others => '0');
+	  v(ones_nb-1 downto 0) := (others => '1');
+		return v;
 	end function;
 	
 	-- *** ShiftLeft ***

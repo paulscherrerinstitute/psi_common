@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
---  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
+--  Copyright (c) 2020 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
---  Authors: Oliver Bruendler
+--  Authors: Oliver Bruendler, Daniele Felici
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -36,12 +36,13 @@ entity psi_common_tdm_par_cfg is
 		-- Control Signals
 		Clk							: in 	std_logic;		-- $$ type=clk; freq=100e6 $$
 		Rst							: in 	std_logic;		-- $$ type=rst; clk=Clk $$
+		EnabledChannels : in  integer range 0 to ChannelCount_g := ChannelCount_g;
 		
 		-- Data Ports
-		Tdm							: in 	std_logic_vector(ChannelWidth_g-1 downto 0);
-		TdmVld						: in	std_logic;
-		Parallel					: out 	std_logic_vector(ChannelCount_g*ChannelWidth_g-1 downto 0);
-		ParallelVld					: out	std_logic		
+    Tdm         : in  std_logic_vector(ChannelWidth_g - 1 downto 0);
+    TdmVld      : in  std_logic;
+    Parallel    : out std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0);
+    ParallelVld : out std_logic		
 	);
 end entity;
 
@@ -53,18 +54,20 @@ architecture rtl of psi_common_tdm_par_cfg is
 
 	-- Two Process Method
 	type two_process_r is record
-		ShiftReg		: std_logic_vector(Parallel'range);
+		ShiftReg	: std_logic_vector(Parallel'range);
 		VldSr			: std_logic_vector(ChannelCount_g-1 downto 0);
 		Odata			: std_logic_vector(Parallel'range);
 		Ovld			: std_logic;
 	end record;	
 	signal r, r_next : two_process_r;
+	
+  signal channel_cnt : integer range 0 to ChannelCount_g - 1    := 0;
 begin
 
 	--------------------------------------------------------------------------
 	-- Combinatorial Process
 	--------------------------------------------------------------------------
-	p_comb : process(	r, Tdm, TdmVld)	
+	p_comb : process(	r, Tdm, TdmVld, EnabledChannels)	
 		variable v : two_process_r;
 	begin	
 		-- hold variables stable
@@ -78,7 +81,7 @@ begin
 		
 		-- *** Latch ***
 		v.Ovld := '0';
-		if r.VldSr = OnesVector(ChannelCount_g) then
+		if r.VldSr = PartiallyOnesVector(ChannelCount_g, EnabledChannels) then
 			v.Ovld := '1';
 			v.Odata := r.ShiftReg;
 			v.VldSr(r.VldSr'high)				:= TdmVld;

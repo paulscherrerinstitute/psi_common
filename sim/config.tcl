@@ -51,6 +51,7 @@ add_sources "../hdl" {
 	psi_common_multi_pl_stage.vhd \
 	psi_common_par_tdm.vhd \
 	psi_common_tdm_par.vhd \
+	psi_common_tdm_par_cfg.vhd \
 	psi_common_arb_priority.vhd \
 	psi_common_arb_round_robin.vhd \
 	psi_common_tdm_mux.vhd \
@@ -86,6 +87,7 @@ add_sources "../testbench" {
 	psi_common_multi_pl_stage_tb/psi_common_multi_pl_stage_tb.vhd \
 	psi_common_par_tdm_tb/psi_common_par_tdm_tb.vhd \
 	psi_common_tdm_par_tb/psi_common_tdm_par_tb.vhd \
+	psi_common_tdm_par_cfg_tb/psi_common_tdm_par_cfg_tb.vhd \
 	psi_common_arb_priority_tb/psi_common_arb_priority_tb.vhd \
 	psi_common_arb_round_robin_tb/psi_common_arb_round_robin_tb.vhd \
 	psi_common_tdm_mux_tb/psi_common_tdm_mux_tb.vhd \
@@ -225,6 +227,9 @@ create_tb_run "psi_common_par_tdm_tb"
 add_tb_run
 
 create_tb_run "psi_common_tdm_par_tb"
+add_tb_run
+
+create_tb_run "psi_common_tdm_par_cfg_tb"
 add_tb_run
 
 create_tb_run "psi_common_arb_priority_tb"
