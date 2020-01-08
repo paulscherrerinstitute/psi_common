@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
---  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
+--  Copyright (c) 2020 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
---  Authors: Oliver Bruendler
+--  Authors: Oliver Bruendler, Daniele Felici
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------
@@ -40,7 +40,6 @@ architecture sim of psi_common_tdm_par_cfg_tb is
 	
 	-- *** TB Control ***
 	signal TbRunning : boolean := True;
-	signal NextCase : integer := -1;
 	signal ProcessDone : std_logic_vector(0 to 1) := (others => '0');
 	constant AllProcessesDone_c : std_logic_vector(0 to 1) := (others => '1');
 	constant TbProcNr_inp_c : integer := 0;
@@ -49,22 +48,36 @@ architecture sim of psi_common_tdm_par_cfg_tb is
 	-- *** DUT Signals ***
 	signal Clk : std_logic := '1';
 	signal Rst : std_logic := '1';
+	signal EnabledChannels : natural range 0 to ChannelCount_g := ChannelCount_g;
 	signal Tdm : std_logic_vector(ChannelWidth_g-1 downto 0) := (others => '0');
 	signal TdmVld : std_logic := '0';
 	signal Parallel : std_logic_vector(ChannelCount_g*ChannelWidth_g-1 downto 0) := (others => '0');
 	signal ParallelVld : std_logic := '0';
 	
+	
 	-- handwritten
 	signal TestCase	: integer := -1;
-	signal Channels	: t_aslv8(0 to 2) := (others => (others => '0'));
 		
-	procedure ExpectChannels(	Values : in t_ainteger(0 to 2)) is
+	procedure Expect3Channels(	Values : in t_ainteger(0 to 2)) is
 	begin
 		wait until rising_edge(Clk) and ParallelVld = '1';
 		StdlvCompareInt (Values(0), Parallel(1*ChannelWidth_g-1 downto 0*ChannelWidth_g), "Wrong value Channel 0", false);	
 		StdlvCompareInt (Values(1), Parallel(2*ChannelWidth_g-1 downto 1*ChannelWidth_g), "Wrong value Channel 1", false);	
 		StdlvCompareInt (Values(2), Parallel(3*ChannelWidth_g-1 downto 2*ChannelWidth_g), "Wrong value Channel 2", false);	
-	end procedure;	
+	end procedure;
+	
+	procedure Expect2Channels( Values : in t_ainteger(0 to 1)) is
+  begin
+    wait until rising_edge(Clk) and ParallelVld = '1';
+    StdlvCompareInt (Values(0), Parallel(2*ChannelWidth_g-1 downto 1*ChannelWidth_g), "Wrong value Channel 1", false);  
+    StdlvCompareInt (Values(1), Parallel(3*ChannelWidth_g-1 downto 2*ChannelWidth_g), "Wrong value Channel 2", false); 
+  end procedure;	
+  
+  procedure Expect1Channel( Value : in integer) is
+  begin
+    wait until rising_edge(Clk) and ParallelVld = '1';
+    StdlvCompareInt (Value, Parallel(3*ChannelWidth_g-1 downto 2*ChannelWidth_g), "Wrong value Channel 2", false);  
+  end procedure;
 	
 begin
 	------------------------------------------------------------
@@ -78,7 +91,7 @@ begin
 		port map (
 			Clk => Clk,
 			Rst => Rst,
-			EnabledChannels => ChannelCount_g,
+			EnabledChannels => EnabledChannels,
 			Tdm => Tdm,
 			TdmVld => TdmVld,
 			Parallel => Parallel,
@@ -133,6 +146,7 @@ begin
 		-- start of process !DO NOT EDIT
 		wait until Rst = '0';
 		
+		-- *** max input length (EnabledChannels = ChannelCount_g) ***
 		-- *** Samples with much space in between ***
 		TestCase <= 0;
 		wait until rising_edge(Clk);
@@ -161,6 +175,63 @@ begin
 		end loop;	
 		TdmVld <= '0';		
 		
+		wait for 100 ns ;
+		-- *** Input length is 2 (EnabledChannels = ChannelCount_g - 1) ***
+    -- *** Samples with much space in between ***
+    TestCase <= 2;
+    EnabledChannels <= ChannelCount_g - 1;
+    wait until rising_edge(Clk);
+    for sample in 0 to 3 loop
+      for channel in 0 to 1 loop
+        TdmVld <= '1';
+        Tdm <= std_logic_vector(to_unsigned(channel*16#10#+sample, Tdm'length));
+        wait until rising_edge(Clk);
+        TdmVld <= '0';
+        Tdm <= (others => '0');
+        for del in 0 to 9 loop
+          wait until rising_edge(Clk);
+        end loop;
+      end loop;
+    end loop;
+    
+    -- *** Samples back to back ***
+    TestCase <= 3;
+    wait until rising_edge(Clk);  
+    TdmVld <= '1';    
+    for sample in 0 to 3 loop
+      for channel in 0 to 1 loop        
+        Tdm <= std_logic_vector(to_unsigned(16#50# + channel*16#10#+sample, Tdm'length));
+        wait until rising_edge(Clk);
+      end loop;
+    end loop; 
+    TdmVld <= '0';  
+		
+		wait for 100 ns ;
+		-- *** Input length is 1 (EnabledChannels = ChannelCount_g - 2) ***
+    -- *** Samples with much space in between ***
+    TestCase <= 4;
+    EnabledChannels <= ChannelCount_g - 2;
+    wait until rising_edge(Clk);
+    for sample in 0 to 3 loop
+      TdmVld <= '1';
+      Tdm <= std_logic_vector(to_unsigned(sample, Tdm'length));
+      wait until rising_edge(Clk);
+      TdmVld <= '0';
+      Tdm <= (others => '0');
+      for del in 0 to 9 loop
+        wait until rising_edge(Clk);
+      end loop;
+    end loop;
+    
+    -- *** Samples back to back ***
+    TestCase <= 5;
+    wait until rising_edge(Clk);  
+    TdmVld <= '1';    
+    for sample in 0 to 3 loop       
+      Tdm <= std_logic_vector(to_unsigned(16#50#+sample, Tdm'length));
+      wait until rising_edge(Clk);
+    end loop; 
+    TdmVld <= '0'; 
 		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_inp_c) <= '1';
@@ -173,17 +244,44 @@ begin
 		-- start of process !DO NOT EDIT
 		wait until Rst = '0';
 		
+		-- *** max input length (EnabledChannels = ChannelCount_g) ***
 		-- *** Samples with much space in between ***
 		wait until TestCase = 0;
 		for sample in 0 to 3 loop
-			ExpectChannels((16#00#+sample, 16#10#+sample, 16#20#+sample));
+			Expect3Channels((16#00#+sample, 16#10#+sample, 16#20#+sample));
 		end loop;
 		
 		-- *** Samples back to back ***
 		wait until TestCase = 1;
 		for sample in 0 to 3 loop
-			ExpectChannels((16#50#+sample, 16#60#+sample, 16#70#+sample));
+			Expect3Channels((16#50#+sample, 16#60#+sample, 16#70#+sample));
 		end loop;		
+		
+		-- *** Input length is 2 (EnabledChannels = ChannelCount_g - 1) ***
+		-- *** Samples with much space in between ***
+    wait until TestCase = 2;
+    for sample in 0 to 3 loop
+      Expect2Channels((16#00#+sample, 16#10#+sample));
+    end loop;
+    
+    -- *** Samples back to back ***
+    wait until TestCase = 3;
+    for sample in 0 to 3 loop
+      Expect2Channels((16#50#+sample, 16#60#+sample));
+    end loop; 
+		
+		-- *** Input length is 1 (EnabledChannels = ChannelCount_g - 2) ***
+    -- *** Samples with much space in between ***
+    wait until TestCase = 4;
+    for sample in 0 to 3 loop
+      Expect1Channel((16#00#+sample));
+    end loop;
+    
+    -- *** Samples back to back ***
+    wait until TestCase = 5;
+    for sample in 0 to 3 loop
+      Expect1Channel((16#50#+sample));
+    end loop; 
 		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_outp_c) <= '1';

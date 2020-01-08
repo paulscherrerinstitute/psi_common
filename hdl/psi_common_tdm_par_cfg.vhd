@@ -7,7 +7,7 @@
 ------------------------------------------------------------------------------
 -- Description
 ------------------------------------------------------------------------------
--- This entity implements a conversion from time-division-multiplexed input
+-- This entity implements a conversion from length-variable time-division-multiplexed input
 -- (multiple values transferred over the same signal one after the other) to
 -- parallel (multiple values distributed over multiple parallel signals).
 
@@ -61,7 +61,6 @@ architecture rtl of psi_common_tdm_par_cfg is
 	end record;	
 	signal r, r_next : two_process_r;
 	
-  signal channel_cnt : integer range 0 to ChannelCount_g - 1    := 0;
 begin
 
 	--------------------------------------------------------------------------
