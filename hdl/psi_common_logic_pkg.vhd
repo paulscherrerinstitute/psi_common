@@ -92,11 +92,11 @@ package body psi_common_logic_pkg is
 	function PartiallyOnesVector(size : in natural;
 	         ones_nb : in natural) 
 	         return std_logic_vector is
-		variable v : std_logic_vector(size-1 downto 0);
+	  constant c_low : std_logic_vector(size-ones_nb-1 downto 0) := (others => '0');
+	  constant c_high : std_logic_vector(ones_nb-1 downto 0) := (others => '1');
+		constant c : std_logic_vector(size-1 downto 0):= c_high & c_low;
 	begin
-	  v(size-1 downto ones_nb) := (others => '0');
-	  v(ones_nb-1 downto 0) := (others => '1');
-		return v;
+		return c;
 	end function;
 	
 	-- *** ShiftLeft ***
