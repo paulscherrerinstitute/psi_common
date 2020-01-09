@@ -37,7 +37,6 @@ entity psi_common_tdm_par_cfg is
 		Clk							: in 	std_logic;		-- $$ type=clk; freq=100e6 $$
 		Rst							: in 	std_logic;		-- $$ type=rst; clk=Clk $$
 		EnabledChannels : in  integer range 0 to ChannelCount_g := ChannelCount_g;
-		debug : out std_logic_vector(ChannelCount_g-1 downto 0);
 		-- Data Ports
     Tdm         : in  std_logic_vector(ChannelWidth_g - 1 downto 0);
     TdmVld      : in  std_logic;
@@ -87,8 +86,6 @@ begin
 			v.VldSr(r.VldSr'high)				:= TdmVld;
 			v.VldSr(r.VldSr'high-1 downto 0) 	:= (others => '0');
 		end if;
-		
-		debug <= PartiallyOnesVector(ChannelCount_g, EnabledChannels);
 		
 		-- *** Outputs ***
 		Parallel <= r.Odata;
