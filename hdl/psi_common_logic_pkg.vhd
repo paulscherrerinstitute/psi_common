@@ -102,6 +102,7 @@ package body psi_common_logic_pkg is
     v_plus_1      := v_high(ones_nb - 1 downto 0) & v_low(size - ones_nb downto 0);
     v      := v_plus_1(size downto 1);
     return v;
+  end function;
     
   -- *** ShiftLeft ***
   function ShiftLeft(arg  : in std_logic_vector;
