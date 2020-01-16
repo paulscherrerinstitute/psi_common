@@ -36,7 +36,8 @@ entity psi_common_tdm_par_cfg is
 		-- Control Signals
 		Clk							: in 	std_logic;		-- $$ type=clk; freq=100e6 $$
 		Rst							: in 	std_logic;		-- $$ type=rst; clk=Clk $$
-		EnabledChannels : in  integer range 0 to ChannelCount_g := ChannelCount_g;
+		EnabledChannels : in  integer range 0 to ChannelCount_g := ChannelCount_g; --add
+		Sync            : in  std_logic;    -- This can be used to synchronize the first tdm value, it is usefull once the user changes the number of enabled channels
 		-- Data Ports
     Tdm         : in  std_logic_vector(ChannelWidth_g - 1 downto 0);
     TdmVld      : in  std_logic;
@@ -80,7 +81,7 @@ begin
 		
 		-- *** Latch ***
 		v.Ovld := '0';
-		if r.VldSr = PartiallyOnesVector(ChannelCount_g, EnabledChannels) then
+		if r.VldSr = PartiallyOnesVector(ChannelCount_g, EnabledChannels) or sync = '1' then
 			v.Ovld := '1';
 			v.Odata := r.ShiftReg;
 			v.VldSr(r.VldSr'high)				:= TdmVld;
