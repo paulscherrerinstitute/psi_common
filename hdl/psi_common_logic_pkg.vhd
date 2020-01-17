@@ -92,14 +92,14 @@ package body psi_common_logic_pkg is
   function PartiallyOnesVector(size    : in natural;
                                ones_nb : in natural)
   return std_logic_vector is
-    variable v_low  : std_logic_vector(size - 1 downto 0);
-    variable v_high : std_logic_vector(size - 1 downto 0);
-    variable v_plus_1      : std_logic_vector(size downto 0); -- We need this to avoid synthesis problems with Xilinx ISE
+    variable v_low  : std_logic_vector(size downto 0);
+    variable v_high : std_logic_vector(size downto 0);
+    variable v_plus_1      : std_logic_vector(size + 1 downto 0); -- We need this to avoid synthesis problems with Xilinx ISE
     variable v      : std_logic_vector(size - 1 downto 0);
   begin
     v_low  := (others => '0');
     v_high := (others => '1');
-    v_plus_1      := v_high(ones_nb - 1 downto 0) & v_low(size - ones_nb downto 0);
+    v_plus_1      := v_high(ones_nb downto 0) & v_low(size - ones_nb downto 0);
     v      := v_plus_1(size downto 1);
     return v;
   end function;
