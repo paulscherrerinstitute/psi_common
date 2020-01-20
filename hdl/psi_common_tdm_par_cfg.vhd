@@ -10,7 +10,7 @@
 -- This entity implements a conversion from length-variable time-division-multiplexed input
 -- (multiple values transferred over the same signal one after the other) to
 -- parallel (multiple values distributed over multiple parallel signals).
-
+-- The enabled channels order is (ChannelCount_g downto ChannelCount_g - EnabledChannels -1) 
 ------------------------------------------------------------------------------
 -- Libraries
 ------------------------------------------------------------------------------
@@ -36,11 +36,11 @@ entity psi_common_tdm_par_cfg is
 		-- Control Signals
 		Clk							: in 	std_logic;		-- $$ type=clk; freq=100e6 $$
 		Rst							: in 	std_logic;		-- $$ type=rst; clk=Clk $$
-		EnabledChannels : in  integer range 0 to ChannelCount_g := ChannelCount_g; --add
-		Sync            : in  std_logic;    -- This can be used to synchronize the first tdm value, it is usefull once the user changes the number of enabled channels
+		EnabledChannels : in  integer range 0 to ChannelCount_g := ChannelCount_g; -- Numeber of enable output channels
 		-- Data Ports
     Tdm         : in  std_logic_vector(ChannelWidth_g - 1 downto 0);
     TdmVld      : in  std_logic;
+    TdmLast     : in  std_logic;    -- If the Tdm has a last bit it can be used to ensure the synchronization, it is usefull once the user changes the number of enabled channels
     Parallel    : out std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0);
     ParallelVld : out std_logic		
 	);
@@ -60,13 +60,14 @@ architecture rtl of psi_common_tdm_par_cfg is
 		Ovld			: std_logic;
 	end record;	
 	signal r, r_next : two_process_r;
+	signal TdmLast_d : std_logic;
 	
 begin
 
 	--------------------------------------------------------------------------
 	-- Combinatorial Process
 	--------------------------------------------------------------------------
-	p_comb : process(	r, Tdm, TdmVld, EnabledChannels)	
+	p_comb : process(	r, Tdm, TdmVld, EnabledChannels, TdmLast)	
 		variable v : two_process_r;
 				
 	begin	
@@ -81,7 +82,7 @@ begin
 		
 		-- *** Latch ***
 		v.Ovld := '0';
-		if r.VldSr = PartiallyOnesVector(ChannelCount_g, EnabledChannels) or sync = '1' then
+		if r.VldSr = PartiallyOnesVector(ChannelCount_g, EnabledChannels) or TdmLast_d = '1' then
 			v.Ovld := '1';
 			v.Odata := r.ShiftReg;
 			v.VldSr(r.VldSr'high)				:= TdmVld;
@@ -104,9 +105,11 @@ begin
 	begin	
 		if rising_edge(Clk) then
 			r <= r_next;
+			TdmLast_d <= TdmLast;
 			if Rst = '1' then
 				r.VldSr	<= (others => '0');
 				r.Ovld <= '0';
+				TdmLast_d <= '0';
 			end if;
 		end if;
 	end process;

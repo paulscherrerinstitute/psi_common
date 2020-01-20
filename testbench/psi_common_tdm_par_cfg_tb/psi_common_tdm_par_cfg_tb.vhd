@@ -51,6 +51,7 @@ architecture sim of psi_common_tdm_par_cfg_tb is
 	signal EnabledChannels : natural range 0 to ChannelCount_g := ChannelCount_g;
 	signal Tdm : std_logic_vector(ChannelWidth_g-1 downto 0) := (others => '0');
 	signal TdmVld : std_logic := '0';
+	signal TdmLast : std_logic := '0';
 	signal Parallel : std_logic_vector(ChannelCount_g*ChannelWidth_g-1 downto 0) := (others => '0');
 	signal ParallelVld : std_logic := '0';
 	
@@ -94,6 +95,7 @@ begin
 			EnabledChannels => EnabledChannels,
 			Tdm => Tdm,
 			TdmVld => TdmVld,
+			TdmLast => TdmLast,
 			Parallel => Parallel,
 			ParallelVld => ParallelVld
 		);
@@ -146,9 +148,11 @@ begin
 		-- start of process !DO NOT EDIT
 		wait until Rst = '0';
 		
+		-- *** TdmLast not used ***
 		-- *** max input length (EnabledChannels = ChannelCount_g) ***
 		-- *** Samples with much space in between ***
 		TestCase <= 0;
+		EnabledChannels <= ChannelCount_g;
 		wait until rising_edge(Clk);
 		for sample in 0 to 3 loop
 			for channel in 0 to 2 loop
@@ -233,6 +237,124 @@ begin
     end loop; 
     TdmVld <= '0'; 
 		
+		wait for 100 ns ;
+		-- *** TdmLast test ***
+    -- *** max input length (EnabledChannels = ChannelCount_g) ***
+    -- *** Samples with much space in between ***
+    TestCase <= 6;
+    EnabledChannels <= ChannelCount_g;
+    wait until rising_edge(Clk);
+    for sample in 0 to 3 loop
+      for channel in 0 to 2 loop
+        TdmVld <= '1';
+        Tdm <= std_logic_vector(to_unsigned(channel*16#10#+sample, Tdm'length));
+        if channel = 2 then
+          TdmLast <= '1';
+        else
+          TdmLast <= '0';
+        end if;
+        wait until rising_edge(Clk);
+        TdmVld <= '0';
+        Tdm <= (others => '0');
+        TdmLast <= '0';
+        for del in 0 to 9 loop
+          wait until rising_edge(Clk);
+        end loop;
+      end loop;
+    end loop;
+    
+    -- *** Samples back to back ***
+    TestCase <= 7;
+    wait until rising_edge(Clk);  
+    TdmVld <= '1';    
+    for sample in 0 to 3 loop
+      for channel in 0 to 2 loop
+        Tdm <= std_logic_vector(to_unsigned(16#50# + channel*16#10#+sample, Tdm'length));       
+        if channel = 2 then 
+          TdmLast <= '1';
+        else
+          TdmLast <= '0';
+        end if;
+        wait until rising_edge(Clk);
+      end loop;
+    end loop; 
+    TdmLast <= '0';
+    TdmVld <= '0';    
+    
+    wait for 100 ns ;
+    -- *** Input length is 2 (EnabledChannels = ChannelCount_g - 1) ***
+    -- *** Samples with much space in between ***
+    TestCase <= 8;
+    EnabledChannels <= ChannelCount_g - 1;
+    wait until rising_edge(Clk);
+    for sample in 0 to 3 loop
+      for channel in 0 to 1 loop
+        TdmVld <= '1';
+        Tdm <= std_logic_vector(to_unsigned(channel*16#10#+sample, Tdm'length));
+        if channel = 1 then
+          TdmLast <= '1';
+        else
+          TdmLast <= '0';
+        end if;
+        wait until rising_edge(Clk);
+        TdmVld <= '0';
+        Tdm <= (others => '0');
+        TdmLast <= '0';
+        for del in 0 to 9 loop
+          wait until rising_edge(Clk);
+        end loop;
+      end loop;
+    end loop;
+    
+    -- *** Samples back to back ***
+    TestCase <= 9;
+    wait until rising_edge(Clk);  
+    TdmVld <= '1';    
+    for sample in 0 to 3 loop
+      for channel in 0 to 1 loop
+        Tdm <= std_logic_vector(to_unsigned(16#50# + channel*16#10#+sample, Tdm'length));
+        if channel = 1 then 
+          TdmLast <= '1';
+        else
+          TdmLast <= '0';
+        end if;
+        wait until rising_edge(Clk);
+      end loop;
+    end loop; 
+    TdmLast <= '0';
+    TdmVld <= '0';  
+    
+    wait for 100 ns ;
+    -- *** Input length is 1 (EnabledChannels = ChannelCount_g - 2) ***
+    -- *** Samples with much space in between ***
+    TestCase <= 10;
+    EnabledChannels <= ChannelCount_g - 2;
+    wait until rising_edge(Clk);
+    for sample in 0 to 3 loop
+      TdmVld <= '1';
+      Tdm <= std_logic_vector(to_unsigned(sample, Tdm'length));
+      TdmLast <= '1';
+      wait until rising_edge(Clk);
+      TdmVld <= '0';
+      Tdm <= (others => '0');
+      TdmLast <= '0';
+      for del in 0 to 9 loop
+        wait until rising_edge(Clk);
+      end loop;
+    end loop;
+    
+    -- *** Samples back to back ***
+    TestCase <= 11;
+    wait until rising_edge(Clk);  
+    TdmVld <= '1';   
+    for sample in 0 to 3 loop       
+      Tdm <= std_logic_vector(to_unsigned(16#50#+sample, Tdm'length)); 
+      TdmLast <= '1';
+      wait until rising_edge(Clk); 
+    end loop;
+    TdmLast <= '0'; 
+    TdmVld <= '0';
+		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_inp_c) <= '1';
 		wait;
@@ -244,6 +366,7 @@ begin
 		-- start of process !DO NOT EDIT
 		wait until Rst = '0';
 		
+		-- *** Test without TdmLast used ***
 		-- *** max input length (EnabledChannels = ChannelCount_g) ***
 		-- *** Samples with much space in between ***
 		wait until TestCase = 0;
@@ -279,6 +402,46 @@ begin
     
     -- *** Samples back to back ***
     wait until TestCase = 5;
+    for sample in 0 to 3 loop
+      Expect1Channel((16#50#+sample));
+    end loop;
+    
+    -- *** Test using TdmLast ***
+    -- *** max input length (EnabledChannels = ChannelCount_g) ***
+    -- *** Samples with much space in between ***
+    wait until TestCase = 6;
+    for sample in 0 to 3 loop
+      Expect3Channels((16#00#+sample, 16#10#+sample, 16#20#+sample));
+    end loop;
+    
+    -- *** Samples back to back ***
+    wait until TestCase = 7;
+    for sample in 0 to 3 loop
+      Expect3Channels((16#50#+sample, 16#60#+sample, 16#70#+sample));
+    end loop;   
+    
+    -- *** Input length is 2 (EnabledChannels = ChannelCount_g - 1) ***
+    -- *** Samples with much space in between ***
+    wait until TestCase = 8;
+    for sample in 0 to 3 loop
+      Expect2Channels((16#00#+sample, 16#10#+sample));
+    end loop;
+    
+    -- *** Samples back to back ***
+    wait until TestCase = 9;
+    for sample in 0 to 3 loop
+      Expect2Channels((16#50#+sample, 16#60#+sample));
+    end loop; 
+    
+    -- *** Input length is 1 (EnabledChannels = ChannelCount_g - 2) ***
+    -- *** Samples with much space in between ***
+    wait until TestCase = 10;
+    for sample in 0 to 3 loop
+      Expect1Channel((16#00#+sample));
+    end loop;
+    
+    -- *** Samples back to back ***
+    wait until TestCase = 11;
     for sample in 0 to 3 loop
       Expect1Channel((16#50#+sample));
     end loop; 
