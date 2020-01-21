@@ -36,7 +36,7 @@ entity psi_common_tdm_par_cfg is
 		-- Control Signals
 		Clk							: in 	std_logic;		-- $$ type=clk; freq=100e6 $$
 		Rst							: in 	std_logic;		-- $$ type=rst; clk=Clk $$
-		EnabledChannels : in  integer range 0 to ChannelCount_g := ChannelCount_g; -- Numeber of enable output channels
+		EnabledChannels : in  integer range 0 to ChannelCount_g := ChannelCount_g; -- Number of enable output channels
 		-- Data Ports
     Tdm         : in  std_logic_vector(ChannelWidth_g - 1 downto 0);
     TdmVld      : in  std_logic;
@@ -58,9 +58,9 @@ architecture rtl of psi_common_tdm_par_cfg is
 		VldSr			: std_logic_vector(ChannelCount_g-1 downto 0);
 		Odata			: std_logic_vector(Parallel'range);
 		Ovld			: std_logic;
+		TdmLast_d   : std_logic;
 	end record;	
 	signal r, r_next : two_process_r;
-	signal TdmLast_d : std_logic;
 	
 begin
 
@@ -75,14 +75,16 @@ begin
 		v := r;
 		
 		-- *** Implementation ***
+		v.TdmLast_d := '0';
 		if TdmVld = '1' then
 			v.ShiftReg	:= Tdm & r.ShiftReg(r.ShiftReg'high downto ChannelWidth_g);
 			v.VldSr		:= '1' & r.VldSr(r.VldSr'high downto 1);
+			v.TdmLast_d := TdmLast;
 		end if;
 		
 		-- *** Latch ***
 		v.Ovld := '0';
-		if r.VldSr = PartiallyOnesVector(ChannelCount_g, EnabledChannels) or TdmLast_d = '1' then
+		if r.VldSr = PartiallyOnesVector(ChannelCount_g, EnabledChannels) or r.TdmLast_d = '1' then
 			v.Ovld := '1';
 			v.Odata := r.ShiftReg;
 			v.VldSr(r.VldSr'high)				:= TdmVld;
@@ -105,11 +107,10 @@ begin
 	begin	
 		if rising_edge(Clk) then
 			r <= r_next;
-			TdmLast_d <= TdmLast;
 			if Rst = '1' then
 				r.VldSr	<= (others => '0');
 				r.Ovld <= '0';
-				TdmLast_d <= '0';
+				r.TdmLast_d <= '0';
 			end if;
 		end if;
 	end process;
