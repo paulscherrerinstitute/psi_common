@@ -70,14 +70,14 @@ architecture sim of psi_common_tdm_par_cfg_tb is
 	procedure Expect2Channels( Values : in t_ainteger(0 to 1)) is
   begin
     wait until rising_edge(Clk) and ParallelVld = '1';
-    StdlvCompareInt (Values(0), Parallel(2*ChannelWidth_g-1 downto 1*ChannelWidth_g), "Wrong value Channel 1", false);  
-    StdlvCompareInt (Values(1), Parallel(3*ChannelWidth_g-1 downto 2*ChannelWidth_g), "Wrong value Channel 2", false); 
+    StdlvCompareInt (Values(0), Parallel(1*ChannelWidth_g-1 downto 0*ChannelWidth_g), "Wrong value Channel 0", false);  
+    StdlvCompareInt (Values(1), Parallel(2*ChannelWidth_g-1 downto 1*ChannelWidth_g), "Wrong value Channel 1", false);
   end procedure;	
   
   procedure Expect1Channel( Value : in integer) is
   begin
     wait until rising_edge(Clk) and ParallelVld = '1';
-    StdlvCompareInt (Value, Parallel(3*ChannelWidth_g-1 downto 2*ChannelWidth_g), "Wrong value Channel 2", false);  
+    StdlvCompareInt (Value, Parallel(1*ChannelWidth_g-1 downto 0*ChannelWidth_g), "Wrong value Channel 0", false);  
   end procedure;
 	
 begin
