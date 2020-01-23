@@ -97,9 +97,9 @@ package body psi_common_logic_pkg is
     variable v_plus_1      : std_logic_vector(size + 1 downto 0); -- We need this to avoid synthesis problems with Xilinx ISE
     variable v      : std_logic_vector(size - 1 downto 0);
   begin
-    v_low  := (others => '0');
-    v_high := (others => '1');
-    v_plus_1      := v_high(ones_nb downto 0) & v_low(size - ones_nb downto 0);
+    v_low  := (others => '1');
+    v_high := (others => '0');
+    v_plus_1      := v_high(size - ones_nb downto 0) & v_low(ones_nb downto 0);
     v      := v_plus_1(size downto 1);
     return v;
   end function;
