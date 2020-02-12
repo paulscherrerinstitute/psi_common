@@ -93,18 +93,14 @@ begin
     -- *** Implementation ***
     v.InTrgArmCfg_c := InTrgArmCfg;
     
-    v.TrgArmed  := '0';
+    v.TrgArmed  := r.TrgArmed;
     
-    if InTrgModeCfg = "00" then -- Continuous trigger
-      v.TrgArmed := '1';
-    elsif InTrgModeCfg = "01" then -- Single trigger
-      v.TrgArmed  := r.TrgArmed;
-      if r.OTrg ='1'  then 
-        v.TrgArmed  := '0';
-      elsif InTrgArmCfg = '1' and r.InTrgArmCfg_c ='0'  then -- toggle arm or de-arm
-        v.TrgArmed  := not r.TrgArmed;
-      end if;
+    if r.OTrg ='1' and InTrgModeCfg = "01"  then -- if single mode, the triggei is de-armed once the trigger is generated
+      v.TrgArmed  := '0';
+    elsif InTrgArmCfg = '1' and r.InTrgArmCfg_c ='0'  then -- toggle arm or de-arm
+      v.TrgArmed  := not r.TrgArmed;
     end if;
+
     
     v.ODigitalTrg := '0';
     -- Digital Trigger
