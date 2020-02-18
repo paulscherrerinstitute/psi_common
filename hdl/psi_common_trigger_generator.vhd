@@ -29,8 +29,8 @@ entity psi_common_trigger_generator is
 		digital_sources_width_g : integer := 1; -- number of digital trigger inputs
 		analog_trg_g : boolean := true; -- analog trigger mechanism is generated
 		analog_sources_width_g : integer := 32; -- number of analog trigger inputs
-		analog_trg_width_g : integer := 16; -- analog trigger input signal width
-		analog_trg_signed_g : boolean := true; -- analog trigger input signal width
+		analog_trg_width_g : integer := 16; -- analog trigger input signals width
+		analog_trg_signed_g : boolean := true; -- analog trigger input signals are signed
 		rst_pol_g		: std_logic	:= '1'		-- reset polarity
 	);
 	port (
@@ -38,9 +38,9 @@ entity psi_common_trigger_generator is
 		InRst	: in	std_logic;			--rst in		$$ type=rst; clk=clk_i $$
 		--InDelay : real := 0.0; -- -- delay in us
 		InTrgTypeCfg : in std_logic_vector (1 downto 0); -- Trigger type (00:Digital,01:Analog, ...) configuration register
-		InTrgModeCfg : in std_logic_vector (1 downto 0); -- Trigger mode (00:Continuous,01:Single) configuration register --in multi stream, but in general??
-		InTrgArmCfg : in std_logic; -- Arm/de-arm the trigger, rising edge sensitive
-    InTrgEdgeCfg : in std_logic_vector (1 downto 0); -- Trigger edge direction configuration register (bit0:fslling edge sensitive, bit1: rising edge sensitive)
+		InTrgModeCfg : in std_logic_vector (1 downto 0); -- Trigger mode (00:Continuous,01:Single) configuration register
+		InTrgArmCfg : in std_logic; -- Arm/dis--arm the trigger, rising edge sensitive
+    InTrgEdgeCfg : in std_logic_vector (1 downto 0); -- Trigger edge direction configuration register (bit0:falling edge sensitive, bit1: rising edge sensitive)
     
     InTrgDigitalSourceCfg : in integer range integer(ceil(log2(real(digital_sources_width_g)))) downto 0; -- Trigger source configuration  register
     InDigitalTrg  : in  std_logic_vector (digital_sources_width_g - 1 downto 0);  -- digital trigger input 
@@ -95,9 +95,9 @@ begin
     
     v.TrgArmed  := r.TrgArmed;
     
-    if r.OTrg ='1' and InTrgModeCfg = "01"  then -- if single mode, the triggei is de-armed once the trigger is generated
+    if r.OTrg ='1' and InTrgModeCfg = "01"  then -- if single mode, the trigger is dis-armed once the trigger is generated
       v.TrgArmed  := '0';
-    elsif InTrgArmCfg = '1' and r.InTrgArmCfg_c ='0'  then -- toggle arm or de-arm
+    elsif InTrgArmCfg = '1' and r.InTrgArmCfg_c ='0'  then -- toggle arm or dis-arm
       v.TrgArmed  := not r.TrgArmed;
     end if;
 
