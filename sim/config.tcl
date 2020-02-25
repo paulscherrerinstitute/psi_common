@@ -66,6 +66,7 @@ add_sources "../hdl" {
 	psi_common_ping_pong.vhd \
 	psi_common_delay_cfg.vhd \
 	psi_common_pulse_shaper_cfg.vhd \
+  psi_common_watchdog.vhd \
 } -tag src
 
 # testbenches
@@ -115,6 +116,7 @@ add_sources "../testbench" {
 	psi_common_ping_pong_tb/psi_common_ping_pong_tdm_burst_tb.vhd \
 	psi_common_delay_cfg_tb/psi_common_delay_cfg_tb.vhd \
 	psi_common_pulse_shaper_cfg_tb/psi_common_pulse_shaper_cfg_tb.vhd \
+	psi_common_watchdog_tb/psi_common_watchdog_tb.vhd \
 } -tag tb
 
 #TB Runs
@@ -312,4 +314,7 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_ping_pong_tdm_burst_tb"
+add_tb_run
+
+create_tb_run "psi_common_watchdog_tb"
 add_tb_run
