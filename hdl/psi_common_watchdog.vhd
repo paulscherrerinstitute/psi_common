@@ -2,8 +2,9 @@
 --  Copyright (c) 2020 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
 --  Authors:  Benoit Stef 
---  Purpose:  Using to verify if value has moved to a certain value within a 
---            predifined time period
+--  Purpose:  Using to verify if value has been active (/= previous value) 
+--            within a predefined time period - error/warning flag can be set
+--            via genenric
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -24,12 +25,12 @@ entity psi_common_watchdog is
           thld_warn_g  : positive  := 3;                                            -- threshold for warning
           length_g     : integer   := 9;                                            -- data input length
           rst_pol_g    : std_logic := '1');                                         -- polarity reset
-  port(   clk_i        : in  std_logic;                                             -- clock adc
-          rst_i        : in  std_logic;                                             -- reset proc
+  port(   clk_i        : in  std_logic;                                             -- clock 
+          rst_i        : in  std_logic;                                             -- reset 
           dat_i        : in  std_logic_vector(length_g - 1 downto 0);               -- input data
-          warn_o       : out std_logic;                                             -- warning output
-          miss_o       : out std_logic_vector(log2ceil(thld_fault_g) - 1 downto 0); -- missing output
-          fault_o      : out std_logic);                                            -- output fault
+          warn_o       : out std_logic;                                             -- warning flag
+          miss_o       : out std_logic_vector(log2ceil(thld_fault_g) - 1 downto 0); -- missing counter  
+          fault_o      : out std_logic);                                            -- fault flag
 end entity;
 
 architecture rtl of psi_common_watchdog is
