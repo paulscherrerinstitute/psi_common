@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
---  Authors: Oliver Bruendler
+--  Authors: Oliver Bruendler, Benoit Stef
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -57,6 +57,10 @@ package psi_common_math_pkg is
 	function choose(	s : in 	boolean;
 						t : in 	unsigned;
 						f : in 	unsigned) return unsigned;	
+							           
+  function choose(  s : in  boolean;
+            t : in  boolean;
+            f : in  boolean) return boolean;					
 						
 	-- count occurence of a value inside an array
 	function count(	a : in t_ainteger;
@@ -223,6 +227,18 @@ package body psi_common_math_pkg is
 			return f;
 		end if;
 	end function;
+	
+	 -- *** Choose (boolean) ***  
+  function choose(  s : in  boolean;
+            t : in  boolean;
+            f : in  boolean) return boolean is
+  begin
+    if s then
+      return t;
+    else
+      return f;
+    end if;
+  end function;
 
 	-- *** count (integer) ***	
 	function count(	a : in t_ainteger;
