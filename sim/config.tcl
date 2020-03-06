@@ -63,6 +63,7 @@ add_sources "../hdl" {
 	psi_common_tdp_ram_be.vhd \
 	psi_common_i2c_master.vhd \
 	psi_common_ping_pong.vhd \
+	psi_common_dont_opt.vhd \
 } -tag src
 
 # testbenches
