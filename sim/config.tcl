@@ -66,7 +66,8 @@ add_sources "../hdl" {
 	psi_common_ping_pong.vhd \
 	psi_common_delay_cfg.vhd \
 	psi_common_pulse_shaper_cfg.vhd \
-  psi_common_watchdog.vhd \
+    psi_common_watchdog.vhd \
+	psi_common_dont_opt.vhd \
 } -tag src
 
 # testbenches
