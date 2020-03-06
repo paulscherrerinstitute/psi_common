@@ -1,3 +1,9 @@
+## 2.8.0
+  * Added Features
+    * Added *psi*_common*_watchdog* - Watchdog with several settable parameters
+    * Added *psi*_common*_tdm*_par*_cfg* - TDM to // with configurable number of enabled channels
+    * Added *psi*_common*_dont*_optimize* - Allows creating virtual pins to check implementation
+
 ## 2.7.1
 * Bugfixes
   * Made *psi\_common\_ping\_pong\_tdm\_burst\_tb* runnable in Vivado
