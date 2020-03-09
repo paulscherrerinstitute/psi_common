@@ -116,7 +116,7 @@ add_sources "../testbench" {
 	psi_common_ping_pong_tb/psi_common_ping_pong_tdm_burst_tb.vhd \
 	psi_common_delay_cfg_tb/psi_common_delay_cfg_tb.vhd \
 	psi_common_pulse_shaper_cfg_tb/psi_common_pulse_shaper_cfg_tb.vhd \
-	psi_common_trigger_generator_tb/psi_common_trigger_generator_tb \
+	psi_common_trigger_generator_tb/psi_common_trigger_generator_tb.vhd \
 } -tag tb
 
 #TB Runs
