@@ -25,13 +25,13 @@ use work.psi_common_array_pkg.all;
 entity psi_common_trigger_generator is
   generic(
     --freq_clock_g  : real    := 100.0; -- Clock Frequency in MHz   $$ export=true $$
-    digital_trg_g           : boolean   := true; -- digital trigger mechanism is generated
-    digital_sources_width_g : integer   := 1; -- number of digital trigger inputs
-    analog_trg_g            : boolean   := true; -- analog trigger mechanism is generated
-    analog_sources_width_g  : integer   := 32; -- number of analog trigger inputs
-    analog_trg_width_g      : integer   := 16; -- analog trigger input signals width
-    analog_trg_signed_g     : boolean   := true; -- analog trigger input signals are signed
-    rst_pol_g               : std_logic := '1' -- reset polarity
+    digital_trg_g          : boolean   := true; -- digital trigger mechanism is generated
+    digital_input_number_g : integer   := 1; -- number of digital trigger inputs
+    analog_trg_g           : boolean   := true; -- analog trigger mechanism is generated
+    analog_input_number_g  : integer   := 32; -- number of analog trigger inputs
+    analog_input_width_g   : integer   := 16; -- analog trigger input signals width
+    analog_trg_signed_g    : boolean   := true; -- analog trigger input signals are signed
+    rst_pol_g              : std_logic := '1' -- reset polarity
   );
   port(
     InClk                 : in  std_logic; --clk in    $$ type=clk; freq=100.0 $$
@@ -42,12 +42,12 @@ entity psi_common_trigger_generator is
     InTrgArmCfg           : in  std_logic; -- Arm/dis--arm the trigger, rising edge sensitive
     InTrgEdgeCfg          : in  std_logic_vector(1 downto 0); -- Trigger edge direction configuration register (bit0:falling edge sensitive, bit1: rising edge sensitive)
 
-    InTrgDigitalSourceCfg : in  integer range integer(ceil(log2(real(digital_sources_width_g)))) downto 0; -- Trigger source configuration  register
-    InDigitalTrg          : in  std_logic_vector(digital_sources_width_g - 1 downto 0); -- digital trigger input 
+    InTrgDigitalSourceCfg : in  integer range (digital_input_number_g - 1) downto 0; -- Trigger source configuration  register
+    InDigitalTrg          : in  std_logic_vector(digital_input_number_g - 1 downto 0); -- digital trigger input 
 
-    InTrgAnalogSourceCfg  : in  integer range integer(ceil(log2(real(analog_sources_width_g)))) downto 0; -- Trigger source configuration  register
-    InAnalogThTrg         : in  std_logic_vector(analog_trg_width_g - 1 downto 0); -- analog trigger threshold value
-    InAnalogTrg           : in  std_logic_vector(analog_sources_width_g * analog_trg_width_g - 1 downto 0); -- Analog input values
+    InTrgAnalogSourceCfg  : in  integer range (analog_input_number_g - 1) downto 0; -- Trigger source configuration  register
+    InAnalogThTrg         : in  std_logic_vector(analog_input_width_g - 1 downto 0); -- analog trigger threshold value
+    InAnalogTrg           : in  std_logic_vector(analog_input_number_g * analog_input_width_g - 1 downto 0); -- Analog input values
 
     OutTrgIsArmed         : out std_logic;
     OutTrigger            : out std_logic -- trigger output
@@ -63,12 +63,12 @@ architecture rtl of psi_common_trigger_generator is
 
   type two_process_r is record
     --delay_cnt    : integer range 0 to ratio_c;
-    RegAnalogValueSigned     : signed(analog_trg_width_g - 1 downto 0);
-    RegAnalogValueSigned_c   : signed(analog_trg_width_g - 1 downto 0);
-    RegAnalogValueUnsigned   : unsigned(analog_trg_width_g - 1 downto 0);
-    RegAnalogValueUnsigned_c : unsigned(analog_trg_width_g - 1 downto 0);
-    RegAnalogThSigned        : signed(analog_trg_width_g - 1 downto 0);
-    RegAnalogThUnsigned      : unsigned(analog_trg_width_g - 1 downto 0);
+    RegAnalogValueSigned     : signed(analog_input_width_g - 1 downto 0);
+    RegAnalogValueSigned_c   : signed(analog_input_width_g - 1 downto 0);
+    RegAnalogValueUnsigned   : unsigned(analog_input_width_g - 1 downto 0);
+    RegAnalogValueUnsigned_c : unsigned(analog_input_width_g - 1 downto 0);
+    RegAnalogThSigned        : signed(analog_input_width_g - 1 downto 0);
+    RegAnalogThUnsigned      : unsigned(analog_input_width_g - 1 downto 0);
     RegDigitalValue_c        : std_logic;
     OAnalogTrg               : std_logic;
     ODigitalTrg              : std_logic;
@@ -124,15 +124,15 @@ begin
 
       if analog_trg_signed_g = true then -- the analog value is signed
 
-        --        signed_analog_in_assign : for i in 0 to analog_sources_width_g-1 loop
+        --        signed_analog_in_assign : for i in 0 to analog_input_number_g-1 loop
         --        if i = InTrgAnalogSourceCfg then
-        --          v.RegAnalogValueSigned  := signed(InAnalogTrg((analog_trg_width_g*i)+(analog_trg_width_g-1) downto analog_sources_width_g*i));
+        --          v.RegAnalogValueSigned  := signed(InAnalogTrg((analog_input_width_g*i)+(analog_input_width_g-1) downto analog_input_number_g*i));
         --        end if;   
         --        end loop;
 
         --v.RegAnalogValueSigned  := signed(InAnalogTrg(InTrgAnalogSourceCfg));
 
-        v.RegAnalogValueSigned := signed(InAnalogTrg((analog_trg_width_g * InTrgAnalogSourceCfg) + (analog_trg_width_g - 1) downto analog_trg_width_g * InTrgAnalogSourceCfg));
+        v.RegAnalogValueSigned := signed(InAnalogTrg((analog_input_width_g * InTrgAnalogSourceCfg) + (analog_input_width_g - 1) downto analog_input_width_g * InTrgAnalogSourceCfg));
 
         v.RegAnalogValueSigned_c := r.RegAnalogValueSigned;
         v.RegAnalogThSigned      := signed(InAnalogThTrg);
@@ -148,14 +148,14 @@ begin
 
       if analog_trg_signed_g = false then -- the analog value is unsigned
 
-        --        unsigned_analog_in_assign : for i in 0 to analog_sources_width_g-1 loop
+        --        unsigned_analog_in_assign : for i in 0 to analog_input_number_g-1 loop
         --        if i = InTrgAnalogSourceCfg then
-        --          v.RegAnalogValueSigned  := unsigned(InAnalogTrg((analog_trg_width_g*i)+(analog_trg_width_g-1) downto analog_sources_width_g*i));
+        --          v.RegAnalogValueSigned  := unsigned(InAnalogTrg((analog_input_width_g*i)+(analog_input_width_g-1) downto analog_input_number_g*i));
         --        end if;   
         --        end loop;
 
         --v.RegAnalogValueUnsigned  := unsigned(InAnalogTrg(InTrgAnalogSourceCfg));
-        v.RegAnalogValueUnsigned := unsigned(InAnalogTrg((analog_trg_width_g * InTrgAnalogSourceCfg) + (analog_trg_width_g - 1) downto analog_trg_width_g * InTrgAnalogSourceCfg));
+        v.RegAnalogValueUnsigned := unsigned(InAnalogTrg((analog_input_width_g * InTrgAnalogSourceCfg) + (analog_input_width_g - 1) downto analog_input_width_g * InTrgAnalogSourceCfg));
 
         v.RegAnalogValueUnsigned_c := r.RegAnalogValueUnsigned;
         v.RegAnalogThUnsigned      := unsigned(InAnalogThTrg);
