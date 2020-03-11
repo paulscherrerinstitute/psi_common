@@ -36,7 +36,7 @@ entity psi_common_trigger_digital is
     InTrgArmCfg           : in  std_logic; -- Arm/dis--arm the trigger, rising edge sensitive
     InTrgEdgeCfg          : in  std_logic_vector(1 downto 0); -- Trigger edge direction configuration register (bit0:falling edge sensitive, bit1: rising edge sensitive)
 
-    InTrgDigitalSourceCfg : in  integer range (digital_input_number_g - 1) downto 0; -- Trigger source configuration  register
+    InTrgDigitalSourceCfg : in  std_logic_vector(log2ceil(digital_input_number_g)-1 downto 0); -- Trigger source configuration  register
     InDigitalTrg          : in  std_logic_vector(digital_input_number_g - 1 downto 0); -- digital trigger input 
 
     OutTrgIsArmed         : out std_logic;
@@ -83,12 +83,12 @@ begin
     v.OTrg := '0';
     -- Digital Trigger
 
-    v.RegDigitalValue_c := InDigitalTrg(InTrgDigitalSourceCfg);
+    v.RegDigitalValue_c := InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg)));
     if r.TrgArmed = '1' then
-      if r.RegDigitalValue_c = '0' and InDigitalTrg(InTrgDigitalSourceCfg) = '1' and InTrgEdgeCfg(1) = '1' then --rising edge
+      if r.RegDigitalValue_c = '0' and InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg))) = '1' and InTrgEdgeCfg(1) = '1' then --rising edge
         v.OTrg := '1';
       end if;
-      if r.RegDigitalValue_c = '1' and InDigitalTrg(InTrgDigitalSourceCfg) = '0' and InTrgEdgeCfg(0) = '1' then --falling edge
+      if r.RegDigitalValue_c = '1' and InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg))) = '0' and InTrgEdgeCfg(0) = '1' then --falling edge
         v.OTrg := '1';
       end if;
     end if;

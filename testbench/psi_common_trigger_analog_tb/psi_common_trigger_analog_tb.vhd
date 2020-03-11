@@ -14,6 +14,7 @@ use ieee.math_real.all;
 
 library work;
 use work.psi_common_array_pkg.all;
+use work.psi_common_math_pkg.all;
 use work.psi_tb_compare_pkg.all;
 
 ------------------------------------------------------------
@@ -47,7 +48,7 @@ architecture sim of psi_common_trigger_analog_tb is
   signal InTrgModeCfg          : std_logic_vector(0 downto 0)                                               := (others => '0');
   signal InTrgArmCfg           : std_logic                                                                  := '0';
   signal InTrgEdgeCfg          : std_logic_vector(1 downto 0)                                               := (others => '0');
-  signal InTrgAnalogSourceCfg  : integer range (analog_input_number_g - 1) downto 0 := 0;
+  signal InTrgAnalogSourceCfg  : std_logic_vector(log2ceil(analog_input_number_g )-1 downto 0):= (others => '0');
   signal InAnalogTrg           : std_logic_vector(analog_input_number_g * analog_input_width_g - 1 downto 0) := (others => '0');
   signal InAnalogThTrg         : std_logic_vector(analog_input_width_g - 1 downto 0)                          := (others => '0');
   signal OutTrgIsArmed         : std_logic;
@@ -169,7 +170,7 @@ begin
 
     InTrgModeCfg(0)      <= '0';        -- continuous mode
     InTrgEdgeCfg         <= "11";       -- both edges are sensitive
-    InTrgAnalogSourceCfg <= 2;
+    InTrgAnalogSourceCfg <= std_logic_vector(to_unsigned(2,log2ceil(analog_input_number_g)));
     InAnalogThTrg        <= x"0010";
 
     wait until rising_edge(InClk);

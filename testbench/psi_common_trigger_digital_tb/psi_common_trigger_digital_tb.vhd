@@ -14,6 +14,7 @@ use ieee.math_real.all;
 
 library work;
 use work.psi_common_array_pkg.all;
+use work.psi_common_math_pkg.all;
 use work.psi_tb_compare_pkg.all;
 
 ------------------------------------------------------------
@@ -27,7 +28,7 @@ end entity;
 ------------------------------------------------------------
 architecture sim of psi_common_trigger_digital_tb is
   -- *** Fixed Generics ***
-  constant digital_input_number_g : integer   := 1; -- number of digital trigger inputs
+  constant digital_input_number_g : integer   := 4; -- number of digital trigger inputs
   constant rst_pol_g               : std_logic := '1'; -- reset polarity
 
   -- *** Not Assigned Generics (default values) ***
@@ -46,7 +47,7 @@ architecture sim of psi_common_trigger_digital_tb is
   signal InTrgArmCfg           : std_logic                                                                  := '0';
   signal InTrgEdgeCfg          : std_logic_vector(1 downto 0)                                               := (others => '0');
   signal InDigitalTrg          : std_logic_vector(digital_input_number_g - 1 downto 0) := (others => '0');
-  signal InTrgDigitalSourceCfg : integer range (digital_input_number_g - 1) downto 0                     := 0;
+  signal InTrgDigitalSourceCfg : std_logic_vector(log2ceil(digital_input_number_g)-1 downto 0):= (others => '0');
   signal OutTrgIsArmed         : std_logic;
   signal OutTrigger            : std_logic;
 
@@ -146,7 +147,7 @@ begin
 
     InTrgModeCfg(0)          <= '0';      -- continuous mode
     InTrgEdgeCfg          <= "11";      -- both edges are sensitive
-    InTrgDigitalSourceCfg <= 0;
+    InTrgDigitalSourceCfg <= std_logic_vector(to_unsigned(0,log2ceil(digital_input_number_g)));
 
     wait until rising_edge(InClk);
     InDigitalTrg(0) <= '0';

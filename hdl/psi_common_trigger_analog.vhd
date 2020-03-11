@@ -38,7 +38,7 @@ entity psi_common_trigger_analog is
     InTrgArmCfg          : in  std_logic; -- Arm/dis--arm the trigger, rising edge sensitive
     InTrgEdgeCfg         : in  std_logic_vector(1 downto 0); -- Trigger edge direction configuration register (bit0:falling edge sensitive, bit1: rising edge sensitive)
 
-    InTrgAnalogSourceCfg : in  integer range (analog_input_number_g - 1) downto 0; -- Trigger source configuration  register
+    InTrgAnalogSourceCfg : in  std_logic_vector(log2ceil(analog_input_number_g)-1 downto 0); -- Trigger source configuration  register
     InAnalogThTrg        : in  std_logic_vector(analog_input_width_g - 1 downto 0); -- analog trigger threshold value
     InAnalogTrg          : in  std_logic_vector(analog_input_number_g * analog_input_width_g - 1 downto 0); -- Analog input values
 
@@ -94,7 +94,7 @@ begin
 
     if analog_trg_signed_g = true then  -- the analog value is signed
 
-      v.RegAnalogValueSigned := signed(InAnalogTrg((analog_input_width_g * InTrgAnalogSourceCfg) + (analog_input_width_g - 1) downto analog_input_width_g * InTrgAnalogSourceCfg));
+      v.RegAnalogValueSigned := signed(InAnalogTrg((analog_input_width_g * to_integer(unsigned(InTrgAnalogSourceCfg))) + (analog_input_width_g - 1) downto analog_input_width_g * to_integer(unsigned(InTrgAnalogSourceCfg))));
 
       v.RegAnalogValueSigned_c := r.RegAnalogValueSigned;
       v.RegAnalogThSigned      := signed(InAnalogThTrg);
@@ -110,7 +110,7 @@ begin
 
     if analog_trg_signed_g = false then -- the analog value is unsigned
 
-      v.RegAnalogValueUnsigned := unsigned(InAnalogTrg((analog_input_width_g * InTrgAnalogSourceCfg) + (analog_input_width_g - 1) downto analog_input_width_g * InTrgAnalogSourceCfg));
+      v.RegAnalogValueUnsigned := unsigned(InAnalogTrg((analog_input_width_g * to_integer(unsigned(InTrgAnalogSourceCfg))) + (analog_input_width_g - 1) downto analog_input_width_g * to_integer(unsigned(InTrgAnalogSourceCfg))));
 
       v.RegAnalogValueUnsigned_c := r.RegAnalogValueUnsigned;
       v.RegAnalogThUnsigned      := unsigned(InAnalogThTrg);
