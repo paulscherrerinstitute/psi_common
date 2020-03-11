@@ -25,7 +25,6 @@ use work.psi_common_math_pkg.all;
 ------------------------------------------------------------------------------
 entity psi_common_trigger_analog is
   generic(
-    analog_trg_g          : boolean   := true; -- analog trigger mechanism is generated
     analog_input_number_g : integer   := 32; -- number of analog trigger inputs
     analog_input_width_g  : integer   := 16; -- analog trigger input signals width
     analog_trg_signed_g   : boolean   := true; -- analog trigger input signals are signed

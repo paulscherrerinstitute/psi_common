@@ -66,7 +66,8 @@ add_sources "../hdl" {
 	psi_common_ping_pong.vhd \
 	psi_common_delay_cfg.vhd \
 	psi_common_pulse_shaper_cfg.vhd \
-	psi_common_trigger_generator.vhd \
+	psi_common_trigger_analog.vhd \
+	psi_common_trigger_digital.vhd \
 } -tag src
 
 # testbenches
@@ -116,7 +117,8 @@ add_sources "../testbench" {
 	psi_common_ping_pong_tb/psi_common_ping_pong_tdm_burst_tb.vhd \
 	psi_common_delay_cfg_tb/psi_common_delay_cfg_tb.vhd \
 	psi_common_pulse_shaper_cfg_tb/psi_common_pulse_shaper_cfg_tb.vhd \
-	psi_common_trigger_generator_tb/psi_common_trigger_generator_tb.vhd \
+	psi_common_trigger_analog_tb/psi_common_trigger_analog_tb.vhd \
+	psi_common_trigger_digital_tb/psi_common_trigger_digital_tb.vhd \
 } -tag tb
 
 #TB Runs
@@ -306,7 +308,10 @@ add_tb_run
 
 create_tb_run "psi_common_i2c_master_tb"
 
-create_tb_run "psi_common_trigger_generator_tb"
+create_tb_run "psi_common_trigger_analog_tb"
+add_tb_run
+
+create_tb_run "psi_common_trigger_digital_tb"
 add_tb_run
 
 #Vivado does not support unconstrained records as required by this TB
