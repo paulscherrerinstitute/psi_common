@@ -48,6 +48,7 @@ architecture sim of psi_common_trigger_digital_tb is
   signal InTrgEdgeCfg          : std_logic_vector(1 downto 0)                                               := (others => '0');
   signal InDigitalTrg          : std_logic_vector(digital_input_number_g - 1 downto 0) := (others => '0');
   signal InTrgDigitalSourceCfg : std_logic_vector(log2ceil(digital_input_number_g)-1 downto 0):= (others => '0');
+  signal InExtDisarm           : std_logic  := '0';
   signal OutTrgIsArmed         : std_logic;
   signal OutTrigger            : std_logic;
 
@@ -85,6 +86,7 @@ begin
       InTrgEdgeCfg          => InTrgEdgeCfg,
       InDigitalTrg          => InDigitalTrg,
       InTrgDigitalSourceCfg => InTrgDigitalSourceCfg,
+      InExtDisarm           => InExtDisarm,
       OutTrgIsArmed         => OutTrgIsArmed,
       OutTrigger            => OutTrigger
     );
@@ -436,6 +438,32 @@ begin
     ExpectTriggerIs(0);
     InDigitalTrg(0) <= '0';
     ExpectTriggerIs(1);
+    ExpectTrgIsArmedIs(0);
+    wait for 100 ns;
+    wait until rising_edge(InClk);
+
+    -- Single mode, inExtDisarm test
+    TestCase <= 12;
+
+    InTrgModeCfg(0)      <= '1';        -- single mode
+    InTrgArmCfg                                                                                    <= '0'; -- arm trigger
+    wait until rising_edge(InClk);
+    InTrgArmCfg                                                                                    <= '1';
+    wait until rising_edge(InClk);
+    InTrgEdgeCfg                                                                                   <= "01";
+    wait until rising_edge(InClk);
+    ExpectTrgIsArmedIs(1);
+    wait for 100 ns;
+    wait until rising_edge(InClk);
+    InExtDisarm  <= '1';
+    wait until rising_edge(InClk);
+    InExtDisarm  <= '0';
+    ExpectTriggerIs(0);
+    InDigitalTrg(0) <= '1';
+    wait until rising_edge(InClk);
+    ExpectTriggerIs(0);
+    InDigitalTrg(0) <= '0';
+    ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
     wait until rising_edge(InClk);

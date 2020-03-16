@@ -51,6 +51,7 @@ architecture sim of psi_common_trigger_analog_tb is
   signal InTrgAnalogSourceCfg  : std_logic_vector(log2ceil(analog_input_number_g )-1 downto 0):= (others => '0');
   signal InAnalogTrg           : std_logic_vector(analog_input_number_g * analog_input_width_g - 1 downto 0) := (others => '0');
   signal InAnalogThTrg         : std_logic_vector(analog_input_width_g - 1 downto 0)                          := (others => '0');
+  signal InExtDisarm           : std_logic  := '0';
   signal OutTrgIsArmed         : std_logic;
   signal OutTrigger            : std_logic;
 
@@ -108,6 +109,7 @@ begin
       InTrgAnalogSourceCfg => InTrgAnalogSourceCfg,
       InAnalogTrg          => InAnalogTrg,
       InAnalogThTrg        => InAnalogThTrg,
+      InExtDisarm          => InExtDisarm,
       OutTrgIsArmed        => OutTrgIsArmed,
       OutTrigger           => OutTrigger
     );
@@ -451,6 +453,29 @@ begin
     ExpectTriggerIs(0);
     InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
     ExpectTriggerIs(1);
+    ExpectTrgIsArmedIs(0);
+    wait for 100 ns;
+    wait until rising_edge(InClk);
+    
+    -- Single mode, inExtDisarm test
+    TestCase <= 12;
+
+    InTrgModeCfg(0)      <= '1';        -- single mode
+    InTrgArmCfg                                                                                    <= '0'; -- arm trigger
+    wait until rising_edge(InClk);
+    InTrgArmCfg                                                                                    <= '1';
+    wait until rising_edge(InClk);
+    InTrgEdgeCfg                                                                                   <= "01";
+    wait until rising_edge(InClk);
+    ExpectTrgIsArmedIs(1);
+    wait for 100 ns;
+    wait until rising_edge(InClk);
+    InExtDisarm  <= '1';
+    wait until rising_edge(InClk);
+    InExtDisarm  <= '0';
+    ExpectTrgIsArmedIs(0);
+    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
+    ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
     wait until rising_edge(InClk);

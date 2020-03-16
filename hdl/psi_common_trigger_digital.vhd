@@ -38,7 +38,8 @@ entity psi_common_trigger_digital is
 
     InTrgDigitalSourceCfg : in  std_logic_vector(log2ceil(digital_input_number_g)-1 downto 0); -- Trigger source configuration  register
     InDigitalTrg          : in  std_logic_vector(digital_input_number_g - 1 downto 0); -- digital trigger input 
-
+    InExtDisarm           : in  std_logic; -- if different trigger causes are armed at the same time for a single trigger all the other cause must be disarmed once a trigger is generated
+    
     OutTrgIsArmed         : out std_logic;
     OutTrigger            : out std_logic -- trigger output
   );
@@ -63,7 +64,7 @@ begin
   --------------------------------------------------------------------------
   -- Combinatorial Process
   --------------------------------------------------------------------------
-  p_comb : process(r, InTrgModeCfg, InTrgArmCfg, InTrgEdgeCfg, InDigitalTrg)
+  p_comb : process(r, InTrgModeCfg, InTrgArmCfg, InTrgEdgeCfg, InDigitalTrg, InTrgDigitalSourceCfg, InExtDisarm)
     variable v : two_process_r;
   begin
     -- hold variables stable
@@ -74,7 +75,7 @@ begin
 
     v.TrgArmed := r.TrgArmed;
 
-    if r.OTrg = '1' and InTrgModeCfg(0) = '1' then -- if single mode, the trigger is dis-armed once the trigger is generated
+    if (r.OTrg = '1' or InExtDisarm = '1') and InTrgModeCfg(0) = '1' then -- if single mode, the trigger is dis-armed once the trigger is generated
       v.TrgArmed := '0';
     elsif InTrgArmCfg = '1' and r.InTrgArmCfg_c = '0' then -- toggle arm or dis-arm
       v.TrgArmed := not r.TrgArmed;
