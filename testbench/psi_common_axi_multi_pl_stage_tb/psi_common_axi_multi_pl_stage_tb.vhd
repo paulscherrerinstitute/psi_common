@@ -200,7 +200,7 @@ begin
 		wait until Rst = '0';
 		
 		-- User Code
-		axi_single_write(16#1234#, 16#87654321#, axi_ms_m, axi_sm_m, Clk);
+		axi_single_write(16#1234#, 16#37654321#, axi_ms_m, axi_sm_m, Clk);
 		axi_single_expect(16#12AB#, 16#3456CDEF#, axi_ms_m, axi_sm_m, Clk);
 		
 		-- end of process !DO NOT EDIT!
@@ -216,7 +216,7 @@ begin
 		
 		-- User Code
 		axi_expect_aw(16#1234#, AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms_s, axi_sm_s, Clk);
-		axi_expect_wd_single(X"87654321", "1111", axi_ms_s, axi_sm_s, Clk);
+		axi_expect_wd_single(X"37654321", "1111", axi_ms_s, axi_sm_s, Clk);
 		axi_apply_bresp(xRESP_OKAY_c, axi_ms_s, axi_sm_s, Clk);
 
 		axi_expect_ar(16#12AB#, AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms_s, axi_sm_s, Clk);

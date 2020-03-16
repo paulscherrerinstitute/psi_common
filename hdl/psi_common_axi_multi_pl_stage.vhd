@@ -136,15 +136,15 @@ architecture rtl of psi_common_axi_multi_pl_stage is
 	constant ProtWidth_c	: positive := 3;
 	constant RespWidth_c	: positive := 2;
 
-	signal AwData 	: std_logic_vector(AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+1+CacheWidth_c+ProtWidth_c-1 downto 0);
-	signal WData 	: std_logic_vector(DataWidth_g+DataWidth_g/8+1-1 downto 0);
-	signal ArData 	: std_logic_vector(AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+1+CacheWidth_c+ProtWidth_c-1 downto 0);
-	signal RData 	: std_logic_vector(DataWidth_g+RespWidth_c+1-1 downto 0);
+	signal AwDataIn, AwDataOut 	: std_logic_vector(AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+1+CacheWidth_c+ProtWidth_c-1 downto 0);
+	signal WDataIn, WDataOut 	: std_logic_vector(DataWidth_g+DataWidth_g/8+1-1 downto 0);
+	signal ArDataIn, ArDataOut 	: std_logic_vector(AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+1+CacheWidth_c+ProtWidth_c-1 downto 0);
+	signal RDataIn, RDataOut 	: std_logic_vector(DataWidth_g+RespWidth_c+1-1 downto 0);
 
 begin
 	
 	-- write address channel
-	
+	AwDataIn <= InAwAddr & InAwLen & InAwSize & InAwBurst & InAwLock & InAwCache & InAwProt;
 	awch_multi_stage: entity work.psi_common_multi_pl_stage
 	generic map(
 		Width_g		=> AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+1+CacheWidth_c+ProtWidth_c,
@@ -156,26 +156,26 @@ begin
 		Rst			=> Rst,
 	
 		-- Input
-		InData		=> InAwAddr & InAwLen & InAwSize & InAwBurst & InAwLock & InAwCache & InAwProt,
+		InData		=> AwDataIn,
 		InVld		=> InAwValid,
 		InRdy		=> InAwReady,
 		
 		-- Output
-		OutData		=> AwData,
+		OutData		=> AwDataOut,
 		OutVld		=> OutAwValid,									
 		OutRdy		=> OutAwReady
 	);
 	
-	OutAwProt 	<= AwData(ProtWidth_c-1 downto 0);
-	OutAwCache 	<= AwData(CacheWidth_c-1+ProtWidth_c downto ProtWidth_c);																															
-	OutAwLock 	<= AwData(CacheWidth_c+ProtWidth_c);																																			
-	OutAwBurst 	<= AwData(BurstWidth_c-1+CacheWidth_c+ProtWidth_c+1 downto CacheWidth_c+ProtWidth_c+1);																								
-	OutAwSize 	<= AwData(SizeWidth_c-1+BurstWidth_c+CacheWidth_c+ProtWidth_c+1 downto BurstWidth_c+CacheWidth_c+ProtWidth_c+1);																
-	OutAwLen 	<= AwData(LenWidth_c-1+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c+1 downto SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c+1);												
-	OutAwAddr 	<= AwData(AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c downto AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c-AddrWidth_g+1);
+	OutAwProt 	<= AwDataOut(ProtWidth_c-1 downto 0);
+	OutAwCache 	<= AwDataOut(CacheWidth_c-1+ProtWidth_c downto ProtWidth_c);																															
+	OutAwLock 	<= AwDataOut(CacheWidth_c+ProtWidth_c);																																			
+	OutAwBurst 	<= AwDataOut(BurstWidth_c-1+CacheWidth_c+ProtWidth_c+1 downto CacheWidth_c+ProtWidth_c+1);																								
+	OutAwSize 	<= AwDataOut(SizeWidth_c-1+BurstWidth_c+CacheWidth_c+ProtWidth_c+1 downto BurstWidth_c+CacheWidth_c+ProtWidth_c+1);																
+	OutAwLen 	<= AwDataOut(LenWidth_c-1+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c+1 downto SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c+1);												
+	OutAwAddr 	<= AwDataOut(AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c downto AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c-AddrWidth_g+1);
 	
 	-- write data channel
-		
+	WDataIn <= InWData & InWStrb & InWLast;
 	wch_multi_stage: entity work.psi_common_multi_pl_stage
 	generic map(
 		Width_g		=> DataWidth_g+DataWidth_g/8+1,
@@ -187,19 +187,19 @@ begin
 		Rst			=> Rst,
 	
 		-- Input
-		InData		=> InWData & InWStrb & InWLast,
+		InData		=> WDataIn,
 		InVld		=> InWValid,
 		InRdy		=> InWReady,
 		
 		-- Output
-		OutData		=> WData,
+		OutData		=> WDataOut,
 		OutVld		=> OutWValid,									
 		OutRdy		=> OutWReady
 	);
 	
-	OutWLast <= WData(0);																				
-	OutWStrb <= WData(DataWidth_g/8-1+1 downto 1);														
-	OutWData <= WData(DataWidth_g+DataWidth_g/8 downto DataWidth_g+DataWidth_g/8-DataWidth_g+1);		
+	OutWLast <= WDataOut(0);																				
+	OutWStrb <= WDataOut(DataWidth_g/8-1+1 downto 1);														
+	OutWData <= WDataOut(DataWidth_g+DataWidth_g/8 downto DataWidth_g+DataWidth_g/8-DataWidth_g+1);		
 		
 	-- write response channel
 	bch_multi_stage: entity work.psi_common_multi_pl_stage
@@ -224,6 +224,7 @@ begin
 	);
 	
 	-- read address channel
+	ArDataIn <= InArAddr & InArLen & InArSize & InArBurst & InArLock & InArCache & InArProt;
 	arch_multi_stage: entity work.psi_common_multi_pl_stage
 	generic map(
 		Width_g		=> AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+1+CacheWidth_c+ProtWidth_c,
@@ -235,25 +236,26 @@ begin
 		Rst			=> Rst,
 	
 		-- Input
-		InData		=> InArAddr & InArLen & InArSize & InArBurst & InArLock & InArCache & InArProt,
+		InData		=> ArDataIn,
 		InVld		=> InArValid,
 		InRdy		=> InArReady,
 		
 		-- Output
-		OutData		=> ArData,
+		OutData		=> ArDataOut,
 		OutVld		=> OutArValid,									
 		OutRdy		=> OutArReady
 	);
 	
-	OutArProt 	<= ArData(ProtWidth_c-1 downto 0);																																				
-	OutArCache 	<= ArData(CacheWidth_c-1+ProtWidth_c downto ProtWidth_c);																														
-	OutArLock	<= ArData(CacheWidth_c+ProtWidth_c);																																					
-	OutArBurst	<= ArData(BurstWidth_c-1+CacheWidth_c+ProtWidth_c+1 downto CacheWidth_c+ProtWidth_c+1);																							
-	OutArSize	<= ArData(SizeWidth_c-1+BurstWidth_c+CacheWidth_c+ProtWidth_c+1 downto BurstWidth_c+CacheWidth_c+ProtWidth_c+1);																		
-	OutArLen	<= ArData(LenWidth_c-1+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c+1 downto SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c+1);												
-	OutArAddr	<= ArData(AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c downto AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c-AddrWidth_g+1);	
+	OutArProt 	<= ArDataOut(ProtWidth_c-1 downto 0);																																				
+	OutArCache 	<= ArDataOut(CacheWidth_c-1+ProtWidth_c downto ProtWidth_c);																														
+	OutArLock	<= ArDataOut(CacheWidth_c+ProtWidth_c);																																					
+	OutArBurst	<= ArDataOut(BurstWidth_c-1+CacheWidth_c+ProtWidth_c+1 downto CacheWidth_c+ProtWidth_c+1);																							
+	OutArSize	<= ArDataOut(SizeWidth_c-1+BurstWidth_c+CacheWidth_c+ProtWidth_c+1 downto BurstWidth_c+CacheWidth_c+ProtWidth_c+1);																		
+	OutArLen	<= ArDataOut(LenWidth_c-1+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c+1 downto SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c+1);												
+	OutArAddr	<= ArDataOut(AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c downto AddrWidth_g+LenWidth_c+SizeWidth_c+BurstWidth_c+CacheWidth_c+ProtWidth_c-AddrWidth_g+1);	
 	
 	-- read data channel
+	RDataIn <= OutRData & OutRResp & OutRLast;
 	rch_multi_stage: entity work.psi_common_multi_pl_stage
 	generic map(
 		Width_g		=> DataWidth_g+RespWidth_c+1,
@@ -265,19 +267,19 @@ begin
 		Rst			=> Rst,
 	
 		-- Input
-		InData		=> OutRData & OutRResp & OutRLast,
+		InData		=> RDataIn,
 		InVld		=> OutRValid,
 		InRdy		=> OutRReady,
 		
 		-- Output
-		OutData		=> RData,
+		OutData		=> RDataOut,
 		OutVld		=> InRValid,									
 		OutRdy		=> InRReady
 	);
 	
-	InRLast <= RData(0);															
-	InRResp <= RData(RespWidth_c-1+1 downto 1);
-	InRData <= RData(DataWidth_g+RespWidth_c downto DataWidth_g+RespWidth_c-DataWidth_g+1);
+	InRLast <= RDataOut(0);															
+	InRResp <= RDataOut(RespWidth_c-1+1 downto 1);
+	InRData <= RDataOut(DataWidth_g+RespWidth_c downto DataWidth_g+RespWidth_c-DataWidth_g+1);
 	
 end;
 
