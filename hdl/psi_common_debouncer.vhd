@@ -51,13 +51,21 @@ architecture RTL of psi_common_debouncer is
   signal r, r_next            : two_process_t := rst_two_process_c;  
   signal inp_sync_s           : std_logic_vector(len_g-1 downto 0);
 
+
+  
+ 
 begin
 
   --*** double stage synchronizer ***  
   gene_sync : if sync_g generate
     signal dff_s : std_logic_vector(len_g-1 downto 0);
+    --*** Set Attribute to avoid Xil - Synth moving to DFF to SRL ***
+    attribute syn_srlstyle : string;
+    attribute shreg_extract : string;
+    attribute syn_srlstyle of dff_s   : signal is "registers";
+    attribute shreg_extract of dff_s  : signal is "no";
     begin
-      process(clk_i)
+      proc_dff : process(clk_i)
       begin
         if rising_edge(clk_i) then
           dff_s       <= inp_i;
