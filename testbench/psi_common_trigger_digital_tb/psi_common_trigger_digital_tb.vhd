@@ -35,11 +35,8 @@ architecture sim of psi_common_trigger_digital_tb is
 
   -- *** TB Control ***
   signal TbRunning            : boolean                  := True;
-  signal ProcessDone          : std_logic_vector(0 to 1) := (others => '0');
-  constant AllProcessesDone_c : std_logic_vector(0 to 1) := (others => '1');
-  constant TbProcNr_inp_c     : integer                  := 0;
-  constant TbProcNr_outp_c    : integer                  := 1;
-
+  signal ProcessDone          : std_logic_vector(0 to 0) := (others => '0');
+  constant AllProcessesDone_c : std_logic_vector(0 to 0) := (others => '1');
   -- *** DUT Signals ***
   signal InClk                 : std_logic                                                                  := '1';
   signal InRst                 : std_logic                                                                  := '1';
@@ -469,7 +466,7 @@ begin
     wait until rising_edge(InClk);
 
     -- end of process !DO NOT EDIT!
-    ProcessDone(TbProcNr_outp_c) <= '1';
+    ProcessDone(0) <= '1';
     wait;
   end process;
 
