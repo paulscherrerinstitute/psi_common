@@ -1,3 +1,7 @@
+## 2.10.0
+  * Added Features
+    * Added *psi\_common\_psi\_common\_par\_tdm\_cfg* - // to TDM with configurable number of enabled channels
+    
 ## 2.9.0
   * Added Features
     * Added *psi\_common\_psi\_common\_axi\_multi_pl_stage* - Axi Multi pipeline stage
