@@ -88,7 +88,7 @@ begin
                 MaxDelay_g    => MaxDelay_g,
                 RStPol_g      => '1',
                 RamBehavior_g => RamBehavior_g,
-                Hold_g        => True)-- DO NOT EDIT in this TESTBENCH
+                Hold_g        => True)  -- DO NOT EDIT in this TESTBENCH
     port map(clk_i => clk_sti,
              rst_i => rst_sti,
              dat_i => dat_sti,

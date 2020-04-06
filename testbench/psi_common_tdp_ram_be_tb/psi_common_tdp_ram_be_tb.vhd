@@ -12,12 +12,12 @@
 -- Libraries
 ------------------------------------------------------------
 library ieee;
-	use ieee.std_logic_1164.all;
-	use ieee.numeric_std.all;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 library work;
-	use work.psi_common_math_pkg.all;
-	use work.psi_tb_compare_pkg.all;
+use work.psi_common_math_pkg.all;
+use work.psi_tb_compare_pkg.all;
 
 ------------------------------------------------------------
 -- Entity Declaration
@@ -29,219 +29,216 @@ end entity;
 -- Architecture
 ------------------------------------------------------------
 architecture sim of psi_common_tdp_ram_be_tb is
-	-- *** Fixed Generics ***
-	
-	-- *** Not Assigned Generics (default values) ***
-	constant Depth_g : positive := 4096 ;
-	constant Width_g : positive := 32 ;
-	constant Behavior_g : string := "RBW" ;
-	
-	-- *** TB Control ***
-	signal TbRunning : boolean := True;
-	signal NextCase : integer := -1;
-	signal ProcessDone : std_logic_vector(0 to 0) := (others => '0');
-	constant AllProcessesDone_c : std_logic_vector(0 to 0) := (others => '1');
-	constant TbProcNr_Stimuli_c : integer := 0;
-	
-	-- *** DUT Signals ***
-	signal ClkA : std_logic := '1';
-	signal AddrA : std_logic_vector(log2ceil(Depth_g)-1 downto 0) := (others => '0');
-	signal BeA : std_logic_vector(Width_g/8-1 downto 0) := (others => '0');
-	signal WrA : std_logic := '0';
-	signal DinA : std_logic_vector(Width_g-1 downto 0) := (others => '0');
-	signal DoutA : std_logic_vector(Width_g-1 downto 0) := (others => '0');
-	signal ClkB : std_logic := '1';
-	signal AddrB : std_logic_vector(log2ceil(Depth_g)-1 downto 0) := (others => '0');
-	signal BeB : std_logic_vector(Width_g/8-1 downto 0) := (others => '0');
-	signal WrB : std_logic := '0';
-	signal DinB : std_logic_vector(Width_g-1 downto 0) := (others => '0');
-	signal DoutB : std_logic_vector(Width_g-1 downto 0) := (others => '0');
-	
+  -- *** Fixed Generics ***
+
+  -- *** Not Assigned Generics (default values) ***
+  constant Depth_g    : positive := 4096;
+  constant Width_g    : positive := 32;
+  constant Behavior_g : string   := "RBW";
+
+  -- *** TB Control ***
+  signal TbRunning            : boolean                  := True;
+  signal NextCase             : integer                  := -1;
+  signal ProcessDone          : std_logic_vector(0 to 0) := (others => '0');
+  constant AllProcessesDone_c : std_logic_vector(0 to 0) := (others => '1');
+  constant TbProcNr_Stimuli_c : integer                  := 0;
+
+  -- *** DUT Signals ***
+  signal ClkA  : std_logic                                        := '1';
+  signal AddrA : std_logic_vector(log2ceil(Depth_g) - 1 downto 0) := (others => '0');
+  signal BeA   : std_logic_vector(Width_g / 8 - 1 downto 0)       := (others => '0');
+  signal WrA   : std_logic                                        := '0';
+  signal DinA  : std_logic_vector(Width_g - 1 downto 0)           := (others => '0');
+  signal DoutA : std_logic_vector(Width_g - 1 downto 0)           := (others => '0');
+  signal ClkB  : std_logic                                        := '1';
+  signal AddrB : std_logic_vector(log2ceil(Depth_g) - 1 downto 0) := (others => '0');
+  signal BeB   : std_logic_vector(Width_g / 8 - 1 downto 0)       := (others => '0');
+  signal WrB   : std_logic                                        := '0';
+  signal DinB  : std_logic_vector(Width_g - 1 downto 0)           := (others => '0');
+  signal DoutB : std_logic_vector(Width_g - 1 downto 0)           := (others => '0');
+
 begin
-	------------------------------------------------------------
-	-- DUT Instantiation
-	------------------------------------------------------------
-	i_dut : entity work.psi_common_tdp_ram_be
-		generic map (
-			Depth_g => Depth_g,
-			Width_g => Width_g,
-			Behavior_g => Behavior_g
-		)
-		port map (
-			ClkA => ClkA,
-			AddrA => AddrA,
-			BeA => BeA,
-			WrA => WrA,
-			DinA => DinA,
-			DoutA => DoutA,
-			ClkB => ClkB,
-			AddrB => AddrB,
-			BeB => BeB,
-			WrB => WrB,
-			DinB => DinB,
-			DoutB => DoutB
-		);
-	
-	------------------------------------------------------------
-	-- Testbench Control !DO NOT EDIT!
-	------------------------------------------------------------
-	p_tb_control : process
-	begin
-		wait until ProcessDone = AllProcessesDone_c;
-		TbRunning <= false;
-		wait;
-	end process;
-	
-	------------------------------------------------------------
-	-- Clocks !DO NOT EDIT!
-	------------------------------------------------------------
-	p_clock_ClkA : process
-		constant Frequency_c : real := real(180e6);
-	begin
-		while TbRunning loop
-			wait for 0.5*(1 sec)/Frequency_c;
-			ClkA <= not ClkA;
-		end loop;
-		wait;
-	end process;
-	
-	p_clock_ClkB : process
-		constant Frequency_c : real := real(25e6);
-	begin
-		while TbRunning loop
-			wait for 0.5*(1 sec)/Frequency_c;
-			ClkB <= not ClkB;
-		end loop;
-		wait;
-	end process;
-	
-	
-	------------------------------------------------------------
-	-- Resets
-	------------------------------------------------------------
-	
-	------------------------------------------------------------
-	-- Processes
-	------------------------------------------------------------
-	-- *** Stimuli ***
-	p_Stimuli : process
-	begin
-		
-		-- Delay a few clock cycles
-		for i in 0 to 99 loop
-			wait until falling_edge(ClkA);
-		end loop;
-		
-		-- Write from portA
-		wait until falling_edge(ClkA);
-		WrA <= '1';
-		BeA <= "1111";
-		AddrA <= X"000";
-		DinA <= X"11111111";
-		wait until falling_edge(ClkA);
-		AddrA <= X"001";
-		DinA <= X"22222222";
-		wait until falling_edge(ClkA);
-		AddrA <= X"002";
-		BeA <= "0011";
-		DinA <= X"33333333";
-		wait until falling_edge(ClkA);
-		AddrA <= X"003";
-		BeA <= "0100";
-		DinA <= X"44444444";
-		wait until falling_edge(ClkA);
-		WrA <= '0';
-		
-		-- Readback from port AddrA
-		wait until falling_edge(ClkA);
-		AddrA <= X"000";
-		wait until falling_edge(ClkA);
-		StdlvCompareStdlv (X"11111111", DoutA, "Wrong Data A 1");
-		AddrA <= X"001";
-		wait until falling_edge(ClkA);
-		StdlvCompareStdlv (X"22222222", DoutA, "Wrong Data A 1");
-		AddrA <= X"002";
-		wait until falling_edge(ClkA);
-		StdlvCompareStdlv (X"00003333", DoutA, "Wrong Data A 1");
-		AddrA <= X"003";
-		wait until falling_edge(ClkA);
-		StdlvCompareStdlv (X"00440000", DoutA, "Wrong Data A 1");
-		
-		-- Readback from port AddrB
-		wait until falling_edge(ClkB);
-		AddrB <= X"000";
-		wait until falling_edge(ClkB);
-		StdlvCompareStdlv (X"11111111", DoutB, "Wrong Data B 1");
-		AddrB <= X"001";
-		wait until falling_edge(ClkB);
-		StdlvCompareStdlv (X"22222222", DoutB, "Wrong Data B 1");
-		AddrB <= X"002";
-		wait until falling_edge(ClkB);
-		StdlvCompareStdlv (X"00003333", DoutB, "Wrong Data B 1");
-		AddrB <= X"003";
-		wait until falling_edge(ClkB);
-		StdlvCompareStdlv (X"00440000", DoutB, "Wrong Data B 1");
-		
-		-- Write from portB
-		wait until falling_edge(ClkB);
-		WrB <= '1';
-		BeB <= "1111";
-		AddrB <= X"100";
-		DinB <= X"AAAAAAAA";
-		wait until falling_edge(ClkB);
-		AddrB <= X"001";
-		DinB <= X"BBBBBBBB";
-		wait until falling_edge(ClkB);
-		AddrB <= X"002";
-		BeB <= "1100";
-		DinB <= X"CCCCCCCC";
-		wait until falling_edge(ClkB);
-		AddrB <= X"003";
-		BeB <= "0110";
-		DinB <= X"DDDDDDDD";
-		wait until falling_edge(ClkB);
-		WrB <= '0';
-		
-		-- Readback from port AddrA
-		wait until falling_edge(ClkA);
-		AddrA <= X"000";
-		wait until falling_edge(ClkA);
-		StdlvCompareStdlv (X"11111111", DoutA, "Wrong Data A 2");
-		AddrA <= X"100";
-		wait until falling_edge(ClkA);
-		StdlvCompareStdlv (X"AAAAAAAA", DoutA, "Wrong Data A 2");
-		AddrA <= X"001";
-		wait until falling_edge(ClkA);
-		StdlvCompareStdlv (X"BBBBBBBB", DoutA, "Wrong Data A 2");
-		AddrA <= X"002";
-		wait until falling_edge(ClkA);
-		StdlvCompareStdlv (X"CCCC3333", DoutA, "Wrong Data A 2");
-		AddrA <= X"003";
-		wait until falling_edge(ClkA);
-		StdlvCompareStdlv (X"00DDDD00", DoutA, "Wrong Data A 2");
-		
-		-- Readback from port AddrB
-		wait until falling_edge(ClkB);
-		AddrB <= X"000";
-		wait until falling_edge(ClkB);
-		StdlvCompareStdlv (X"11111111", DoutB, "Wrong Data B 2");
-		AddrB <= X"100";
-		wait until falling_edge(ClkB);
-		StdlvCompareStdlv (X"AAAAAAAA", DoutB, "Wrong Data B 2");
-		AddrB <= X"001";
-		wait until falling_edge(ClkB);
-		StdlvCompareStdlv (X"BBBBBBBB", DoutB, "Wrong Data B 2");
-		AddrB <= X"002";
-		wait until falling_edge(ClkB);
-		StdlvCompareStdlv (X"CCCC3333", DoutB, "Wrong Data B 2");
-		AddrB <= X"003";
-		wait until falling_edge(ClkB);
-		StdlvCompareStdlv (X"00DDDD00", DoutB, "Wrong Data B 2");
-		
-		-- end of process !DO NOT EDIT!
-		ProcessDone(TbProcNr_Stimuli_c) <= '1';
-		wait;
-	end process;
-	
-	
+  ------------------------------------------------------------
+  -- DUT Instantiation
+  ------------------------------------------------------------
+  i_dut : entity work.psi_common_tdp_ram_be
+    generic map(
+      Depth_g    => Depth_g,
+      Width_g    => Width_g,
+      Behavior_g => Behavior_g
+    )
+    port map(
+      ClkA  => ClkA,
+      AddrA => AddrA,
+      BeA   => BeA,
+      WrA   => WrA,
+      DinA  => DinA,
+      DoutA => DoutA,
+      ClkB  => ClkB,
+      AddrB => AddrB,
+      BeB   => BeB,
+      WrB   => WrB,
+      DinB  => DinB,
+      DoutB => DoutB
+    );
+
+  ------------------------------------------------------------
+  -- Testbench Control !DO NOT EDIT!
+  ------------------------------------------------------------
+  p_tb_control : process
+  begin
+    wait until ProcessDone = AllProcessesDone_c;
+    TbRunning <= false;
+    wait;
+  end process;
+
+  ------------------------------------------------------------
+  -- Clocks !DO NOT EDIT!
+  ------------------------------------------------------------
+  p_clock_ClkA : process
+    constant Frequency_c : real := real(180e6);
+  begin
+    while TbRunning loop
+      wait for 0.5 * (1 sec) / Frequency_c;
+      ClkA <= not ClkA;
+    end loop;
+    wait;
+  end process;
+
+  p_clock_ClkB : process
+    constant Frequency_c : real := real(25e6);
+  begin
+    while TbRunning loop
+      wait for 0.5 * (1 sec) / Frequency_c;
+      ClkB <= not ClkB;
+    end loop;
+    wait;
+  end process;
+
+  ------------------------------------------------------------
+  -- Resets
+  ------------------------------------------------------------
+
+  ------------------------------------------------------------
+  -- Processes
+  ------------------------------------------------------------
+  -- *** Stimuli ***
+  p_Stimuli : process
+  begin
+    -- Delay a few clock cycles
+    for i in 0 to 99 loop
+      wait until falling_edge(ClkA);
+    end loop;
+
+    -- Write from portA
+    wait until falling_edge(ClkA);
+    WrA   <= '1';
+    BeA   <= "1111";
+    AddrA <= X"000";
+    DinA  <= X"11111111";
+    wait until falling_edge(ClkA);
+    AddrA <= X"001";
+    DinA  <= X"22222222";
+    wait until falling_edge(ClkA);
+    AddrA <= X"002";
+    BeA   <= "0011";
+    DinA  <= X"33333333";
+    wait until falling_edge(ClkA);
+    AddrA <= X"003";
+    BeA   <= "0100";
+    DinA  <= X"44444444";
+    wait until falling_edge(ClkA);
+    WrA   <= '0';
+
+    -- Readback from port AddrA
+    wait until falling_edge(ClkA);
+    AddrA <= X"000";
+    wait until falling_edge(ClkA);
+    StdlvCompareStdlv(X"11111111", DoutA, "Wrong Data A 1");
+    AddrA <= X"001";
+    wait until falling_edge(ClkA);
+    StdlvCompareStdlv(X"22222222", DoutA, "Wrong Data A 1");
+    AddrA <= X"002";
+    wait until falling_edge(ClkA);
+    StdlvCompareStdlv(X"00003333", DoutA, "Wrong Data A 1");
+    AddrA <= X"003";
+    wait until falling_edge(ClkA);
+    StdlvCompareStdlv(X"00440000", DoutA, "Wrong Data A 1");
+
+    -- Readback from port AddrB
+    wait until falling_edge(ClkB);
+    AddrB <= X"000";
+    wait until falling_edge(ClkB);
+    StdlvCompareStdlv(X"11111111", DoutB, "Wrong Data B 1");
+    AddrB <= X"001";
+    wait until falling_edge(ClkB);
+    StdlvCompareStdlv(X"22222222", DoutB, "Wrong Data B 1");
+    AddrB <= X"002";
+    wait until falling_edge(ClkB);
+    StdlvCompareStdlv(X"00003333", DoutB, "Wrong Data B 1");
+    AddrB <= X"003";
+    wait until falling_edge(ClkB);
+    StdlvCompareStdlv(X"00440000", DoutB, "Wrong Data B 1");
+
+    -- Write from portB
+    wait until falling_edge(ClkB);
+    WrB   <= '1';
+    BeB   <= "1111";
+    AddrB <= X"100";
+    DinB  <= X"AAAAAAAA";
+    wait until falling_edge(ClkB);
+    AddrB <= X"001";
+    DinB  <= X"BBBBBBBB";
+    wait until falling_edge(ClkB);
+    AddrB <= X"002";
+    BeB   <= "1100";
+    DinB  <= X"CCCCCCCC";
+    wait until falling_edge(ClkB);
+    AddrB <= X"003";
+    BeB   <= "0110";
+    DinB  <= X"DDDDDDDD";
+    wait until falling_edge(ClkB);
+    WrB   <= '0';
+
+    -- Readback from port AddrA
+    wait until falling_edge(ClkA);
+    AddrA <= X"000";
+    wait until falling_edge(ClkA);
+    StdlvCompareStdlv(X"11111111", DoutA, "Wrong Data A 2");
+    AddrA <= X"100";
+    wait until falling_edge(ClkA);
+    StdlvCompareStdlv(X"AAAAAAAA", DoutA, "Wrong Data A 2");
+    AddrA <= X"001";
+    wait until falling_edge(ClkA);
+    StdlvCompareStdlv(X"BBBBBBBB", DoutA, "Wrong Data A 2");
+    AddrA <= X"002";
+    wait until falling_edge(ClkA);
+    StdlvCompareStdlv(X"CCCC3333", DoutA, "Wrong Data A 2");
+    AddrA <= X"003";
+    wait until falling_edge(ClkA);
+    StdlvCompareStdlv(X"00DDDD00", DoutA, "Wrong Data A 2");
+
+    -- Readback from port AddrB
+    wait until falling_edge(ClkB);
+    AddrB <= X"000";
+    wait until falling_edge(ClkB);
+    StdlvCompareStdlv(X"11111111", DoutB, "Wrong Data B 2");
+    AddrB <= X"100";
+    wait until falling_edge(ClkB);
+    StdlvCompareStdlv(X"AAAAAAAA", DoutB, "Wrong Data B 2");
+    AddrB <= X"001";
+    wait until falling_edge(ClkB);
+    StdlvCompareStdlv(X"BBBBBBBB", DoutB, "Wrong Data B 2");
+    AddrB <= X"002";
+    wait until falling_edge(ClkB);
+    StdlvCompareStdlv(X"CCCC3333", DoutB, "Wrong Data B 2");
+    AddrB <= X"003";
+    wait until falling_edge(ClkB);
+    StdlvCompareStdlv(X"00DDDD00", DoutB, "Wrong Data B 2");
+
+    -- end of process !DO NOT EDIT!
+    ProcessDone(TbProcNr_Stimuli_c) <= '1';
+    wait;
+  end process;
+
 end;
