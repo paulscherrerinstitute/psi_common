@@ -21,6 +21,7 @@ use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 use work.psi_common_array_pkg.all;
 use work.psi_tb_compare_pkg.all;
+use work.psi_tb_txt_util.all;
 
 ------------------------------------------------------------
 -- Entity Declaration
@@ -51,8 +52,10 @@ architecture sim of psi_common_tdm_par_tb is
   signal Rst         : std_logic                                                      := '1';
   signal Tdm         : std_logic_vector(ChannelWidth_g - 1 downto 0)                  := (others => '0');
   signal TdmVld      : std_logic                                                      := '0';
+  signal TdmRdy      : std_logic                                                      := '0';
   signal Parallel    : std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0) := (others => '0');
   signal ParallelVld : std_logic                                                      := '0';
+  signal ParallelRdy : std_logic                                                      := '1';
 
   -- handwritten
   signal TestCase : integer         := -1;
@@ -60,7 +63,7 @@ architecture sim of psi_common_tdm_par_tb is
 
   procedure ExpectChannels(Values : in t_ainteger(0 to 2)) is
   begin
-    wait until rising_edge(Clk) and ParallelVld = '1';
+    wait until rising_edge(Clk) and ParallelVld = '1' for 1 us;
     StdlvCompareInt(Values(0), Parallel(1 * ChannelWidth_g - 1 downto 0 * ChannelWidth_g), "Wrong value Channel 0", false);
     StdlvCompareInt(Values(1), Parallel(2 * ChannelWidth_g - 1 downto 1 * ChannelWidth_g), "Wrong value Channel 1", false);
     StdlvCompareInt(Values(2), Parallel(3 * ChannelWidth_g - 1 downto 2 * ChannelWidth_g), "Wrong value Channel 2", false);
@@ -80,8 +83,10 @@ begin
       Rst         => Rst,
       Tdm         => Tdm,
       TdmVld      => TdmVld,
+      TdmRdy      => TdmRdy,
       Parallel    => Parallel,
-      ParallelVld => ParallelVld
+      ParallelVld => ParallelVld,
+      ParallelRdy => ParallelRdy
     );
 
   ------------------------------------------------------------
@@ -157,6 +162,19 @@ begin
       end loop;
     end loop;
     TdmVld   <= '0';
+    wait for 1 us;
+
+    -- *** Handshaking ***
+    TestCase <= 2;
+    wait until rising_edge(Clk);
+    TdmVld   <= '1';
+    for sample in 0 to 3 loop
+      for channel in 0 to 2 loop
+        Tdm <= std_logic_vector(to_unsigned(channel * 16#10# + sample, Tdm'length));
+        wait until rising_edge(Clk) and TdmRdy = '1' for 1 us;
+      end loop;
+    end loop;
+    TdmVld   <= '0';
 
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_inp_c) <= '1';
@@ -179,6 +197,18 @@ begin
     wait until TestCase = 1;
     for sample in 0 to 3 loop
       ExpectChannels((16#50# + sample, 16#60# + sample, 16#70# + sample));
+    end loop;
+
+    -- *** Handshaking ***
+    wait until TestCase = 2;
+    wait until rising_edge(Clk);
+    for sample in 0 to 3 loop
+      ParallelRdy <= '0'; 
+      for i in 0 to 19 loop
+        wait until rising_edge(Clk);
+      end loop;
+      ParallelRdy <= '1'; 
+      ExpectChannels((16#00# + sample, 16#10# + sample, 16#20# + sample));
     end loop;
 
     -- end of process !DO NOT EDIT!
