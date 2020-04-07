@@ -51,8 +51,10 @@ architecture sim of psi_common_par_tdm_tb is
   signal Rst         : std_logic                                                      := '1';
   signal Parallel    : std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0) := (others => '0');
   signal ParallelVld : std_logic                                                      := '0';
+  signal ParallelRdy : std_logic := '0';
   signal Tdm         : std_logic_vector(ChannelWidth_g - 1 downto 0)                  := (others => '0');
   signal TdmVld      : std_logic                                                      := '0';
+  signal TdmRdy : std_logic := '1';
 
   -- handwritten
   signal TestCase : integer         := -1;
@@ -86,8 +88,10 @@ begin
       Rst         => Rst,
       Parallel    => Parallel,
       ParallelVld => ParallelVld,
+      ParallelRdy => ParallelRdy,
       Tdm         => Tdm,
-      TdmVld      => TdmVld
+      TdmVld      => TdmVld,
+      TdmRdy      => TdmRdy
     );
 
   ------------------------------------------------------------
@@ -173,6 +177,19 @@ begin
       Channels    <= (others => (others => '0'));
       wait until rising_edge(Clk);
     end loop;
+    wait for 1 us;
+        
+    -- *** Handshaking ***
+    TestCase <= 2;
+    wait until rising_edge(Clk);
+    ParallelVld <= '1';
+    for spl in 0 to 5 loop          
+      for ch in 0 to 2 loop             
+        Channels(ch) <= std_logic_vector(to_unsigned(spl*10+ch, ChannelWidth_g));
+      end loop;
+      wait until rising_edge(Clk) and ParallelRdy = '1' for 1 us;
+    end loop;
+    ParallelVld <= '0';     
 
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_inp_c) <= '1';
@@ -198,6 +215,21 @@ begin
       ExpectChannels((16#50# + i, 16#60# + i, 16#70# + i));
     end loop;
 
+    -- *** Handshaking ***
+    wait until TestCase = 2;
+    TdmRdy <= '0';
+    for spl in 0 to 5 loop          
+      for ch in 0 to 2 loop 
+        for ck in 0 to 9 loop
+          wait until rising_edge(Clk);
+        end loop;
+        TdmRdy <= '1';
+        wait until rising_edge(Clk) and TdmVld = '1' for 1 us;
+        StdlvCompareInt (spl*10+ch, Tdm, "Wrong value Channel " & to_string(ch), false);
+        TdmRdy <= '0';
+      end loop;
+    end loop;   
+        
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_outp_c) <= '1';
     wait;

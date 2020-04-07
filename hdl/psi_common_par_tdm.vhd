@@ -24,7 +24,7 @@ use work.psi_common_logic_pkg.all;
 
 ------------------------------------------------------------------------------
 -- Entity
-------------------------------------------------------------------------------	
+------------------------------------------------------------------------------  
 -- $$ processes=inp,outp $$
 entity psi_common_par_tdm is
   generic(
@@ -39,8 +39,10 @@ entity psi_common_par_tdm is
     -- Data Ports
     Parallel    : in  std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0);
     ParallelVld : in  std_logic;
+    ParallelRdy : out   std_logic;
     Tdm         : out std_logic_vector(ChannelWidth_g - 1 downto 0);
-    TdmVld      : out std_logic
+    TdmVld      : out   std_logic;
+    TdmRdy      : in    std_logic := '1'
   );
 end entity;
 
@@ -61,17 +63,25 @@ begin
   --------------------------------------------------------------------------
   -- Combinatorial Process
   --------------------------------------------------------------------------
-  p_comb : process(r, Parallel, ParallelVld)
+    p_comb : process(   r, Parallel, ParallelVld, TdmRdy)   
     variable v : two_process_r;
+        variable ParallelRdy_v : std_logic;
   begin
     -- hold variables stable
     v := r;
 
+    -- *** Back Pressure ***
+    if unsigned(r.VldSr(r.VldSr'high downto 1)) = 0 and ((TdmRdy = '1') or (r.VldSr(0) = '0')) then
+      ParallelRdy_v := '1';
+    else
+      ParallelRdy_v := '0';
+    end if;     
+        
     -- *** Implementation ***
-    if ParallelVld = '1' then
+    if (ParallelVld = '1') and (ParallelRdy_v = '1') then
       v.ShiftReg := Parallel;
       v.VldSr    := (others => '1');
-    else
+    elsif TdmRdy = '1' then
       v.ShiftReg := shiftRight(r.ShiftReg, ChannelWidth_g);
       v.VldSr    := shiftRight(r.VldSr, 1);
     end if;
@@ -79,6 +89,7 @@ begin
     -- *** Outputs ***
     Tdm    <= r.ShiftReg(ChannelWidth_g - 1 downto 0);
     TdmVld <= r.VldSr(0);
+    ParallelRdy <= ParallelRdy_v;
 
     -- Apply to record
     r_next <= v;
@@ -87,7 +98,7 @@ begin
 
   --------------------------------------------------------------------------
   -- Sequential Process
-  --------------------------------------------------------------------------	
+  --------------------------------------------------------------------------    
   p_seq : process(Clk)
   begin
     if rising_edge(Clk) then
