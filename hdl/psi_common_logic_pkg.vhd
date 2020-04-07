@@ -66,6 +66,9 @@ package psi_common_logic_pkg is
 
   function To01X(inp : in std_logic_vector)
   return std_logic_vector;
+  
+  function InvertBitOrder(inp : in std_logic_vector)
+  return std_logic_vector;
 
 end psi_common_logic_pkg;
 
@@ -234,6 +237,16 @@ package body psi_common_logic_pkg is
   begin
     for i in inp'low to inp'high loop
       tmp(i) := to01X(inp(i));
+    end loop;
+    return tmp;
+  end function;
+  
+  function InvertBitOrder(inp : in std_logic_vector)
+  return std_logic_vector is
+    variable tmp : std_logic_vector(inp'range);
+  begin
+    for i in inp'low to inp'high loop
+      tmp(tmp'high-i) := inp(i);
     end loop;
     return tmp;
   end function;
