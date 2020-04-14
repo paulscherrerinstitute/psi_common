@@ -33,7 +33,7 @@ Generics             | Description
 ---------------------|-------------------------------------------------------
 **Width\_g**         |Width of the data to delay
 **Delay\_g**         |Number of delay taps
-**Resource\_g**    |**"AUTO"** (default) automatically use SRL or BRAM according to *BramThreshold\_g, **"BRAM"** use Block RAM to implement the delay taps, **"SRL"**use SRLs (LUTs used as shift registers) to implement the delay taps
+**Resource\_g**    |**"AUTO"** (default) automatically use SRL or BRAM according to *BramThreshold\_g, **"BRAM"** use Block RAM to implement the delay taps, **"SRL"** use SRLs (LUTs used as shift registers) to implement the delay taps
 **BramThreshold\_g** |This generic controls the resources to use for the delay taps in case *Resource\_g ="AUTO".* SRLs are used if *Delay\_g* \< *BramThreshold\_g*. Otherwise BRAMs are used.
 **RstState\_g**      |**True** Persisting memory content is replaced by zeros after reset, **False** Persisting memory content is visible at output after reset (less resource usage)
 **RamBehavior\_g**   |**"RBW"** Read-before-write implementation, **"WBR"** Write-before-read implementation This generic is only used if a BRAM is used for the delay.
