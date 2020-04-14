@@ -115,7 +115,7 @@ Generics              | Description
 **ResetVal\_g**       |Reset values for registers. The size of the array passed does not have to match *NumReg\_g*, if it does not, the reset values are applied to the first N registers and the other registers are reset to zero.
 **UseMem\_g**         |**True** = use memory interface, **False** = use registers only
 **AxiIdWidth\_g**     |Number of bits used for the AXI ID signals
-**AxiAddrWidth \_g**  |Number of AXI address bits supported
+**AxiAddrWidth\_g**  |Number of AXI address bits supported
 
 ### 4 Interfaces
 
@@ -123,7 +123,7 @@ Generics              | Description
 -----------------|-----------|-----------------|-----------------
  ***Control Signals***  |||   
  s\_axi\_aclk    | Input     | 1               | Clock           
- s\_axi\_aresetn | Input     | 1               | Reset (low| active)         
+ s\_axi\_aresetn | Input     | 1               | Reset (low active)         
  ***Register Interface***    |                 |                 |        
  o\_reg\_rd      | Output    | *NumReg\_g*     | Read-pulse for each register   
  i\_reg\_rdata   | Input     |*NumReg\_g x 32* | Register read values  
