@@ -1,7 +1,7 @@
 <img align="right" src="../psi_logo.png">
 
 ***
-# psi_commo_status_cc
+# psi_common_status_cc
 
 - VHDL source: [psi_common_status_cc.vhd](../../hdl/psi_common_status_cc_.vhd)
 - Testbench: [psi_common_status_cc_tb.vhd](../../testbench/psi_common_status_cc_tb/psi_common_status_cc_tb.vhd)
