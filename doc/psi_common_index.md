@@ -46,7 +46,7 @@
 
 [4.2 psi\_common\_sync\_fifo](ch4_fifos/ch4_2_sync_fifo.md)
 
-### 5 Clock Crossings]
+### 5 Clock Crossings
 
 [5.1 psi\_common\_pulse\_cc](ch5_cc/ch5_1_pulse_cc.md)
 
@@ -112,18 +112,18 @@
 
 ### 11 Miscellaneous
 
-[11.1 psi\_common\_delay](#psi_common_delay)
+[11.1 psi\_common\_delay](ch11_misc/ch11_1_delay.md)
 
-[11.2 psi\_common\_pl\_stage](#psi_common_pl_stage)
+[11.2 psi\_common\_pl\_stage](ch11_misc/ch11_2_pl_stage.md)
 
-[11.3 psi\_common\_multi\_pl\_stage](#psi_common_multi_pl_stage)
+[11.3 psi\_common\_multi\_pl\_stage](ch11_misc/ch11_3_multi_pl_stage.md)
 
-[11.4 psi\_common\_ping\_pong](#psi_common_ping_pong)
+[11.4 psi\_common\_ping\_pong](ch11_misc/ch11_4_ping_pong.md)
 
-[11.5 psi\_common\_delay\_cfg](#psi_common_delay_cfg)
+[11.5 psi\_common\_delay\_cfg](ch11_misc/ch11_5_delay_cfg.md)
 
-[11.6 psi\_common\_watchdog](#psi_common_watchdog)
+[11.6 psi\_common\_watchdog](ch11_misc/ch11_6_watchdog.md)
 
-[11.7 psi\_common\_dont\_opt](#psi_common_dont_opt)
+[11.7 psi\_common\_dont\_opt](ch11_misc/ch11_7_dont_opt.md)
 
-[11.8 psi\_common\_debouncer](#psi_common_debouncer)
+[11.8 psi\_common\_debouncer](ch11_misc/ch11_8_debouncer.md)

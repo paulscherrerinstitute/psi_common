@@ -138,5 +138,5 @@ Generics              | Description
  s\_axi\_\*      | \*        | \*              | AXI signals, see AXI specification   
 
 ***
-[Index](../psi_common_index.md) **|** Previous: [Interfaces > axi master full](../ch10_interfaces/ch10_3_axi_master_full.md) **|**
+[Index](../psi_common_index.md) **|** Previous: [Interfaces > axi master full](../ch10_interfaces/ch10_4_axi_master_full.md) **|**
 Next: [Miscellaneous > delay](../ch11_misc/ch11_1_delay.md)
