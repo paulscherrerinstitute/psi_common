@@ -76,16 +76,16 @@ begin
       rst_pol_g               => rst_pol_g
     )
     port map(
-      InClk                 => InClk,
-      InRst                 => InRst,
-      InTrgModeCfg          => InTrgModeCfg,
-      InTrgArmCfg           => InTrgArmCfg,
-      InTrgEdgeCfg          => InTrgEdgeCfg,
-      InDigitalTrg          => InDigitalTrg,
+      InClk => InClk,
+      InRst => InRst,
+      InTrgModeCfg => InTrgModeCfg,
+      InTrgArmCfg => InTrgArmCfg,
+      InTrgEdgeCfg => InTrgEdgeCfg,
       InTrgDigitalSourceCfg => InTrgDigitalSourceCfg,
-      InExtDisarm           => InExtDisarm,
-      OutTrgIsArmed         => OutTrgIsArmed,
-      OutTrigger            => OutTrigger
+      InDigitalTrg => InDigitalTrg,
+      InExtDisarm => InExtDisarm,
+      OutTrgIsArmed => OutTrgIsArmed,
+      OutTrigger => OutTrigger
     );
 
   ------------------------------------------------------------
@@ -274,7 +274,7 @@ begin
     InTrgEdgeCfg    <= "11";
     wait until rising_edge(InClk);
     ExpectTrgIsArmedIs(0);
-    InTrgArmCfg     <= '0';             
+    InTrgArmCfg     <= '0';
     wait until rising_edge(InClk);
     ExpectTrgIsArmedIs(0);
     InTrgArmCfg     <= '1';             -- arm trigger

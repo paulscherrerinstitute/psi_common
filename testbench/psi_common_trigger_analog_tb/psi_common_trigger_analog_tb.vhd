@@ -99,17 +99,17 @@ begin
       rst_pol_g              => rst_pol_g
     )
     port map(
-      InClk                => InClk,
-      InRst                => InRst,
-      InTrgModeCfg         => InTrgModeCfg,
-      InTrgArmCfg          => InTrgArmCfg,
-      InTrgEdgeCfg         => InTrgEdgeCfg,
+      InClk => InClk,
+      InRst => InRst,
+      InTrgModeCfg => InTrgModeCfg,
+      InTrgArmCfg => InTrgArmCfg,
+      InTrgEdgeCfg => InTrgEdgeCfg,
       InTrgAnalogSourceCfg => InTrgAnalogSourceCfg,
-      InAnalogTrg          => InAnalogTrg,
-      InAnalogThTrg        => InAnalogThTrg,
-      InExtDisarm          => InExtDisarm,
-      OutTrgIsArmed        => OutTrgIsArmed,
-      OutTrigger           => OutTrigger
+      InAnalogThTrg => InAnalogThTrg,
+      InAnalogTrg => InAnalogTrg,
+      InExtDisarm => InExtDisarm,
+      OutTrgIsArmed => OutTrgIsArmed,
+      OutTrigger => OutTrigger
     );
 
   ------------------------------------------------------------
@@ -454,7 +454,7 @@ begin
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
     wait until rising_edge(InClk);
-    
+
     -- Single mode, inExtDisarm test
     TestCase <= 12;
 
