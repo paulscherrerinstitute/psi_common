@@ -127,3 +127,7 @@
 [11.7 psi\_common\_dont\_opt](ch11_misc/ch11_7_dont_opt.md)
 
 [11.8 psi\_common\_debouncer](ch11_misc/ch11_8_debouncer.md)
+
+### Others
+[presentation](presentation/psi_common_presentation.pdf)
+[GHDL install](ghdl/GHDL.md)
