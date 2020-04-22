@@ -54,12 +54,12 @@ architecture rtl of psi_common_tdm_par_cfg is
 
   -- Two Process Method
   type two_process_r is record
-    ParallelReg : std_logic_vector(Parallel'range);
-    ChCounter   : integer range 0 to ChannelCount_g + 1;
-    EnChannelsMask: std_logic_vector (ChannelCount_g-1 downto 0);
-    Odata       : std_logic_vector(Parallel'range);
-    Ovld        : std_logic;
-    TdmLast_d   : std_logic;
+    ParallelReg    : std_logic_vector(Parallel'range);
+    ChCounter      : integer range 0 to ChannelCount_g + 1;
+    EnChannelsMask : std_logic_vector(ChannelCount_g - 1 downto 0);
+    Odata          : std_logic_vector(Parallel'range);
+    Ovld           : std_logic;
+    TdmLast_d      : std_logic;
   end record;
   signal r, r_next : two_process_r;
 begin
@@ -83,26 +83,26 @@ begin
       end if;
       v.ChCounter := v.ChCounter + 1;
       v.TdmLast_d := TdmLast;
-      
+
     end if;
 
     -- *** Latch ***
-    v.Ovld := '0';     
-    
+    v.Ovld := '0';
+
     if r.ChCounter = EnabledChannels or r.TdmLast_d = '1' then
-      v.Ovld      := '1';
-      v.Odata     := r.ParallelReg;
+      v.Ovld           := '1';
+      v.Odata          := r.ParallelReg;
       v.EnChannelsMask := PartiallyOnesVector(ChannelCount_g, EnabledChannels);
-      v.ChCounter := to_integer(unsigned'('0' & TdmVld)); -- Necessary if you have a stream and TdmVld stays at '1' between one data word and the next one
+      v.ChCounter      := to_integer(unsigned'('0' & TdmVld)); -- Necessary if you have a stream and TdmVld stays at '1' between one data word and the next one
     end if;
-    
+
     -- *** Outputs ***
-    parallel_assign : for i in 0 to ChannelCount_g-1 loop
-      if r.EnChannelsMask(i)='1' then
-        Parallel((ChannelWidth_g*i)+(ChannelWidth_g-1) downto ChannelWidth_g*i) <= r.Odata((ChannelWidth_g*i)+(ChannelWidth_g-1) downto ChannelWidth_g*i);
+    parallel_assign : for i in 0 to ChannelCount_g - 1 loop
+      if r.EnChannelsMask(i) = '1' then
+        Parallel((ChannelWidth_g * i) + (ChannelWidth_g - 1) downto ChannelWidth_g * i) <= r.Odata((ChannelWidth_g * i) + (ChannelWidth_g - 1) downto ChannelWidth_g * i);
       else
-        Parallel((ChannelWidth_g*i)+(ChannelWidth_g-1) downto ChannelWidth_g*i) <= (others=> '0');
-      end if;   
+        Parallel((ChannelWidth_g * i) + (ChannelWidth_g - 1) downto ChannelWidth_g * i) <= (others => '0');
+      end if;
     end loop;
     ParallelVld <= r.Ovld;
 
@@ -119,10 +119,10 @@ begin
     if rising_edge(Clk) then
       r <= r_next;
       if Rst = '1' then
-        r.ChCounter <= 0;
-        r.EnChannelsMask <= (others=> '0');
-        r.Ovld      <= '0';
-        r.TdmLast_d <= '0';
+        r.ChCounter      <= 0;
+        r.EnChannelsMask <= (others => '0');
+        r.Ovld           <= '0';
+        r.TdmLast_d      <= '0';
       end if;
     end if;
   end process;
