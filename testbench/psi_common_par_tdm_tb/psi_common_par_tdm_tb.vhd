@@ -47,14 +47,16 @@ architecture sim of psi_common_par_tdm_tb is
   constant TbProcNr_outp_c    : integer                  := 1;
 
   -- *** DUT Signals ***
-  signal Clk         : std_logic                                                      := '1';
-  signal Rst         : std_logic                                                      := '1';
-  signal Parallel    : std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0) := (others => '0');
-  signal ParallelVld : std_logic                                                      := '0';
-  signal ParallelRdy : std_logic := '0';
-  signal Tdm         : std_logic_vector(ChannelWidth_g - 1 downto 0)                  := (others => '0');
-  signal TdmVld      : std_logic                                                      := '0';
-  signal TdmRdy : std_logic := '1';
+  signal Clk          : std_logic                                                      := '1';
+  signal Rst          : std_logic                                                      := '1';
+  signal Parallel     : std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0) := (others => '0');
+  signal ParallelVld  : std_logic                                                      := '0';
+  signal ParallelRdy  : std_logic                                                      := '0';
+  signal ParallelLast : std_logic                                                      := '1';
+  signal Tdm          : std_logic_vector(ChannelWidth_g - 1 downto 0)                  := (others => '0');
+  signal TdmVld       : std_logic                                                      := '0';
+  signal TdmRdy       : std_logic                                                      := '1';
+  signal TdmLast      : std_logic                                                      := '0';
 
   -- handwritten
   signal TestCase : integer         := -1;
@@ -64,10 +66,13 @@ architecture sim of psi_common_par_tdm_tb is
   begin
     wait until rising_edge(Clk) and TdmVld = '1';
     StdlvCompareInt(Values(0), Tdm, "Wrong value Channel 0", false);
+    StdlCompare(0, TdmLast, "Wrong last channel 0");
     wait until rising_edge(Clk) and TdmVld = '1';
     StdlvCompareInt(Values(1), Tdm, "Wrong value Channel 1", false);
+    StdlCompare(0, TdmLast, "Wrong last channel 1");
     wait until rising_edge(Clk) and TdmVld = '1';
     StdlvCompareInt(Values(2), Tdm, "Wrong value Channel 2", false);
+    StdlCompare(1, TdmLast, "Wrong last channel 2");
   end procedure;
 
 begin
@@ -84,14 +89,16 @@ begin
       ChannelWidth_g => ChannelWidth_g
     )
     port map(
-      Clk         => Clk,
-      Rst         => Rst,
-      Parallel    => Parallel,
-      ParallelVld => ParallelVld,
-      ParallelRdy => ParallelRdy,
-      Tdm         => Tdm,
-      TdmVld      => TdmVld,
-      TdmRdy      => TdmRdy
+      Clk          => Clk,
+      Rst          => Rst,
+      Parallel     => Parallel,
+      ParallelVld  => ParallelVld,
+      ParallelRdy  => ParallelRdy,
+      ParallelLast => ParallelLast,
+      Tdm          => Tdm,
+      TdmVld       => TdmVld,
+      TdmRdy       => TdmRdy,
+      TdmLast      => TdmLast
     );
 
   ------------------------------------------------------------
