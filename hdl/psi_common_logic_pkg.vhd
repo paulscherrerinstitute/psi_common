@@ -66,6 +66,9 @@ package psi_common_logic_pkg is
 
   function To01X(inp : in std_logic_vector)
   return std_logic_vector;
+  
+  function InvertBitOrder(inp : in std_logic_vector)
+  return std_logic_vector;
 
 end psi_common_logic_pkg;
 
@@ -92,18 +95,18 @@ package body psi_common_logic_pkg is
   function PartiallyOnesVector(size    : in natural;
                                ones_nb : in natural)
   return std_logic_vector is
-    variable v_low  : std_logic_vector(size downto 0);
-    variable v_high : std_logic_vector(size downto 0);
-    variable v_plus_1      : std_logic_vector(size + 1 downto 0); -- We need this to avoid synthesis problems with Xilinx ISE
-    variable v      : std_logic_vector(size - 1 downto 0);
+    variable v_low    : std_logic_vector(size downto 0);
+    variable v_high   : std_logic_vector(size downto 0);
+    variable v_plus_1 : std_logic_vector(size + 1 downto 0); -- We need this to avoid synthesis problems with Xilinx ISE
+    variable v        : std_logic_vector(size - 1 downto 0);
   begin
-    v_low  := (others => '1');
-    v_high := (others => '0');
-    v_plus_1      := v_high(size - ones_nb downto 0) & v_low(ones_nb downto 0);
-    v      := v_plus_1(size downto 1);
+    v_low    := (others => '1');
+    v_high   := (others => '0');
+    v_plus_1 := v_high(size - ones_nb downto 0) & v_low(ones_nb downto 0);
+    v        := v_plus_1(size downto 1);
     return v;
   end function;
-    
+
   -- *** ShiftLeft ***
   function ShiftLeft(arg  : in std_logic_vector;
                      bits : in integer;
@@ -234,6 +237,16 @@ package body psi_common_logic_pkg is
   begin
     for i in inp'low to inp'high loop
       tmp(i) := to01X(inp(i));
+    end loop;
+    return tmp;
+  end function;
+  
+  function InvertBitOrder(inp : in std_logic_vector)
+  return std_logic_vector is
+    variable tmp : std_logic_vector(inp'range);
+  begin
+    for i in inp'low to inp'high loop
+      tmp(tmp'high-i) := inp(i);
     end loop;
     return tmp;
   end function;

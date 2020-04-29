@@ -6,12 +6,14 @@ Benoît Stef [benoit.stef@psi.ch]
 ## Authors
 * Oliver Bründler [oli.bruendler@gmx.ch]
 * Benoît Stef [benoit.stef@psi.ch]
+* Daniele Felici [daniele.felici@psi.ch]
+* Patric Bucher [patric.bucher@psi.ch]
 
 ## License
 This library is published under [PSI HDL Library License](License.txt), which is [LGPL](LGPL2_1.txt) plus some additional exceptions to clarify the LGPL terms in the context of firmware development.
 
 ## Detailed Documentation
-See [Documentation](doc/psi_common.pdf)
+See [Documentation](doc/psi_common_index.md)
 
 ## Changelog
 See [Changelog](Changelog.md)
