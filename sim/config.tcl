@@ -71,7 +71,8 @@ add_sources "../hdl" {
 	psi_common_dont_opt.vhd \
 	psi_common_axi_multi_pl_stage.vhd \
 	psi_common_par_tdm_cfg.vhd \
-	psi_common_axilite_slave_ipif.vhd \	psi_common_watchdog.vhd \
+	psi_common_axilite_slave_ipif.vhd \
+	psi_common_watchdog.vhd \
 	psi_common_debouncer.vhd \
 } -tag src
 
