@@ -314,9 +314,11 @@ package body psi_common_math_pkg is
 		variable Idx_v : integer := input'low;
 		variable IsNeg_v : boolean := false;
 		variable ValInt_v : integer := 0;
-		variable ValFrac_v : integer := 0;
+		variable ValFrac_v : real := 0.0;
 		variable FracDigits_v : integer := 0;
-		variable Exp_v : integer;
+		variable Exp_v : integer := 0;
+		variable ExpNeg_v : boolean := false;
+		variable ValAbs_v : real := 0.0;
 	begin
 		-- skip leading white-spaces
 		while (Idx_v <= input'high) and input(Idx_v) = ' ' loop
@@ -340,22 +342,41 @@ package body psi_common_math_pkg is
 		
 		-- Parse Fractional
 		while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
-			ValFrac_v := ValFrac_v*10 + (character'pos(input(Idx_v))-character'pos('0'));
+			ValFrac_v := ValFrac_v*10.0 + real((character'pos(input(Idx_v))-character'pos('0')));
 			FracDigits_v := FracDigits_v + 1;
 			Idx_v := Idx_v + 1;
 		end loop;
 		
 		-- Check exponent
-		if Idx_v <= input'high then
-			assert (input(Idx_v) /= 'E') and (input(Idx_v) /= 'e') report "from_str: exponential notation not supported" severity error;
+		if (Idx_v <= input'high) then
+			if (input(Idx_v) /= 'E') or (input(Idx_v) /= 'e') then
+				Idx_v := Idx_v + 1;
+				-- Check sign
+				if (Idx_v <= input'high) and (input(Idx_v) = '-') then
+					ExpNeg_v := true;
+					Idx_v := Idx_v + 1;
+				end if;
+				
+				-- Parse Integer
+				while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
+					Exp_v := Exp_v*10 + (character'pos(input(Idx_v))-character'pos('0'));
+					Idx_v := Idx_v + 1;
+				end loop;
+				if ExpNeg_v then
+					Exp_v := -Exp_v;
+				end if;
+			end if;
 		end if;
 		
 		-- Return
+		ValAbs_v := (real(ValInt_v)+ValFrac_v/10.0**real(FracDigits_v))*10.0**real(Exp_v);
 		if IsNeg_v then
-			return -(real(ValInt_v)+real(ValFrac_v)/10.0**real(FracDigits_v));
+			return -ValAbs_v;
 		else
-			return real(ValInt_v)+real(ValFrac_v)/10.0**real(FracDigits_v);
+			return ValAbs_v;
 		end if;
+		
+		
   end function;
 
 end psi_common_math_pkg;
