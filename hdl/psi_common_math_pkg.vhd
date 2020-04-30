@@ -337,19 +337,23 @@ package body psi_common_math_pkg is
 			Idx_v := Idx_v + 1;
 		end loop;
 		
-		assert input(Idx_v) = '.' report "from_str: decimal point is missing" severity error;
-		Idx_v := Idx_v + 1;
+		-- Check decimal point
+		if (Idx_v <= input'high) then
+			if input(Idx_v) = '.' then
+				Idx_v := Idx_v + 1;
 		
-		-- Parse Fractional
-		while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
-			ValFrac_v := ValFrac_v*10.0 + real((character'pos(input(Idx_v))-character'pos('0')));
-			FracDigits_v := FracDigits_v + 1;
-			Idx_v := Idx_v + 1;
-		end loop;
+				-- Parse Fractional
+				while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
+					ValFrac_v := ValFrac_v*10.0 + real((character'pos(input(Idx_v))-character'pos('0')));
+					FracDigits_v := FracDigits_v + 1;
+					Idx_v := Idx_v + 1;
+				end loop;
+			end if;
+		end if;
 		
 		-- Check exponent
 		if (Idx_v <= input'high) then
-			if (input(Idx_v) /= 'E') or (input(Idx_v) /= 'e') then
+			if (input(Idx_v) = 'E') or (input(Idx_v) = 'e') then
 				Idx_v := Idx_v + 1;
 				-- Check sign
 				if (Idx_v <= input'high) and (input(Idx_v) = '-') then
