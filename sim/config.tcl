@@ -1,5 +1,6 @@
 ##############################################################################
-#  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
+#  Copyright (c) 2018-2020 by Paul Scherrer Institute, Switzerland
+#  Copyright (c) 2020 by Enclustra GmbH, Switzerland
 #  All rights reserved.
 #  Authors: Oliver Bruendler, Benoit Stef
 ##############################################################################
@@ -70,8 +71,9 @@ add_sources "../hdl" {
 	psi_common_dont_opt.vhd \
 	psi_common_axi_multi_pl_stage.vhd \
 	psi_common_par_tdm_cfg.vhd \
-  psi_common_watchdog.vhd \
-  psi_common_debouncer.vhd \
+	psi_common_axilite_slave_ipif.vhd \
+	psi_common_watchdog.vhd \
+	psi_common_debouncer.vhd \
 } -tag src
 
 # testbenches
@@ -124,7 +126,8 @@ add_sources "../testbench" {
 	psi_common_watchdog_tb/psi_common_watchdog_tb.vhd \
 	psi_common_axi_multi_pl_stage_tb/psi_common_axi_multi_pl_stage_tb.vhd \
 	psi_common_par_tdm_cfg_tb/psi_common_par_tdm_cfg_tb.vhd \
-  psi_common_debouncer_tb/psi_common_debouncer_tb.vhd \
+	psi_common_axilite_slave_ipif_tb/psi_common_axilite_slave_ipif_tb.vhd \
+	psi_common_debouncer_tb/psi_common_debouncer_tb.vhd \
 } -tag tb
 
 #TB Runs
@@ -331,6 +334,14 @@ create_tb_run "psi_common_axi_multi_pl_stage_tb"
 add_tb_run
 
 create_tb_run "psi_common_par_tdm_cfg_tb"
+add_tb_run
+
+create_tb_run "psi_common_axilite_slave_ipif_tb"
+#Vivado does not support unconstrained records as required by this TB
+tb_run_skip Vivado
+tb_run_add_arguments \
+	"-gNumReg_g=4 -gUseMem_g=true" \
+	"-gNumReg_g=4 -gUseMem_g=false"
 add_tb_run
 
 create_tb_run "psi_common_debouncer_tb"
