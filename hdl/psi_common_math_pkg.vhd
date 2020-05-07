@@ -10,6 +10,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.math_real.all;
 
 library work;
 use work.psi_common_array_pkg.all;
@@ -83,6 +84,9 @@ package psi_common_math_pkg is
   function from_uslv(input : std_logic_vector) return integer;
 
   function from_sslv(input : std_logic_vector) return integer;
+  
+  -- convert string to real
+  function from_str(input : string) return real;
 
 end psi_common_math_pkg;
 
@@ -304,4 +308,79 @@ package body psi_common_math_pkg is
   begin
     return to_integer(signed(input));
   end function;
+  
+  -- convert string to real
+  function from_str(input : string) return real is
+		variable Idx_v : integer := input'low;
+		variable IsNeg_v : boolean := false;
+		variable ValInt_v : integer := 0;
+		variable ValFrac_v : real := 0.0;
+		variable FracDigits_v : integer := 0;
+		variable Exp_v : integer := 0;
+		variable ExpNeg_v : boolean := false;
+		variable ValAbs_v : real := 0.0;
+	begin
+		-- skip leading white-spaces
+		while (Idx_v <= input'high) and input(Idx_v) = ' ' loop
+			Idx_v := Idx_v + 1;
+		end loop;
+		
+		-- Check sign
+		if (Idx_v <= input'high) and (input(Idx_v) = '-') then
+			IsNeg_v := true;
+			Idx_v := Idx_v + 1;
+		end if;
+		
+		-- Parse Integer
+		while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
+			ValInt_v := ValInt_v*10 + (character'pos(input(Idx_v))-character'pos('0'));
+			Idx_v := Idx_v + 1;
+		end loop;
+		
+		-- Check decimal point
+		if (Idx_v <= input'high) then
+			if input(Idx_v) = '.' then
+				Idx_v := Idx_v + 1;
+		
+				-- Parse Fractional
+				while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
+					ValFrac_v := ValFrac_v*10.0 + real((character'pos(input(Idx_v))-character'pos('0')));
+					FracDigits_v := FracDigits_v + 1;
+					Idx_v := Idx_v + 1;
+				end loop;
+			end if;
+		end if;
+		
+		-- Check exponent
+		if (Idx_v <= input'high) then
+			if (input(Idx_v) = 'E') or (input(Idx_v) = 'e') then
+				Idx_v := Idx_v + 1;
+				-- Check sign
+				if (Idx_v <= input'high) and (input(Idx_v) = '-') then
+					ExpNeg_v := true;
+					Idx_v := Idx_v + 1;
+				end if;
+				
+				-- Parse Integer
+				while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
+					Exp_v := Exp_v*10 + (character'pos(input(Idx_v))-character'pos('0'));
+					Idx_v := Idx_v + 1;
+				end loop;
+				if ExpNeg_v then
+					Exp_v := -Exp_v;
+				end if;
+			end if;
+		end if;
+		
+		-- Return
+		ValAbs_v := (real(ValInt_v)+ValFrac_v/10.0**real(FracDigits_v))*10.0**real(Exp_v);
+		if IsNeg_v then
+			return -ValAbs_v;
+		else
+			return ValAbs_v;
+		end if;
+		
+		
+  end function;
+
 end psi_common_math_pkg;

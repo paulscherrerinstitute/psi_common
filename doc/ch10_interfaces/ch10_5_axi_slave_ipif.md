@@ -139,4 +139,4 @@ Generics              | Description
 
 ***
 [Index](../psi_common_index.md) **|** Previous: [Interfaces > axi master full](../ch10_interfaces/ch10_4_axi_master_full.md) **|**
-Next: [Miscellaneous > delay](../ch11_misc/ch11_1_delay.md)
+Next: [Interfaces > axilite slave ipif](./ch10_6_axilite_slave_ipif.md)
