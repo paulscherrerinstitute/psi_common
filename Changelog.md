@@ -1,3 +1,27 @@
+## 2.11.0
+* Added Features
+	* Added *psi\_common\_psi\_common\_debouncer* - Configurable debounce component
+	* Added InvertBitOrder function in *psi\_common\_logic\_pkg*
+	* Added backpressure handling to *psi\_common\_tdm\_par* - **Warning** as port has changed
+	* Added backpressure handling to *psi\_common\_par\_tdm* - **Warning** as port has changed
+	* Added interactiveGhdl.tcl
+* Documentation
+	* MD file instead of docx
+
+## 2.10.0
+  * Added Features
+    * Added *psi\_common\_psi\_common\_par\_tdm\_cfg* - // to TDM with configurable number of enabled channels
+
+## 2.9.0
+  * Added Features
+    * Added *psi\_common\_psi\_common\_axi\_multi_pl_stage* - Axi Multi pipeline stage
+
+## 2.8.0
+  * Added Features
+    * Added *psi\_common\_watchdog* - Watchdog with several settable parameters
+    * Added *psi\_common\_tdm\_par\_cfg* - TDM to // with configurable number of enabled channels
+    * Added *psi\_common\_dont\_optimize* - Allows creating virtual pins to check implementation
+
 ## 2.7.1
 * Bugfixes
   * Made *psi\_common\_ping\_pong\_tdm\_burst\_tb* runnable in Vivado

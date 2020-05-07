@@ -13,287 +13,284 @@
 -- Libraries
 ------------------------------------------------------------
 library ieee;
-	use ieee.std_logic_1164.all;
-	use ieee.numeric_std.all;
-	use ieee.math_real.all;
-	
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee.math_real.all;
+
 library work;
-	use work.psi_tb_compare_pkg.all;
-	use work.psi_tb_txt_util.all;
+use work.psi_tb_compare_pkg.all;
+use work.psi_tb_txt_util.all;
 
 ------------------------------------------------------------
 -- Entity Declaration
 ------------------------------------------------------------
 entity psi_common_multi_pl_stage_tb is
-	generic (
-		HandleRdy_g	: boolean	:= true
-	);
+  generic(
+    HandleRdy_g : boolean := true
+  );
 end entity;
 
 ------------------------------------------------------------
 -- Architecture
 ------------------------------------------------------------
 architecture sim of psi_common_multi_pl_stage_tb is
-	-- *** Fixed Generics ***
-	
-	-- *** Not Assigned Generics (default values) ***
-	constant Width_g : integer := 8;
-	
-	-- *** TB Control ***
-	signal TbRunning : boolean := True;
-	signal NextCase : integer := -1;
-	signal ProcessDone : std_logic_vector(0 to 1) := (others => '0');
-	constant AllProcessesDone_c : std_logic_vector(0 to 1) := (others => '1');
-	constant TbProcNr_stim_c : integer := 0;
-	constant TbProcNr_check_c : integer := 1;
-	
-	-- *** DUT Signals ***
-	signal Clk : std_logic := '0';
-	signal Rst : std_logic := '1';
-	signal InVld : std_logic := '0';
-	signal InRdy : std_logic := '0';
-	signal InData : std_logic_vector(Width_g-1 downto 0) := (others => '0');
-	signal OutVld : std_logic := '0';
-	signal OutRdy : std_logic := '0';
-	signal OutData : std_logic_vector(Width_g-1 downto 0) := (others => '0');
-	
-	-- Handwritten
-	signal done : boolean := False;
-	signal testcase : integer := -1;
-	
+  -- *** Fixed Generics ***
+
+  -- *** Not Assigned Generics (default values) ***
+  constant Width_g : integer := 8;
+
+  -- *** TB Control ***
+  signal TbRunning            : boolean                  := True;
+  signal NextCase             : integer                  := -1;
+  signal ProcessDone          : std_logic_vector(0 to 1) := (others => '0');
+  constant AllProcessesDone_c : std_logic_vector(0 to 1) := (others => '1');
+  constant TbProcNr_stim_c    : integer                  := 0;
+  constant TbProcNr_check_c   : integer                  := 1;
+
+  -- *** DUT Signals ***
+  signal Clk     : std_logic                              := '0';
+  signal Rst     : std_logic                              := '1';
+  signal InVld   : std_logic                              := '0';
+  signal InRdy   : std_logic                              := '0';
+  signal InData  : std_logic_vector(Width_g - 1 downto 0) := (others => '0');
+  signal OutVld  : std_logic                              := '0';
+  signal OutRdy  : std_logic                              := '0';
+  signal OutData : std_logic_vector(Width_g - 1 downto 0) := (others => '0');
+
+  -- Handwritten
+  signal done     : boolean := False;
+  signal testcase : integer := -1;
+
 begin
-	------------------------------------------------------------
-	-- DUT Instantiation
-	------------------------------------------------------------
-	i_dut : entity work.psi_common_multi_pl_stage
-		generic map (
-			UseRdy_g => HandleRdy_g,
-			Width_g	=> Width_g,
-			Stages_g => 20
-		)
-		port map (
-			Clk => Clk,
-			Rst => Rst,
-			InVld => InVld,
-			InRdy => InRdy,
-			InData => InData,
-			OutVld => OutVld,
-			OutRdy => OutRdy,
-			OutData => OutData
-		);
-	
-	------------------------------------------------------------
-	-- Testbench Control !DO NOT EDIT!
-	------------------------------------------------------------
-	p_tb_control : process
-	begin
-		wait until Rst = '0';
-		wait until ProcessDone = AllProcessesDone_c;
-		TbRunning <= false;
-		wait;
-	end process;
-	
-	------------------------------------------------------------
-	-- Clocks !DO NOT EDIT!
-	------------------------------------------------------------
-	p_clock_Clk : process
-		constant Frequency_c : real := real(100e6);
-	begin
-		while TbRunning loop
-			wait for 0.5*(1 sec)/Frequency_c;
-			Clk <= not Clk;
-		end loop;
-		wait;
-	end process;
-	
-	
-	------------------------------------------------------------
-	-- Resets
-	------------------------------------------------------------
-	p_rst_Rst : process
-	begin
-		wait for 1 us;
-		-- Wait for two clk edges to ensure reset is active for at least one edge
-		wait until rising_edge(Clk);
-		wait until rising_edge(Clk);
-		Rst <= '0';
-		wait;
-	end process;
-	
-	
-	------------------------------------------------------------
-	-- Processes
-	------------------------------------------------------------
-	-- *** stim ***
-	p_stim : process
-	begin
-		-- start of process !DO NOT EDIT
-		wait until Rst = '0';
-		
-		-- Single Samples	
-		print(">> Single Samples");
-		testcase <= 0;
-		wait until rising_edge(Clk);
-		for i in 0 to 4 loop
-			assert InRdy = '1' or not HandleRdy_g report "###ERROR###: InRdy went low unexpectedly" severity error;
-			InData <= std_logic_vector(to_unsigned(i, Width_g));
-			InVld <= '1';
-			for i in 0 to 9 loop
-				wait until rising_edge(Clk);
-				InVld <= '0';
-				assert InRdy = '1' or not HandleRdy_g report "###ERROR###: InRdy went low unexpectedly" severity error;
-			end loop;
-		end loop;
-		if done /= true then
-			wait until done = true;
-		end if;
-		
-		-- Streaming	
-		print(">> Streaming");
-		testcase <= 1;
-		wait until rising_edge(Clk);
-		InVld <= '1';
-		for i in 0 to 15 loop
-			assert InRdy = '1' or not HandleRdy_g report "###ERROR###: InRdy went low unexpectedly" severity error;
-			InData <= std_logic_vector(to_unsigned(i, Width_g));
-			wait until rising_edge(Clk);
-		end loop;
-		InVld <= '0';
-		if done /= true then
-			wait until done = true;
-		end if;		
-		
-		-- Test Back Pressure		
-		if HandleRdy_g then
-			print(">> Back Pressure");
-			testcase <= 2;
-			wait until rising_edge(Clk);			
-			for inDel in 3 downto 0 loop
-				for outDel in 0 to 3 loop
-					for val in 1 to 80 loop
-						InVld <= '1';
-						InData <= std_logic_vector(to_unsigned(val, Width_g));						
-						wait until rising_edge(Clk) and InRdy = '1';	
-						for j in 0 to inDel-1 loop		
-							InVld <= '0';
-							wait until rising_edge(Clk);
-						end loop;					
-					end loop;
-					InVld <= '0';
-					wait for 1 us;
-					wait until rising_edge(Clk);		
-				end loop;
-			end loop;		
-			if done /= true then
-				wait until done = true;
-			end if;			
-		end if;
-		
-		-- Valid does not wait for Ready
-		if HandleRdy_g then		
-			print(">> Valid does not wait for Ready");
-			testcase <= 3;
-			wait until rising_edge(Clk);			
-			for outDel in 0 to 10 loop
-				for val in 1 to 40 loop
-					InVld <= '1';
-					InData <= std_logic_vector(to_unsigned(val, Width_g));						
-					wait until rising_edge(Clk) and InRdy = '1';	
-				end loop;
-				InVld <= '0';
-				wait for 1 us;
-				wait until rising_edge(Clk);		
-			end loop;		
-			if done /= true then
-				wait until done = true;
-			end if;			
-		end if;
-		
-		-- end of process !DO NOT EDIT!
-		ProcessDone(TbProcNr_stim_c) <= '1';
-		wait;
-	end process;
-	
-	-- *** check ***
-	p_check : process
-	begin
-		-- start of process !DO NOT EDIT
-		wait until Rst = '0';
-		
-		-- Test Single Samples
-		wait until testcase = 0;
-		done <= False;
-		if HandleRdy_g then
-			OutRdy <= '1';
-		end if;
-		for i in 0 to 4 loop
-			wait until rising_edge(Clk) and OutVld = '1';
-			StdlvCompareInt (i, OutData, "Wrong Data");
-		end loop;
-		done <= True;
-		
-		-- Test Streaming
-		wait until testcase = 1;
-		done <= False;
-		if HandleRdy_g then
-			OutRdy <= '1';
-		end if;
-		for i in 0 to 15 loop
-			wait until rising_edge(Clk) and OutVld = '1';
-			StdlvCompareInt (i, OutData, "Wrong Data");
-		end loop;
-		done <= True;	
+  ------------------------------------------------------------
+  -- DUT Instantiation
+  ------------------------------------------------------------
+  i_dut : entity work.psi_common_multi_pl_stage
+    generic map(
+      UseRdy_g => HandleRdy_g,
+      Width_g  => Width_g,
+      Stages_g => 20
+    )
+    port map(
+      Clk     => Clk,
+      Rst     => Rst,
+      InVld   => InVld,
+      InRdy   => InRdy,
+      InData  => InData,
+      OutVld  => OutVld,
+      OutRdy  => OutRdy,
+      OutData => OutData
+    );
 
-		-- Test Back Pressure
-		if HandleRdy_g then
-			wait until testcase = 2;
-			done <= False;		
-			for inDel in 3 downto 0 loop
-				for outDel in 0 to 3 loop
-					for val in 1 to 80 loop
-						OutRdy <= '1';
-						wait until rising_edge(Clk) and OutVld = '1';
-						StdlvCompareInt (val, OutData, "Wrong Data");					
-						for j in 0 to outDel-1 loop		
-							OutRdy <= '0';
-							wait until rising_edge(Clk);
-						end loop;					
-					end loop;	
-				end loop;
-			end loop;
-			done <= True;	
-		end if;
+  ------------------------------------------------------------
+  -- Testbench Control !DO NOT EDIT!
+  ------------------------------------------------------------
+  p_tb_control : process
+  begin
+    wait until Rst = '0';
+    wait until ProcessDone = AllProcessesDone_c;
+    TbRunning <= false;
+    wait;
+  end process;
 
-		-- Valid does not wait for Ready
-		if HandleRdy_g then
-			wait until testcase = 3;
-			done <= False;		
-			OutRdy <= '0';
-			wait until rising_edge(Clk);
-			for outDel in 0 to 10 loop
-				for val in 1 to 40 loop
-					if OutVld /= '1' then
-						wait until OutVld = '1';
-					end if;
-					for i in 0 to outDel-1 loop
-						wait until rising_edge(Clk);
-						assert OutVld = '1' report "###ERROR###: OutVld went low" severity error;
-					end loop;	
-					wait for 1 ns;
-					OutRdy <= '1';
-					StdlvCompareInt (val, OutData, "Wrong Data");	
-					wait until rising_edge(Clk);
-					wait for 1 ns;
-					OutRdy <= '0';				
-				end loop;
-			end loop;
-			done <= True;		
-		end if;
-		
-		-- end of process !DO NOT EDIT!
-		ProcessDone(TbProcNr_check_c) <= '1';
-		wait;
-	end process;
-	
-	
+  ------------------------------------------------------------
+  -- Clocks !DO NOT EDIT!
+  ------------------------------------------------------------
+  p_clock_Clk : process
+    constant Frequency_c : real := real(100e6);
+  begin
+    while TbRunning loop
+      wait for 0.5 * (1 sec) / Frequency_c;
+      Clk <= not Clk;
+    end loop;
+    wait;
+  end process;
+
+  ------------------------------------------------------------
+  -- Resets
+  ------------------------------------------------------------
+  p_rst_Rst : process
+  begin
+    wait for 1 us;
+    -- Wait for two clk edges to ensure reset is active for at least one edge
+    wait until rising_edge(Clk);
+    wait until rising_edge(Clk);
+    Rst <= '0';
+    wait;
+  end process;
+
+  ------------------------------------------------------------
+  -- Processes
+  ------------------------------------------------------------
+  -- *** stim ***
+  p_stim : process
+  begin
+    -- start of process !DO NOT EDIT
+    wait until Rst = '0';
+
+    -- Single Samples	
+    print(">> Single Samples");
+    testcase <= 0;
+    wait until rising_edge(Clk);
+    for i in 0 to 4 loop
+      assert InRdy = '1' or not HandleRdy_g report "###ERROR###: InRdy went low unexpectedly" severity error;
+      InData <= std_logic_vector(to_unsigned(i, Width_g));
+      InVld  <= '1';
+      for i in 0 to 9 loop
+        wait until rising_edge(Clk);
+        InVld <= '0';
+        assert InRdy = '1' or not HandleRdy_g report "###ERROR###: InRdy went low unexpectedly" severity error;
+      end loop;
+    end loop;
+    if done /= true then
+      wait until done = true;
+    end if;
+
+    -- Streaming	
+    print(">> Streaming");
+    testcase <= 1;
+    wait until rising_edge(Clk);
+    InVld    <= '1';
+    for i in 0 to 15 loop
+      assert InRdy = '1' or not HandleRdy_g report "###ERROR###: InRdy went low unexpectedly" severity error;
+      InData <= std_logic_vector(to_unsigned(i, Width_g));
+      wait until rising_edge(Clk);
+    end loop;
+    InVld    <= '0';
+    if done /= true then
+      wait until done = true;
+    end if;
+
+    -- Test Back Pressure		
+    if HandleRdy_g then
+      print(">> Back Pressure");
+      testcase <= 2;
+      wait until rising_edge(Clk);
+      for inDel in 3 downto 0 loop
+        for outDel in 0 to 3 loop
+          for val in 1 to 80 loop
+            InVld  <= '1';
+            InData <= std_logic_vector(to_unsigned(val, Width_g));
+            wait until rising_edge(Clk) and InRdy = '1';
+            for j in 0 to inDel - 1 loop
+              InVld <= '0';
+              wait until rising_edge(Clk);
+            end loop;
+          end loop;
+          InVld <= '0';
+          wait for 1 us;
+          wait until rising_edge(Clk);
+        end loop;
+      end loop;
+      if done /= true then
+        wait until done = true;
+      end if;
+    end if;
+
+    -- Valid does not wait for Ready
+    if HandleRdy_g then
+      print(">> Valid does not wait for Ready");
+      testcase <= 3;
+      wait until rising_edge(Clk);
+      for outDel in 0 to 10 loop
+        for val in 1 to 40 loop
+          InVld  <= '1';
+          InData <= std_logic_vector(to_unsigned(val, Width_g));
+          wait until rising_edge(Clk) and InRdy = '1';
+        end loop;
+        InVld <= '0';
+        wait for 1 us;
+        wait until rising_edge(Clk);
+      end loop;
+      if done /= true then
+        wait until done = true;
+      end if;
+    end if;
+
+    -- end of process !DO NOT EDIT!
+    ProcessDone(TbProcNr_stim_c) <= '1';
+    wait;
+  end process;
+
+  -- *** check ***
+  p_check : process
+  begin
+    -- start of process !DO NOT EDIT
+    wait until Rst = '0';
+
+    -- Test Single Samples
+    wait until testcase = 0;
+    done <= False;
+    if HandleRdy_g then
+      OutRdy <= '1';
+    end if;
+    for i in 0 to 4 loop
+      wait until rising_edge(Clk) and OutVld = '1';
+      StdlvCompareInt(i, OutData, "Wrong Data");
+    end loop;
+    done <= True;
+
+    -- Test Streaming
+    wait until testcase = 1;
+    done <= False;
+    if HandleRdy_g then
+      OutRdy <= '1';
+    end if;
+    for i in 0 to 15 loop
+      wait until rising_edge(Clk) and OutVld = '1';
+      StdlvCompareInt(i, OutData, "Wrong Data");
+    end loop;
+    done <= True;
+
+    -- Test Back Pressure
+    if HandleRdy_g then
+      wait until testcase = 2;
+      done <= False;
+      for inDel in 3 downto 0 loop
+        for outDel in 0 to 3 loop
+          for val in 1 to 80 loop
+            OutRdy <= '1';
+            wait until rising_edge(Clk) and OutVld = '1';
+            StdlvCompareInt(val, OutData, "Wrong Data");
+            for j in 0 to outDel - 1 loop
+              OutRdy <= '0';
+              wait until rising_edge(Clk);
+            end loop;
+          end loop;
+        end loop;
+      end loop;
+      done <= True;
+    end if;
+
+    -- Valid does not wait for Ready
+    if HandleRdy_g then
+      wait until testcase = 3;
+      done   <= False;
+      OutRdy <= '0';
+      wait until rising_edge(Clk);
+      for outDel in 0 to 10 loop
+        for val in 1 to 40 loop
+          if OutVld /= '1' then
+            wait until OutVld = '1';
+          end if;
+          for i in 0 to outDel - 1 loop
+            wait until rising_edge(Clk);
+            assert OutVld = '1' report "###ERROR###: OutVld went low" severity error;
+          end loop;
+          wait for 1 ns;
+          OutRdy <= '1';
+          StdlvCompareInt(val, OutData, "Wrong Data");
+          wait until rising_edge(Clk);
+          wait for 1 ns;
+          OutRdy <= '0';
+        end loop;
+      end loop;
+      done   <= True;
+    end if;
+
+    -- end of process !DO NOT EDIT!
+    ProcessDone(TbProcNr_check_c) <= '1';
+    wait;
+  end process;
+
 end;

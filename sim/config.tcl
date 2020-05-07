@@ -66,6 +66,11 @@ add_sources "../hdl" {
 	psi_common_ping_pong.vhd \
 	psi_common_delay_cfg.vhd \
 	psi_common_pulse_shaper_cfg.vhd \
+	psi_common_watchdog.vhd \
+	psi_common_dont_opt.vhd \
+	psi_common_axi_multi_pl_stage.vhd \
+	psi_common_par_tdm_cfg.vhd \
+  	psi_common_debouncer.vhd \
 	psi_common_trigger_analog.vhd \
 	psi_common_trigger_digital.vhd \
 } -tag src
@@ -117,8 +122,10 @@ add_sources "../testbench" {
 	psi_common_ping_pong_tb/psi_common_ping_pong_tdm_burst_tb.vhd \
 	psi_common_delay_cfg_tb/psi_common_delay_cfg_tb.vhd \
 	psi_common_pulse_shaper_cfg_tb/psi_common_pulse_shaper_cfg_tb.vhd \
-	psi_common_trigger_analog_tb/psi_common_trigger_analog_tb.vhd \
-	psi_common_trigger_digital_tb/psi_common_trigger_digital_tb.vhd \
+	psi_common_watchdog_tb/psi_common_watchdog_tb.vhd \
+	psi_common_axi_multi_pl_stage_tb/psi_common_axi_multi_pl_stage_tb.vhd \
+	psi_common_par_tdm_cfg_tb/psi_common_par_tdm_cfg_tb.vhd \
+  psi_common_debouncer_tb/psi_common_debouncer_tb.vhd \
 } -tag tb
 
 #TB Runs
@@ -307,13 +314,6 @@ create_tb_run "psi_common_tdp_ram_be_tb"
 add_tb_run
 
 create_tb_run "psi_common_i2c_master_tb"
-
-create_tb_run "psi_common_trigger_analog_tb"
-add_tb_run
-
-create_tb_run "psi_common_trigger_digital_tb"
-add_tb_run
-
 #Vivado does not support unconstrained records as required by this TB
 #a GHDL bug prevents this TB to run in Version 0.36. The bug is reported. Maybe test again in future.
 tb_run_skip "Vivado GHDL"
@@ -323,4 +323,16 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_ping_pong_tdm_burst_tb"
+add_tb_run
+
+create_tb_run "psi_common_watchdog_tb"
+add_tb_run
+
+create_tb_run "psi_common_axi_multi_pl_stage_tb"
+add_tb_run
+
+create_tb_run "psi_common_par_tdm_cfg_tb"
+add_tb_run
+
+create_tb_run "psi_common_debouncer_tb"
 add_tb_run

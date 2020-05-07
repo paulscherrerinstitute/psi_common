@@ -30,7 +30,7 @@ entity psi_common_delay_cfg is
           MaxDelay_g    : positive  := 256; -- maximum delay wanted
           RStPol_g      : std_logic := '1'; -- reset polarity
           RamBehavior_g : string    := "RBW"; -- "RBW" = read-before-write, "WBR" = write-before-read
-          Hold_g        : boolean   := true-- Holding value at output when delay increase is performed 
+          Hold_g        : boolean   := true -- Holding value at output when delay increase is performed 
          );
 
   port(clk_i : in  std_logic;           -- system clock
