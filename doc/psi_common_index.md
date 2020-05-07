@@ -130,6 +130,10 @@
 
 [11.8 psi\_common\_debouncer](ch11_misc/ch11_8_debouncer.md)
 
+[11.9 psi\_common\_trigger\_analog](ch11_misc/ch11_9_trigger_analog.md)
+
+[11.9 psi\_common\_trigger\_digital](ch11_misc/ch11_10_trigger_digital.md)
+
 ### Others
 
 [presentation](presentation/psi_common_presentation.pdf)

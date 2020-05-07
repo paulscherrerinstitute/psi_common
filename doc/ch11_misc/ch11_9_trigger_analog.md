@@ -53,4 +53,4 @@ OutTrgIsArmed        |Output     |1                                             
 OutTrigger           |Output     |1                                                  |When the selected input passes the threshold value, a single clock pulse is generated
 
 ***
-[Index](../psi_common_index.md) **|** Previous: [Misc > delay cfg](../ch11_misc/ch11_8_debouncer.md) **|** Next:  [Misc > dont opt](../ch11_misc/ch11_10_trigger_digital.md)
+[Index](../psi_common_index.md) **|** Previous: [Misc > debouncer](../ch11_misc/ch11_8_debouncer.md) **|** Next:  [Misc > trigger digital](../ch11_misc/ch11_10_trigger_digital.md)

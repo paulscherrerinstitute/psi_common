@@ -54,7 +54,6 @@ end entity;
 architecture rtl of psi_common_trigger_analog is
 
   type two_process_r is record
-    --delay_cnt    : integer range 0 to ratio_c;
     RegAnalogValueSigned     : signed(analog_input_width_g - 1 downto 0);
     RegAnalogValueSigned_c   : signed(analog_input_width_g - 1 downto 0);
     RegAnalogValueUnsigned   : unsigned(analog_input_width_g - 1 downto 0);

@@ -61,7 +61,6 @@ architecture sim of psi_common_trigger_digital_tb is
 
   procedure ExpectTrgIsArmedIs(Value : in integer) is
   begin
-    --wait until rising_edge(InClk);
     wait until rising_edge(InClk);
     StdlCompare(Value, OutTrgIsArmed, "Wrong OutTrgIsArmed behaviour");
   end procedure;
