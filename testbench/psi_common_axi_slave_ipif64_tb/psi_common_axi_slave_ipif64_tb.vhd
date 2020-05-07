@@ -35,7 +35,6 @@ library work;
 ------------------------------------------------------------
 entity psi_common_axi_slave_ipif64_tb is
 	generic (
-		--NumReg_g : positive := 32;
 		UseMem_g : boolean := true;
 		AxiThrottling_g : natural := 3
 	);
@@ -49,15 +48,11 @@ architecture sim of psi_common_axi_slave_ipif64_tb is
 	constant ResetVal_g : t_aslv64 := (X"0001A123B123C123", X"0002123456789ABC");
 	
 	-- *** Not Assigned Generics (default values) ***
-	constant NumRegWidth_g  : integer := 8; --5(32),...,8(256) [512 gives issue] 
+	constant NumRegWidth_g  : integer range 1 to 8 := 8; --5(32),...,8(256)
 	constant NumReg_g       : integer := 2**NumRegWidth_g;
 	constant AxiIdWidth_g   : integer := 1;
-	--constant AxiAddrWidth_g : integer := NumRegWidth_g+3+1; --8; (32bit reg => 32x4=128-> 8bit)
-	constant AxiAddrWidth_g : integer := 32;
-
-	--constant AxiAddrWidth_g : integer := 9; --8; (32bit reg => 32x4=128-> 8bit)
-	--constant AxiAddrWidth_g : integer := log2(natural(NumReg_g)*8)+1; --8; (64bit reg => 64x8=256-> 9bit) --GHDL CRASH
-	--constant AxiAddrWidth_g : integer := NumRegWidth_g+3+1; --8; (64bit reg => 64x8=256-> 9bit)           --GHDL CRASH
+	constant AxiAddrWidth_g : integer := 20;
+	--constant AxiAddrWidth_g : integer := NumRegWidth_g+3+2; (64bit reg => 64x8=256-> 9bit)           --GHDL CRASH
 	
 	-------------------------------------------------------------------------
 	-- AXI Definition
@@ -130,10 +125,10 @@ begin
 			UseMem_g => UseMem_g,
 			ResetVal_g => ResetVal_g,
 			--
-			AxiIdWidth_g			=> 1, --: integer := 1;	
-			AxiAddrWidth_g		=> AxiAddrWidth_g, --: integer := 10;-- 9;--8;
-			AxiDataWidth_g    => DATA_WIDTH, --: integer := 64;
-			AxiByteWidth_g    => BYTE_WIDTH --: integer := 64/8
+			AxiIdWidth_g			=> 1,
+			AxiAddrWidth_g		=> AxiAddrWidth_g,
+			AxiDataWidth_g    => DATA_WIDTH,
+			AxiByteWidth_g    => BYTE_WIDTH
 		)
 		port map (
 			s_axi_aclk => s_axi_aclk,
@@ -243,12 +238,9 @@ begin
 			print(">> Single Read/Write to Registers");
 			TestCase <= 1;
 			-- write
-			--axi_single_write(4*1, 16#0123456789ABCDEF#, axi_ms, axi_sm, s_axi_aclk);
 			axi_single_write(8*1, "0123456789ABCDEF", 16, axi_ms, axi_sm, s_axi_aclk);
 			-- read
-			--axi_single_expect(4*1, 16#6666555577778888#, axi_ms, axi_sm, s_axi_aclk);
 			axi_single_expect(8*1, "6666555577778888", 16, axi_ms, axi_sm, s_axi_aclk, "No Msg", 63, 0, false, 0);
-			--axi_single_expect(4*1, "0123456789ABCDEF", 16, axi_ms, axi_sm, s_axi_aclk);
 			WaitDone(1);
 		end if;
 
@@ -257,19 +249,15 @@ begin
 		TestCase <= 2;		
 		if UseMem_g then			
 			-- write
-			--axi_single_write(4*(NumReg_g+1), 16#1111222233334444#, axi_ms, axi_sm, s_axi_aclk);
 			axi_single_write(8*(NumReg_g+1), "1111222233334444", 16, axi_ms, axi_sm, s_axi_aclk);
 			-- read
-			--axi_single_expect(4*(NumReg_g+3), 16#3333444455556666#, axi_ms, axi_sm, s_axi_aclk);
 			axi_single_expect(8*(NumReg_g+3), "3333444455556666", 16, axi_ms, axi_sm, s_axi_aclk, "No Msg", 63, 0, false, 0);
 		else
 			-- write
-			--axi_apply_aw(4*(NumReg_g+1), AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 			axi_apply_aw(8*(NumReg_g+1), AxSIZE_8_c, 1-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 			axi_apply_wd_single(X"ABCD12340000FFFF", X"FF", axi_ms, axi_sm, s_axi_aclk);
 			axi_expect_bresp(xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk);
 			-- read 
-			--axi_apply_ar(4*(NumReg_g+1), AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 			axi_apply_ar(8*(NumReg_g+1), AxSIZE_8_c, 1-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 			axi_expect_rresp_single(X"0000000000000000", xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, IgnoreData=>true);
 		end if;
@@ -280,15 +268,11 @@ begin
 			print(">> Burst Read/Write to Registers");
 			TestCase <= 3;
 			-- write
-			--axi_apply_aw(4*1, AxSIZE_4_c, 3-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 			axi_apply_aw(8*1, AxSIZE_8_c, 3-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-			--axi_apply_wd_burst(3, 1, 1, "11111111", "11111111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
 			axi_apply_wd_burst(3, "100000007ffffff1", "A", 16, "11111111", "11111111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
 			axi_expect_bresp(xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk);
 			-- read
-			--axi_apply_ar(4*1, AxSIZE_4_c, 3-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 			axi_apply_ar(8*1, AxSIZE_8_c, 3-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-			--axi_expect_rresp_burst(3, 16#100#, 1, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
 			axi_expect_rresp_burst(3, "1000000000000100", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
 			WaitDone(3);
 		end if;
@@ -298,15 +282,11 @@ begin
 			print(">> Burst Read/Write to all Registers");
 			TestCase <= 4;
 			-- write
-			--axi_apply_aw(0, AxSIZE_4_c, NumReg_g-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 			axi_apply_aw(0, AxSIZE_8_c, NumReg_g-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-			--axi_apply_wd_burst(NumReg_g, 10, 1, "11111111", "11111111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
 			axi_apply_wd_burst(NumReg_g, "100000007ffffff1", "A", 16, "11111111", "11111111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
 			axi_expect_bresp(xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk);
 			-- read
-			--axi_apply_ar(0, AxSIZE_4_c, NumReg_g-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 			axi_apply_ar(0, AxSIZE_8_c, NumReg_g-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-			--axi_expect_rresp_burst(NumReg_g, 16#1000#, 1, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
 			axi_expect_rresp_burst(NumReg_g, "1000000000001000", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
 			WaitDone(4);
 		end if;
@@ -315,9 +295,7 @@ begin
 		print(">> Burst Read/Write to Memory");
 		TestCase <= 5;
 		-- write
-		--axi_apply_aw(4*(NumReg_g+1), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 		axi_apply_aw(8*(NumReg_g+1), AxSIZE_8_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-		--axi_apply_wd_burst(4, 16#200#, 1, "1100", "0111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
 		axi_apply_wd_burst(4, "1000000000000200", "1", 16, "10001100", "10000111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
 		if UseMem_g then
 			axi_expect_bresp(xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk);
@@ -326,13 +304,10 @@ begin
 			axi_expect_bresp(xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk);
 		end if;
 		-- read
-		--axi_apply_ar(4*(NumReg_g+2), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 		axi_apply_ar(8*(NumReg_g+2), AxSIZE_8_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk); --Addr=NumReg_g+2 -> ExpData==0x302
 		if UseMem_g then
-			--axi_expect_rresp_burst(4, 16#302#, 1, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);	
 			axi_expect_rresp_burst(4, "100000000000302", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);	
 		else
-			--axi_expect_rresp_burst(4, 16#302#, 1, xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, true, false, AxiThrottling_g);	
 			axi_expect_rresp_burst(4, "100000000000302", "1", 16, xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, true, false, AxiThrottling_g);	
 		end if;
 		WaitDone(5);
@@ -341,9 +316,7 @@ begin
 		print(">> Burst over Reg/Mem Boundary");
 		TestCase <= 6;
 		-- write
-		--axi_apply_aw(4*(NumReg_g-2), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 		axi_apply_aw(8*(NumReg_g-2), AxSIZE_8_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-		--axi_apply_wd_burst(4, 16#400#, 1, "1111", "1111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
 		axi_apply_wd_burst(4, "1000000000000400", "1", 16, "11111111", "11111111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
 		if UseMem_g then
 			axi_expect_bresp(xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk);
@@ -352,13 +325,10 @@ begin
 			axi_expect_bresp(xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk);
 		end if;
 		-- read
-		--axi_apply_ar(4*(NumReg_g-2), AxSIZE_4_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 		axi_apply_ar(8*(NumReg_g-2), AxSIZE_8_c, 4-1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
 		if UseMem_g then
-			--axi_expect_rresp_burst(4, 16#500#, 1, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);	
 			axi_expect_rresp_burst(4, "1000000000000500", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);	
 		else
-			--axi_expect_rresp_burst(4, 16#500#, 1, xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, true, false, AxiThrottling_g);	
 			axi_expect_rresp_burst(4, "1000000000000500", "1", 16, xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, true, false, AxiThrottling_g);	
 		end if;
 		WaitDone(6);
@@ -410,9 +380,7 @@ begin
 			wait until rising_edge(s_axi_aclk) and o_mem_wr = "11111111" for 1 us;
 			StdlvCompareStdlv("11111111", o_mem_wr, "Write did not arrive");
 			StdlvCompareStdlv(X"1111222233334444", o_mem_wdata, "Received wrong data");
-			--StdlvCompareInt(1*4, o_mem_addr, "Wrong write address");
 			StdlvCompareInt(1*8, o_mem_addr, "Wrong write address");
-			--wait until rising_edge(s_axi_aclk) and unsigned(o_mem_addr) = 3*4 for 1 us;
 			wait until rising_edge(s_axi_aclk) and unsigned(o_mem_addr) = 3*8 for 1 us;
 			wait until falling_edge(s_axi_aclk);
 			i_mem_rdata <= X"3333444455556666";
@@ -431,7 +399,6 @@ begin
 			for i in 1 to 3 loop
 				wait until rising_edge(s_axi_aclk) and o_reg_wr(i) = '1' for 1 us;
 				StdlCompare(1, o_reg_wr(i), "Write did not arrive");
-				--StdlvCompareInt(i, o_reg_wdata(i), "Wrong write data");		
 				StdlvCompareStdlv(std_logic_vector(ExpData_v), o_reg_wdata(i), "Wrong write data");
 				ExpData_v := ExpData_v + 16#A#;
 			end loop;
@@ -443,7 +410,6 @@ begin
 			WaitCase(4);
 			RegData_v := hex_string_to_unsigned("1000000000001000", RegData_v'length);
 			for i in 0 to NumReg_g-1 loop
-				--i_reg_rdata(i) <= std_logic_vector(to_unsigned(16#00001000#+i, 64));
 				i_reg_rdata(i) <= std_logic_vector(RegData_v);
 				RegData_v := RegData_v + 1;
 			end loop;
@@ -451,7 +417,6 @@ begin
 			for i in 0 to NumReg_g-1 loop
 				wait until rising_edge(s_axi_aclk) and o_reg_wr(i) = '1' for 1 us;
 				StdlCompare(1, o_reg_wr(i), "Write did not arrive");
-				--StdlvCompareInt(10+i, o_reg_wdata(i), "Wrong write data");		 --AF not sure that works with 64-bit (o_reg_wdata)
 				StdlvCompareStdlv(std_logic_vector(ExpData_v), o_reg_wdata(i), "Wrong write data");
 				ExpData_v := ExpData_v + 16#A#;
 			end loop;
@@ -480,10 +445,8 @@ begin
 			StartTime_v := now;
 			while now < StartTime_v + 1 us loop
 				wait until rising_edge(s_axi_aclk);
-				--i_mem_rdata <= std_logic_vector(to_unsigned(16#300#+to_integer(unsigned(o_mem_addr))/4,64));	
-				--i_mem_rdata <= std_logic_vector(to_unsigned(16#300#+to_integer(unsigned(o_mem_addr))/8,64));	
 				MemData_v := hex_string_to_unsigned("100000000000300", MemData_v'length) + 
-				             shift_right(unsigned(o_mem_addr),log2(BYTE_WIDTH)); --log2(BYTE_WIDTH)=log2(8) --> 2**3 = 8
+				             shift_right(unsigned(o_mem_addr),log2(BYTE_WIDTH));
 				i_mem_rdata <= std_logic_vector(MemData_v);	
 			end loop;
 			wait until rising_edge(s_axi_aclk);
@@ -500,18 +463,15 @@ begin
 			while RecWords_v(3 downto 0) /= "1111" loop
 				wait until rising_edge(s_axi_aclk);
 				if o_reg_wr(NumReg_g-2) = '1' then
-					--StdlvCompareInt(16#400#, o_reg_wdata(NumReg_g-2), "Wrong reset data[0]");
 					StdlvCompareStdlv(X"1000000000000400", o_reg_wdata(NumReg_g-2), "Wrong reset data[0]");	
 					RecWords_v(0) := '1';
 				end if;
 				if o_reg_wr(NumReg_g-1) = '1' then
-					--StdlvCompareInt(16#401#, o_reg_wdata(NumReg_g-1), "Wrong reset data[1]");
 					StdlvCompareStdlv(X"1000000000000401", o_reg_wdata(NumReg_g-1), "Wrong reset data[1]");	
 					RecWords_v(1) := '1';
 				end if;			
 				if o_mem_wr /= "00000000" then
 					StdlvCompareStdlv("11111111", o_mem_wr, "o_mem_wr wrong");
-					--StdlvCompareInt(16#00000402#+MemWord_v, o_mem_wdata, "o_mem_wdata wrong");
 					SignCompare2(	Expected 	=> hex_string_to_signed("1000000000000402", o_mem_wdata'length) + MemWord_v, --: in signed;
 												Actual		=> signed(o_mem_wdata), --: in signed;
 												Msg			  => "SignCompare2: " --:  in string;
@@ -535,7 +495,6 @@ begin
 				if o_reg_rd(NumReg_g-1) then
 					RecWords_v(1) := '1';
 				end if;	
-				--i_mem_rdata <= std_logic_vector(to_unsigned(16#502#+to_integer(unsigned(o_mem_addr))/8,64));
 				MemData_v := hex_string_to_unsigned("1000000000000502", MemData_v'length) + 
 				             shift_right(unsigned(o_mem_addr),log2(BYTE_WIDTH)); --log2(BYTE_WIDTH)=log2(8) --> 2**3 = 8
 				i_mem_rdata <= std_logic_vector(MemData_v);	

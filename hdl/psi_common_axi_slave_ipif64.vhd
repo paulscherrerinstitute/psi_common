@@ -2,7 +2,6 @@
 --  Copyright (c) 2019 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
 --  Authors: Goran Marinkovic, Oliver Bruendler
---  Modifier: AFOR
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -12,10 +11,9 @@
 -- supports the implementation of registers as well as access to memories. 
 -- Its only main limitations are, that data for memory accesses must be available for 
 -- reading after one clock cycle. So except using a synchronous RAM, no additional
--- pipelining is possible and that it only supports 32-bit wide AXI bus.
---
--- AFOR @2020.04.22: Started from original version and changed from 32 to 64
---                   bit wide AXI bus.
+-- pipelining is possible and that it only supports 64-bit wide AXI bus.
+------------------------------------------------------------------------------
+
 
 ------------------------------------------------------------------------------
 -- Libraries
@@ -326,8 +324,7 @@ begin
 				end if;
 			when axi_fsm_rd_data =>
 				-- Produce decoding error if memory is accessed but not enabled
---				if unsigned(axi_araddr) >= (NumReg_g*4) and not UseMem_g then
-				if unsigned(axi_araddr) >= (NumReg_g*8) and not UseMem_g then --AF not sure ?
+				if unsigned(axi_araddr) >= (NumReg_g*8) and not UseMem_g then
 					axi_rresp <= RESP_DECERR_c;
 				end if;
 				-- Do access
@@ -506,8 +503,7 @@ begin
 				end if;
 			when axi_fsm_wr_data =>
 				-- Produce decoding error if memory is accessed but not enabled
---				if unsigned(axi_awaddr) >= (NumReg_g*4) and not UseMem_g then
-				if unsigned(axi_awaddr) >= (NumReg_g*8) and not UseMem_g then --AF not sure ?
+				if unsigned(axi_awaddr) >= (NumReg_g*8) and not UseMem_g then
 					axi_bresp <= RESP_DECERR_c;
 				end if;
 				-- Do access
@@ -670,10 +666,6 @@ begin
 		o_mem_wr_gen: for reg_byte_index in 0 to AxiByteWidth_g-1 generate
 			o_mem_wr(reg_byte_index)	 <= '1' when ((axi_waddr_sel = '1') and (axi_fsm = axi_fsm_wr_data) and (s_axi_wvalid = '1') and (s_axi_wstrb(reg_byte_index) = '1')) else '0';
 		end generate o_mem_wr_gen;
---		o_mem_wr(0)							 <= '1' when ((axi_waddr_sel = '1') and (axi_fsm = axi_fsm_wr_data) and (s_axi_wvalid = '1') and (s_axi_wstrb(0) = '1')) else '0';
---		o_mem_wr(1)							 <= '1' when ((axi_waddr_sel = '1') and (axi_fsm = axi_fsm_wr_data) and (s_axi_wvalid = '1') and (s_axi_wstrb(1) = '1')) else '0';
---		o_mem_wr(2)							 <= '1' when ((axi_waddr_sel = '1') and (axi_fsm = axi_fsm_wr_data) and (s_axi_wvalid = '1') and (s_axi_wstrb(2) = '1')) else '0';
---		o_mem_wr(3)							 <= '1' when ((axi_waddr_sel = '1') and (axi_fsm = axi_fsm_wr_data) and (s_axi_wvalid = '1') and (s_axi_wstrb(3) = '1')) else '0';
 		o_mem_wdata							 <= s_axi_wdata;
 	end generate;
 	g_nmem : if not UseMem_g generate
@@ -688,19 +680,17 @@ begin
 	-- The logic (ported legacy code) does only assert RVALID after RREADY is present. This violates the AXI specification.
 	-- By using a pipeline stage to decouple the logic from the bus, this problem can be solved (the PL stage always asserts READY).
 	b_rplstage : block
---		signal pl_in_data 	: std_logic_vector(34+AxiIdWidth_g downto 0);
-		signal pl_in_data 	: std_logic_vector(AxiIdWidth_g+AxiDataWidth_g+3-1 downto 0); --AF: AxiIdWidth_g + AxiDataWidth_g + rresp'width(2) + rlast'width(1)
+		signal pl_in_data 	: std_logic_vector(AxiIdWidth_g+AxiDataWidth_g+3-1 downto 0);
 		signal pl_out_data	: std_logic_vector(pl_in_data'range);
 	begin
-		pl_in_data(AxiDataWidth_g-1 downto 0)                                <= rpl_rdata; --63 - 0    |   31 - 0
-		pl_in_data(AxiDataWidth_g+2-1 downto AxiDataWidth_g)                 <= rpl_rresp; --65 - 64   |   33 - 32
-		pl_in_data(AxiDataWidth_g+2)                                         <= rpl_rlast; --66        |   34
-		pl_in_data(AxiIdWidth_g+AxiDataWidth_g+3-1 downto AxiDataWidth_g+3)  <= rpl_rid;   --1+66 - 67 |   1+34 - 35
+		pl_in_data(AxiDataWidth_g-1 downto 0)                                <= rpl_rdata;
+		pl_in_data(AxiDataWidth_g+2-1 downto AxiDataWidth_g)                 <= rpl_rresp;
+		pl_in_data(AxiDataWidth_g+2)                                         <= rpl_rlast;
+		pl_in_data(AxiIdWidth_g+AxiDataWidth_g+3-1 downto AxiDataWidth_g+3)  <= rpl_rid;
 	
 		i_rplstage : entity work.psi_common_pl_stage
 			generic map (
---				Width_g		=> 35+AxiIdWidth_g, --35+1
-				Width_g		=> AxiIdWidth_g+AxiDataWidth_g+3, --AF: 1+32+3=1+35  |  1+64+3=1+67
+				Width_g		=> AxiIdWidth_g+AxiDataWidth_g+3,
 				UseRdy_g	=> true
 			)
 			port map (	
@@ -716,10 +706,6 @@ begin
 				OutData		=> pl_out_data
 			);
 		
---		s_axi_rdata	<= pl_out_data(31 downto 0);
---		s_axi_rresp	<= pl_out_data(33 downto 32);
---		s_axi_rlast	<= pl_out_data(34);
---		s_axi_rid	<= pl_out_data(AxiIdWidth_g+34 downto 35);
 		s_axi_rdata	<= pl_out_data(AxiDataWidth_g-1 downto 0);
 		s_axi_rresp	<= pl_out_data(AxiDataWidth_g+2-1 downto AxiDataWidth_g);
 		s_axi_rlast	<= pl_out_data(AxiDataWidth_g+2);
