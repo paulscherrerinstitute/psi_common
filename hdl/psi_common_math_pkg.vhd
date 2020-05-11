@@ -294,7 +294,7 @@ package body psi_common_math_pkg is
   function to_sslv(input : integer;
                    len   : integer) return std_logic_vector is
   begin
-    return std_logic_vector(to_unsigned(input, len));
+    return std_logic_vector(to_signed(input, len));
   end function;
 
   -- *** integer to unsigned slv  ***
