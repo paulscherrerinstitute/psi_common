@@ -28,8 +28,10 @@ Signal                 | Direction | Width                               |Descri
   Clk                  |    Input  |    1                                | Clock
   Rst                  |    Input  |    1                                | Reset (high active)
   TdmVld               |    Input  |    1                                | AXI-S handshaking signal
+	TdmRdy							 |    Output |	  1															   |	AXI-S handshaking signal  
   Tdm                  |    Input  |    ChannelWidth                     | TDM input signal, first sample is channel 0.
   ParallelVld          |    Output |    1                                | AXI-S handshaking signal
+	ParallelRdy					 |		Input	 |    1																 | AXI-S handshaking signal 
   Parallel             |    Output |    ChannelCount\_g\*ChannelWidth\_g | Data of all channels in parallel. Channel 0 is in the lowest bits.
 
 ***
