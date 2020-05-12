@@ -1,3 +1,9 @@
+## 2.12.0
+*Added Features
+  * Added *psi\_common\_axi\_slave\_ipif64* - AXI BUS interface 64 bits capable 
+  * Added *psi\_common\_axilight\_slave\_ipif* - AXI LIGHT BUS interface 
+  * Added string to real conversion function
+
 ## 2.11.0
 * Added Features
 	* Added *psi\_common\_psi\_common\_debouncer* - Configurable debounce component
