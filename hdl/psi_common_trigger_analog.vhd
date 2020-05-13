@@ -7,7 +7,10 @@
 ------------------------------------------------------------------------------
 -- Description
 ------------------------------------------------------------------------------
--- 
+-- This component generates a single clock pulse when its input 
+-- value overpass a certain threshold.
+-- The trigger pulse is generated with two clock cycle delay once the 
+-- selected condition is satisfied.  
 
 ------------------------------------------------------------------------------
 -- Libraries
@@ -54,15 +57,15 @@ end entity;
 architecture rtl of psi_common_trigger_analog is
 
   type two_process_r is record
-    RegAnalogValueSigned     : signed(analog_input_width_g - 1 downto 0);
-    RegAnalogValueSigned_c   : signed(analog_input_width_g - 1 downto 0);
-    RegAnalogValueUnsigned   : unsigned(analog_input_width_g - 1 downto 0);
-    RegAnalogValueUnsigned_c : unsigned(analog_input_width_g - 1 downto 0);
-    RegAnalogThSigned        : signed(analog_input_width_g - 1 downto 0);
-    RegAnalogThUnsigned      : unsigned(analog_input_width_g - 1 downto 0);
-    OTrg                     : std_logic;
-    TrgArmed                 : std_logic;
-    InTrgArmCfg_c            : std_logic;
+    RegAnalogValueSigned        : signed(analog_input_width_g - 1 downto 0);
+    RegAnalogValueSigned_dff    : signed(analog_input_width_g - 1 downto 0);
+    RegAnalogValueUnsigned      : unsigned(analog_input_width_g - 1 downto 0);
+    RegAnalogValueUnsigned_dff  : unsigned(analog_input_width_g - 1 downto 0);
+    RegAnalogThSigned           : signed(analog_input_width_g - 1 downto 0);
+    RegAnalogThUnsigned         : unsigned(analog_input_width_g - 1 downto 0);
+    OTrg                        : std_logic;
+    TrgArmed                    : std_logic;
+    InTrgArmCfg_dff             : std_logic;
   end record;
 
   signal r, r_next : two_process_r;
@@ -79,13 +82,13 @@ begin
     v := r;
 
     -- *** Implementation ***
-    v.InTrgArmCfg_c := InTrgArmCfg;
+    v.InTrgArmCfg_dff := InTrgArmCfg;
 
     v.TrgArmed := r.TrgArmed;
 
     if (r.OTrg = '1' or InExtDisarm = '1')  and InTrgModeCfg(0) = '1' then -- if single mode, the trigger is dis-armed once the trigger is generated
       v.TrgArmed := '0';
-    elsif InTrgArmCfg = '1' and r.InTrgArmCfg_c = '0' then -- toggle arm or dis-arm
+    elsif InTrgArmCfg = '1' and r.InTrgArmCfg_dff = '0' then -- toggle arm or dis-arm
       v.TrgArmed := not r.TrgArmed;
     end if;
 
@@ -96,13 +99,13 @@ begin
 
       v.RegAnalogValueSigned := signed(InAnalogTrg((analog_input_width_g * to_integer(unsigned(InTrgAnalogSourceCfg))) + (analog_input_width_g - 1) downto analog_input_width_g * to_integer(unsigned(InTrgAnalogSourceCfg))));
 
-      v.RegAnalogValueSigned_c := r.RegAnalogValueSigned;
+      v.RegAnalogValueSigned_dff := r.RegAnalogValueSigned;
       v.RegAnalogThSigned      := signed(InAnalogThTrg);
       if r.TrgArmed = '1' then
-        if r.RegAnalogValueSigned_c < r.RegAnalogThSigned and r.RegAnalogValueSigned >= r.RegAnalogThSigned and InTrgEdgeCfg(1) = '1' then --rising edge
+        if r.RegAnalogValueSigned_dff < r.RegAnalogThSigned and r.RegAnalogValueSigned >= r.RegAnalogThSigned and InTrgEdgeCfg(1) = '1' then --rising edge
           v.OTrg := '1';
         end if;
-        if r.RegAnalogValueSigned_c > r.RegAnalogThSigned and r.RegAnalogValueSigned <= r.RegAnalogThSigned and InTrgEdgeCfg(0) = '1' then --falling edge
+        if r.RegAnalogValueSigned_dff > r.RegAnalogThSigned and r.RegAnalogValueSigned <= r.RegAnalogThSigned and InTrgEdgeCfg(0) = '1' then --falling edge
           v.OTrg := '1';
         end if;
       end if;
@@ -112,13 +115,13 @@ begin
 
       v.RegAnalogValueUnsigned := unsigned(InAnalogTrg((analog_input_width_g * to_integer(unsigned(InTrgAnalogSourceCfg))) + (analog_input_width_g - 1) downto analog_input_width_g * to_integer(unsigned(InTrgAnalogSourceCfg))));
 
-      v.RegAnalogValueUnsigned_c := r.RegAnalogValueUnsigned;
+      v.RegAnalogValueUnsigned_dff := r.RegAnalogValueUnsigned;
       v.RegAnalogThUnsigned      := unsigned(InAnalogThTrg);
       if r.TrgArmed = '1' then
-        if r.RegAnalogValueUnsigned_c < r.RegAnalogThUnsigned and r.RegAnalogValueUnsigned >= r.RegAnalogThUnsigned and InTrgEdgeCfg(1) = '1' then --rising edge
+        if r.RegAnalogValueUnsigned_dff < r.RegAnalogThUnsigned and r.RegAnalogValueUnsigned >= r.RegAnalogThUnsigned and InTrgEdgeCfg(1) = '1' then --rising edge
           v.OTrg := '1';
         end if;
-        if r.RegAnalogValueUnsigned_c > r.RegAnalogThUnsigned and r.RegAnalogValueUnsigned <= r.RegAnalogThUnsigned and InTrgEdgeCfg(0) = '1' then --falling edge
+        if r.RegAnalogValueUnsigned_dff > r.RegAnalogThUnsigned and r.RegAnalogValueUnsigned <= r.RegAnalogThUnsigned and InTrgEdgeCfg(0) = '1' then --falling edge
           v.OTrg := '1';
         end if;
       end if;
@@ -142,14 +145,14 @@ begin
       r <= r_next;
       if InRst = rst_pol_g then
         r.RegAnalogValueSigned     <= (others => '0');
-        r.RegAnalogValueSigned_c   <= (others => '0');
+        r.RegAnalogValueSigned_dff   <= (others => '0');
         r.RegAnalogValueUnsigned   <= (others => '0');
-        r.RegAnalogValueUnsigned_c <= (others => '0');
+        r.RegAnalogValueUnsigned_dff <= (others => '0');
         r.RegAnalogThSigned        <= (others => '0');
         r.RegAnalogThUnsigned      <= (others => '0');
         r.OTrg                     <= '0';
         r.TrgArmed                 <= '0';
-        r.InTrgArmCfg_c            <= '0';
+        r.InTrgArmCfg_dff            <= '0';
       end if;
     end if;
   end process;

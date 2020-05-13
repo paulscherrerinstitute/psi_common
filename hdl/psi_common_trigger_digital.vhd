@@ -7,7 +7,10 @@
 ------------------------------------------------------------------------------
 -- Description
 ------------------------------------------------------------------------------
--- 
+-- This component generates a single trigger pulse when a rising and/or a 
+-- falling edge of a std_logic signal is detected at the input.
+-- The trigger pulse is generated with one clock cycle delay once the 
+-- selected condition is satisfied. 
 
 ------------------------------------------------------------------------------
 -- Libraries
@@ -51,10 +54,10 @@ end entity;
 architecture rtl of psi_common_trigger_digital is
 
   type two_process_r is record
-    RegDigitalValue_c : std_logic;
-    OTrg              : std_logic;
-    TrgArmed          : std_logic;
-    InTrgArmCfg_c     : std_logic;
+    RegDigitalValue_dff : std_logic;
+    OTrg                : std_logic;
+    TrgArmed            : std_logic;
+    InTrgArmCfg_dff     : std_logic;
   end record;
 
   signal r, r_next : two_process_r;
@@ -71,25 +74,25 @@ begin
     v := r;
 
     -- *** Implementation ***
-    v.InTrgArmCfg_c := InTrgArmCfg;
+    v.InTrgArmCfg_dff := InTrgArmCfg;
 
     v.TrgArmed := r.TrgArmed;
 
     if (r.OTrg = '1' or InExtDisarm = '1') and InTrgModeCfg(0) = '1' then -- if single mode, the trigger is dis-armed once the trigger is generated
       v.TrgArmed := '0';
-    elsif InTrgArmCfg = '1' and r.InTrgArmCfg_c = '0' then -- toggle arm or dis-arm
+    elsif InTrgArmCfg = '1' and r.InTrgArmCfg_dff = '0' then -- toggle arm or dis-arm
       v.TrgArmed := not r.TrgArmed;
     end if;
 
     v.OTrg := '0';
     -- Digital Trigger
 
-    v.RegDigitalValue_c := InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg)));
+    v.RegDigitalValue_dff := InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg)));
     if r.TrgArmed = '1' then
-      if r.RegDigitalValue_c = '0' and InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg))) = '1' and InTrgEdgeCfg(1) = '1' then --rising edge
+      if r.RegDigitalValue_dff = '0' and InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg))) = '1' and InTrgEdgeCfg(1) = '1' then --rising edge
         v.OTrg := '1';
       end if;
-      if r.RegDigitalValue_c = '1' and InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg))) = '0' and InTrgEdgeCfg(0) = '1' then --falling edge
+      if r.RegDigitalValue_dff = '1' and InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg))) = '0' and InTrgEdgeCfg(0) = '1' then --falling edge
         v.OTrg := '1';
       end if;
     end if;
@@ -111,10 +114,10 @@ begin
     if rising_edge(InClk) then
       r <= r_next;
       if InRst = rst_pol_g then
-        r.RegDigitalValue_c <= '0';
+        r.RegDigitalValue_dff <= '0';
         r.OTrg              <= '0';
         r.TrgArmed          <= '0';
-        r.InTrgArmCfg_c     <= '0';
+        r.InTrgArmCfg_dff     <= '0';
       end if;
     end if;
   end process;
