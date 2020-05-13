@@ -55,7 +55,7 @@ Alternatively the repository [psi\_fpga\_all](https://github.com/paulscherrerins
   * [PsiSim](https://github.com/paulscherrerinstitute/PsiSim) (2.1.0 or higher)
 * VHDL
   * [**psi\_common**](https://github.com/paulscherrerinstitute/psi_common)
-  * [psi\_tb](https://github.com/paulscherrerinstitute/psi_tb) (2.4.1 or higher)
+  * [psi\_tb](https://github.com/paulscherrerinstitute/psi_tb) (2.6.0 or higher)
 
 <!-- END OF PARSED SECTION -->
 
