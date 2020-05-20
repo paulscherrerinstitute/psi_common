@@ -30,11 +30,14 @@ Clk                    |Input      |1                                 |Clock
 Rst                    |Input      |1                                 |Reset (high active)
 ParallelRdy            |Output     |1                                 |AXI-S handshaking signal
 ParallelVld            |Input      |1                                 |AXI-S handshaking signal
+ParallelRdy            |Output     |1                                 |AXI-S handshaking signal
 Parallel               |Input      |ChannelCount\_g\*ChannelWidth\_g  |Data of all channels in parallel. Channel 0 is in the lowest bit and played out first.
 ParallelLast           |Input      |1                                 |Assert *TdmLast* when transmitting thel ast channel. <br> Can be set to '1' statically to mark the last channel of each TDM-burst with *TdmLast*. <br> Can be asserted dynamically in packet based systems.
 TdmRdy                 |Input      |1                                 |AXI-S handshaking signal
+TdmRdy                 |Input      |1                                 |AXI-S handshaking signal
 TdmVld                 |Output     |1                                 |AXI-S handshaking signal
 Tdm                    |Output     |ChannelWidth                      |Data signal output
+
 TdmLast                |Output     |1                                 |Last channel in a TDM burst that was marked with *ParallelLast* at the input
 
 ***

@@ -2,9 +2,15 @@
 
 ***
 # psi_common_axi_slave_ipif
+**32 bits support**
 - VHDL source: [psi_common_axi_slave_ipif.vhd](../../hdl/psi_common_axi_slave_ipif.vhd)
 - Testbench: [psi_common_axi_slave_ipif_tb.vhd](../../testbench/psi_common_axi_slave_ipif_tb/psi_common_axi_slave_ipif_tb.vhd)
 
+**64 bits support**
+- VHDL source: [psi_common_axi_slave_ipif64.vhd](../../hdl/psi_common_axi_slave_ipif64.vhd)
+- Testbench: [psi_common_axi_slave_ipif64_tb.vhd](../../testbench/psi_common_axi_slave_ipif64_tb) *(require library **psi_tb** release 2.6.0)*
+
+The description has been written for original 32 bits support, the 64 bits IP IP block doesn't have a dedicated description but it is essentially what is presented here below.
 
 ### 1 Description
 
@@ -139,4 +145,4 @@ Generics              | Description
 
 ***
 [Index](../psi_common_index.md) **|** Previous: [Interfaces > axi master full](../ch10_interfaces/ch10_4_axi_master_full.md) **|**
-Next: [Miscellaneous > delay](../ch11_misc/ch11_1_delay.md)
+Next: [Interfaces > axilite slave ipif](./ch10_6_axilite_slave_ipif.md)

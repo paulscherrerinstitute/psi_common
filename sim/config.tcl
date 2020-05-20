@@ -1,5 +1,6 @@
 ##############################################################################
-#  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
+#  Copyright (c) 2018-2020 by Paul Scherrer Institute, Switzerland
+#  Copyright (c) 2020 by Enclustra GmbH, Switzerland
 #  All rights reserved.
 #  Authors: Oliver Bruendler, Benoit Stef
 ##############################################################################
@@ -61,6 +62,7 @@ add_sources "../hdl" {
 	psi_common_axi_master_simple.vhd \
 	psi_common_axi_master_full.vhd \
 	psi_common_axi_slave_ipif.vhd \
+	psi_common_axi_slave_ipif64.vhd \
 	psi_common_tdp_ram_be.vhd \
 	psi_common_i2c_master.vhd \
 	psi_common_ping_pong.vhd \
@@ -69,9 +71,11 @@ add_sources "../hdl" {
 	psi_common_watchdog.vhd \
 	psi_common_dont_opt.vhd \
 	psi_common_axi_multi_pl_stage.vhd \
-	psi_common_par_tdm_cfg.vhd \
-  psi_common_debouncer.vhd \
-	psi_common_trigger_analog.vhd \
+	psi_common_par_tdm_cfg.vhd \	
+	psi_common_axilite_slave_ipif.vhd \
+	psi_common_watchdog.vhd \
+	psi_common_debouncer.vhd \
+  psi_common_trigger_analog.vhd \
 	psi_common_trigger_digital.vhd \
 } -tag src
 
@@ -116,6 +120,8 @@ add_sources "../testbench" {
 	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_large.vhd \
 	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb.vhd \
 	psi_common_axi_slave_ipif_tb/psi_common_axi_slave_ipif_tb.vhd \
+	psi_common_axi_slave_ipif64_tb/psi_common_axi_slave_ipif64_tb.vhd \
+	psi_common_axi_slave_ipif64_tb/psi_common_axi_slave_ipif64_sram_tb.vhd \
 	psi_common_tdp_ram_be_tb/psi_common_tdp_ram_be_tb.vhd \
 	psi_common_i2c_master_tb/psi_common_i2c_master_tb.vhd \
 	psi_common_ping_pong_tb/psi_common_ping_pong_tb.vhd \
@@ -128,6 +134,7 @@ add_sources "../testbench" {
   psi_common_debouncer_tb/psi_common_debouncer_tb.vhd \
   psi_common_trigger_analog_tb/psi_common_trigger_analog_tb.vhd \
 	psi_common_trigger_digital_tb/psi_common_trigger_digital_tb.vhd \
+	psi_common_axilite_slave_ipif_tb/psi_common_axilite_slave_ipif_tb.vhd \
 } -tag tb
 
 #TB Runs
@@ -312,6 +319,20 @@ tb_run_add_arguments \
 	"-gNumReg_g=4 -gUseMem_g=false -gAxiThrottling_g=0"
 add_tb_run
 
+create_tb_run "psi_common_axi_slave_ipif64_tb"
+#Vivado does not support unconstrained records as required by this TB
+tb_run_skip Vivado
+tb_run_add_arguments \
+	"-gUseMem_g=true -gAxiThrottling_g=3" 
+add_tb_run
+
+create_tb_run "psi_common_axi_slave_ipif64_sram_tb"
+#Vivado does not support unconstrained records as required by this TB
+tb_run_skip Vivado
+tb_run_add_arguments \
+	"-gUseMem_g=true -gAxiThrottling_g=3"
+add_tb_run
+
 create_tb_run "psi_common_tdp_ram_be_tb"
 add_tb_run
 
@@ -341,6 +362,14 @@ create_tb_run "psi_common_axi_multi_pl_stage_tb"
 add_tb_run
 
 create_tb_run "psi_common_par_tdm_cfg_tb"
+add_tb_run
+
+create_tb_run "psi_common_axilite_slave_ipif_tb"
+#Vivado does not support unconstrained records as required by this TB
+tb_run_skip Vivado
+tb_run_add_arguments \
+	"-gNumReg_g=4 -gUseMem_g=true" \
+	"-gNumReg_g=4 -gUseMem_g=false"
 add_tb_run
 
 create_tb_run "psi_common_debouncer_tb"
