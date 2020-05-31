@@ -62,6 +62,10 @@ package psi_common_math_pkg is
   function choose(s : in boolean;
                   t : in boolean;
                   f : in boolean) return boolean;
+				  
+  function choose(s : in boolean;
+                  t : in t_areal;
+                  f : in t_areal) return t_areal;
 
   -- count occurence of a value inside an array
   function count(a : in t_ainteger;
@@ -267,6 +271,18 @@ package body psi_common_math_pkg is
       return f;
     end if;
   end function;
+  
+  -- *** Choose (t_areal) ***  
+  function choose(s : in boolean;
+                  t : in t_areal;
+                  f : in t_areal) return t_areal is
+  begin
+    if s then
+      return t;
+    else
+      return f;
+    end if;
+  end function; 
 
   -- *** count (integer) ***  
   function count(a : in t_ainteger;
