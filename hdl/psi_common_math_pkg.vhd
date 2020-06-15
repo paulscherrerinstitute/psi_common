@@ -62,6 +62,10 @@ package psi_common_math_pkg is
   function choose(s : in boolean;
                   t : in boolean;
                   f : in boolean) return boolean;
+				  
+  function choose(s : in boolean;
+                  t : in t_areal;
+                  f : in t_areal) return t_areal;
 
   -- count occurence of a value inside an array
   function count(a : in t_ainteger;
@@ -87,6 +91,9 @@ package psi_common_math_pkg is
   
   -- convert string to real
   function from_str(input : string) return real;
+  
+  -- convert string  to real array
+  function from_str(input : string) return t_areal; 
 
 end psi_common_math_pkg;
 
@@ -94,6 +101,27 @@ end psi_common_math_pkg;
 -- Package Body
 ------------------------------------------------------------------------------
 package body psi_common_math_pkg is
+
+  -- *************************************************************************
+  -- Helpers 
+  -- *************************************************************************
+  -- Coun the number of elements in a array string (separated by ",")
+  function count_array_str_elements(input : string) return natural is
+    variable count  : natural := 1;
+    variable idx  : integer := input'low;
+  begin
+    while idx <= input'high loop
+      if input(idx) = ',' then
+        count := count + 1;
+      end if;
+      idx := idx + 1;
+    end loop;
+    return count;
+  end function;
+  
+  -- *************************************************************************
+  -- Public Functions 
+  -- *************************************************************************
 
   -- *** Log2 integer ***
   function log2(arg : in natural) return natural is
@@ -149,7 +177,7 @@ package body psi_common_math_pkg is
     end if;
   end function;
 
-  -- *** Min ***			
+  -- *** Min ***      
   function min(a : in integer;
                b : in integer) return integer is
   begin
@@ -160,7 +188,7 @@ package body psi_common_math_pkg is
     end if;
   end function;
 
-  -- *** Choose (std_logic) ***	
+  -- *** Choose (std_logic) *** 
   function choose(s : in boolean;
                   t : in std_logic;
                   f : in std_logic) return std_logic is
@@ -172,7 +200,7 @@ package body psi_common_math_pkg is
     end if;
   end function;
 
-  -- *** Choose (std_logic_vector) ***	
+  -- *** Choose (std_logic_vector) ***  
   function choose(s : in boolean;
                   t : in std_logic_vector;
                   f : in std_logic_vector) return std_logic_vector is
@@ -184,7 +212,7 @@ package body psi_common_math_pkg is
     end if;
   end function;
 
-  -- *** Choose (integer) ***	
+  -- *** Choose (integer) *** 
   function choose(s : in boolean;
                   t : in integer;
                   f : in integer) return integer is
@@ -196,7 +224,7 @@ package body psi_common_math_pkg is
     end if;
   end function;
 
-  -- *** Choose (string) ***	
+  -- *** Choose (string) ***  
   function choose(s : in boolean;
                   t : in string;
                   f : in string) return string is
@@ -208,7 +236,7 @@ package body psi_common_math_pkg is
     end if;
   end function;
 
-  -- *** Choose (real) ***	
+  -- *** Choose (real) ***  
   function choose(s : in boolean;
                   t : in real;
                   f : in real) return real is
@@ -220,7 +248,7 @@ package body psi_common_math_pkg is
     end if;
   end function;
 
-  -- *** Choose (unsigned) ***	
+  -- *** Choose (unsigned) ***  
   function choose(s : in boolean;
                   t : in unsigned;
                   f : in unsigned) return unsigned is
@@ -243,8 +271,20 @@ package body psi_common_math_pkg is
       return f;
     end if;
   end function;
+  
+  -- *** Choose (t_areal) ***  
+  function choose(s : in boolean;
+                  t : in t_areal;
+                  f : in t_areal) return t_areal is
+  begin
+    if s then
+      return t;
+    else
+      return f;
+    end if;
+  end function; 
 
-  -- *** count (integer) ***	
+  -- *** count (integer) ***  
   function count(a : in t_ainteger;
                  v : in integer) return integer is
     variable cnt_v : integer := 0;
@@ -257,7 +297,7 @@ package body psi_common_math_pkg is
     return cnt_v;
   end function;
 
-  -- *** count (bool) ***		
+  -- *** count (bool) ***   
   function count(a : in t_abool;
                  v : in boolean) return integer is
     variable cnt_v : integer := 0;
@@ -270,7 +310,7 @@ package body psi_common_math_pkg is
     return cnt_v;
   end function;
 
-  -- *** count (std_logic) ***	
+  -- *** count (std_logic) ***  
   function count(a : in std_logic_vector;
                  v : in std_logic) return integer is
     variable cnt_v : integer := 0;
@@ -311,76 +351,97 @@ package body psi_common_math_pkg is
   
   -- convert string to real
   function from_str(input : string) return real is
-		variable Idx_v : integer := input'low;
-		variable IsNeg_v : boolean := false;
-		variable ValInt_v : integer := 0;
-		variable ValFrac_v : real := 0.0;
-		variable FracDigits_v : integer := 0;
-		variable Exp_v : integer := 0;
-		variable ExpNeg_v : boolean := false;
-		variable ValAbs_v : real := 0.0;
-	begin
-		-- skip leading white-spaces
-		while (Idx_v <= input'high) and input(Idx_v) = ' ' loop
-			Idx_v := Idx_v + 1;
-		end loop;
-		
-		-- Check sign
-		if (Idx_v <= input'high) and (input(Idx_v) = '-') then
-			IsNeg_v := true;
-			Idx_v := Idx_v + 1;
-		end if;
-		
-		-- Parse Integer
-		while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
-			ValInt_v := ValInt_v*10 + (character'pos(input(Idx_v))-character'pos('0'));
-			Idx_v := Idx_v + 1;
-		end loop;
-		
-		-- Check decimal point
-		if (Idx_v <= input'high) then
-			if input(Idx_v) = '.' then
-				Idx_v := Idx_v + 1;
-		
-				-- Parse Fractional
-				while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
-					ValFrac_v := ValFrac_v*10.0 + real((character'pos(input(Idx_v))-character'pos('0')));
-					FracDigits_v := FracDigits_v + 1;
-					Idx_v := Idx_v + 1;
-				end loop;
-			end if;
-		end if;
-		
-		-- Check exponent
-		if (Idx_v <= input'high) then
-			if (input(Idx_v) = 'E') or (input(Idx_v) = 'e') then
-				Idx_v := Idx_v + 1;
-				-- Check sign
-				if (Idx_v <= input'high) and (input(Idx_v) = '-') then
-					ExpNeg_v := true;
-					Idx_v := Idx_v + 1;
-				end if;
-				
-				-- Parse Integer
-				while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
-					Exp_v := Exp_v*10 + (character'pos(input(Idx_v))-character'pos('0'));
-					Idx_v := Idx_v + 1;
-				end loop;
-				if ExpNeg_v then
-					Exp_v := -Exp_v;
-				end if;
-			end if;
-		end if;
-		
-		-- Return
-		ValAbs_v := (real(ValInt_v)+ValFrac_v/10.0**real(FracDigits_v))*10.0**real(Exp_v);
-		if IsNeg_v then
-			return -ValAbs_v;
-		else
-			return ValAbs_v;
-		end if;
-		
-		
+    variable Idx_v : integer := input'low;
+    variable IsNeg_v : boolean := false;
+    variable ValInt_v : integer := 0;
+    variable ValFrac_v : real := 0.0;
+    variable FracDigits_v : integer := 0;
+    variable Exp_v : integer := 0;
+    variable ExpNeg_v : boolean := false;
+    variable ValAbs_v : real := 0.0;
+  begin
+    -- skip leading white-spaces
+    while (Idx_v <= input'high) and input(Idx_v) = ' ' loop
+      Idx_v := Idx_v + 1;
+    end loop;
+    
+    -- Check sign
+    if (Idx_v <= input'high) and (input(Idx_v) = '-') then
+      IsNeg_v := true;
+      Idx_v := Idx_v + 1;
+    end if;
+    
+    -- Parse Integer
+    while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
+      ValInt_v := ValInt_v*10 + (character'pos(input(Idx_v))-character'pos('0'));
+      Idx_v := Idx_v + 1;
+    end loop;
+    
+    -- Check decimal point
+    if (Idx_v <= input'high) then
+      if input(Idx_v) = '.' then
+        Idx_v := Idx_v + 1;
+    
+        -- Parse Fractional
+        while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
+          ValFrac_v := ValFrac_v*10.0 + real((character'pos(input(Idx_v))-character'pos('0')));
+          FracDigits_v := FracDigits_v + 1;
+          Idx_v := Idx_v + 1;
+        end loop;
+      end if;
+    end if;
+    
+    -- Check exponent
+    if (Idx_v <= input'high) then
+      if (input(Idx_v) = 'E') or (input(Idx_v) = 'e') then
+        Idx_v := Idx_v + 1;
+        -- Check sign
+        if (Idx_v <= input'high) and (input(Idx_v) = '-') then
+          ExpNeg_v := true;
+          Idx_v := Idx_v + 1;
+        end if;
+        
+        -- Parse Integer
+        while (Idx_v <= input'high) and (input(Idx_v) <= '9') and (input(Idx_v) >= '0') loop
+          Exp_v := Exp_v*10 + (character'pos(input(Idx_v))-character'pos('0'));
+          Idx_v := Idx_v + 1;
+        end loop;
+        if ExpNeg_v then
+          Exp_v := -Exp_v;
+        end if;
+      end if;
+    end if;
+    
+    -- Return
+    ValAbs_v := (real(ValInt_v)+ValFrac_v/10.0**real(FracDigits_v))*10.0**real(Exp_v);
+    if IsNeg_v then
+      return -ValAbs_v;
+    else
+      return ValAbs_v;
+    end if; 
+  end function;
+  
+  -- convert string to real array
+  function from_str(input : string) return t_areal is
+    variable arr      : t_areal(0 to count_array_str_elements(input)-1) := (others => 0.0);
+    variable aIdx     : natural   := 0;
+    variable startIdx : natural   := 1;
+    variable endIdx   : natural   := 1;
+    variable idx      : natural   := input'low;
+  begin
+    while idx <= input'high loop
+      if input(idx) = ',' then
+        endIdx    := idx-1;
+        arr(aIdx) := from_str(input(startIdx to endIdx));
+        aIdx      := aIdx+1;
+        startIdx  := idx+1;
+      end if;
+      idx := idx + 1;
+    end loop;
+    if startIdx <= input'high then
+      arr(aIdx) := from_str(input(startIdx to input'high));
+    end if;
+    return arr;
   end function;
 
 end psi_common_math_pkg;
