@@ -1,3 +1,9 @@
+## 2.13.0
+*Added Features
+  * Added *psi\_common\_trigger\_analog* - Generic Analog trigger 
+  * Added *psi\_common\_trigger\_digital* - Generic Digital trigger
+  * Added *psi\_common\_dyn\_sft* - Dynamic barrel shifter
+  
 ## 2.12.0
 *Added Features
   * Added *psi\_common\_axi\_slave\_ipif64* - AXI BUS interface 64 bits capable 
