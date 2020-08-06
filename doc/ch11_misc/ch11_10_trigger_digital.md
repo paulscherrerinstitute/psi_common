@@ -47,4 +47,4 @@ OutTrgIsArmed         |Output     |1                                   |If the t
 OutTrigger            |Output     |1                                   |When the selected input passes the threshold value, a single clock pulse is generated
 
 ***
-[Index](../psi_common_index.md) **|** Previous: [Misc > trigger analog](../ch11_misc/ch11_9_trigger_analog.md) **|** Next:  [Misc > trigger digital](../ch11_misc/ch11_11_dyn_sft.md)
+[Index](../psi_common_index.md) **|** Previous: [Misc > trigger analog](../ch11_misc/ch11_9_trigger_analog.md) **|** Next:  [Misc > dynamic shifter](../ch11_misc/ch11_11_dyn_sft.md)
