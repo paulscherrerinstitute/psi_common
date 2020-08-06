@@ -41,4 +41,4 @@ inp\_i  |Input      |len\_g  |data input
 out\_o  |Output     |len\_g  |data output
 
 ***
-[Index](../psi_common_index.md) **|** Previous: [Misc > dont opt](../ch11_misc/ch11_7_dont_opt.md)
+[Index](../psi_common_index.md) **|** Previous: [Misc > dont_opt](../ch11_misc/ch11_7_dont_opt.md) **|** Next: [Misc > dyn_sft](../ch11_misc/ch11_9_dyn_sft.md)

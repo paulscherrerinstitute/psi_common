@@ -132,6 +132,8 @@
 
 [11.8 psi\_common\_debouncer](ch11_misc/ch11_8_debouncer.md)
 
+[11.9 psi\_common\_dyn\_sft](ch11_misc/ch11_9_dyn_sft.md)
+
 ### Others
 
 [presentation](presentation/psi_common_presentation.pdf)
