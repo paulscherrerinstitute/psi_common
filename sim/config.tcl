@@ -77,6 +77,7 @@ add_sources "../hdl" {
 	psi_common_debouncer.vhd \
   psi_common_trigger_analog.vhd \
 	psi_common_trigger_digital.vhd \
+  psi_common_dyn_sft.vhd \
 } -tag src
 
 # testbenches
@@ -135,6 +136,8 @@ add_sources "../testbench" {
   psi_common_trigger_analog_tb/psi_common_trigger_analog_tb.vhd \
 	psi_common_trigger_digital_tb/psi_common_trigger_digital_tb.vhd \
 	psi_common_axilite_slave_ipif_tb/psi_common_axilite_slave_ipif_tb.vhd \
+	psi_common_debouncer_tb/psi_common_debouncer_tb.vhd \
+  psi_common_dyn_sft_tb/psi_common_dyn_sft_tb.vhd \
 } -tag tb
 
 #TB Runs
@@ -373,4 +376,13 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_debouncer_tb"
+add_tb_run
+
+create_tb_run "psi_common_dyn_sft_tb"
+tb_run_add_arguments \
+	"-gDirection_g=LEFT -gSelectBitsPerStage_g=2 -gSignExtend_g=false" \
+  "-gDirection_g=LEFT -gSelectBitsPerStage_g=3 -gSignExtend_g=false" \
+  "-gDirection_g=RIGHT -gSelectBitsPerStage_g=2 -gSignExtend_g=false" \
+  "-gDirection_g=RIGHT -gSelectBitsPerStage_g=2 -gSignExtend_g=true" \
+  "-gDirection_g=LEFT -gSelectBitsPerStage_g=2 -gSignExtend_g=true"
 add_tb_run
