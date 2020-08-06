@@ -87,6 +87,9 @@ Delay settable via register | [psi_common_delay_cfg.vhd](../hdl/psi_common_delay
 Generic Watchdog 						| [psi_common_watchdog.vhd](../hdl/psi_common_watchdog.vhd)   | [link](ch11_misc/ch11_6_watchdog.md)  
 Don't optimize (Xilinx) allows evaluating synthesis  | [psi_common_dont_opt.vhd](../hdl/psi_common_dont_opt.vhd)   | [link](ch11_misc/ch11_7_dont_opt.md)  
 Generic Debouncer  					| [psi_common_debouncer.vhd](../hdl/psi_common_debouncer.vhd)  | [link](ch11_misc/ch11_8_debouncer.md)  
+Analog Trigger Generator  	| [psi_common_trigger_analog.vhd](../hdl/psi_trigger_analog.vhd)  | [link](ch11_misc/ch11_9_trigger_analog.md)  
+Digital Trigger Generator  	| [psi_common_trigger_digital.vhd](../hdl/psi_trigger_digital.vhd)  | [link](ch11_misc/ch11_10_trigger_digital.md) 
+Dynamic Shifter             | [psi_common_dyn_sft.vhd](../hdl/psi_common_dyn_sft.vhd)     | [link](ch11_misc/ch11_11_dyn_sft.md) 
 ***
 
 ### Packages

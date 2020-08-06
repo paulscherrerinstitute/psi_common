@@ -94,7 +94,11 @@ begin
     -- *** Outputs ***
     Parallel    <= r.Odata;
     ParallelVld <= r.Ovld;
-    TdmRdy      <= '0' when Blocked_v else '1';
+    if Blocked_v then
+      TdmRdy <= '0';
+    else 
+      TdmRdy <= '1';
+    end if;
 
     -- Apply to record
     r_next <= v;

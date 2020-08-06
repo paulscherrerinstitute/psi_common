@@ -29,9 +29,10 @@ Generics            | Description
 **TransWidth\_g**   | SPI Transfer width (bits per transfer)
 **CsHighCycles\_g** | Minimal number of *Cs\_n* high cycles between two transfers
 **SpiCPOL\_g**      | SPI clock polarity (see figure above)
-**SpiCPHA\_g**      |  SPI sampling edge configuration (see figure above)
-**SlaveCnt\_g**     |  Number of slaves to support (number of *Cs\_n* lines)
-**LsbFirst\_g**     |  **False** = MSB first transmission, **True** = LSB first transmission
+**SpiCPHA\_g**      | SPI sampling edge configuration (see figure above)
+**SlaveCnt\_g**     | Number of slaves to support (number of *Cs\_n* lines)
+**LsbFirst\_g**     | **False** = MSB first transmission, **True** = LSB first transmission
+**MosiIdleState\_g**| Idle state of the MOSI line
 
 ### Interfaces
 

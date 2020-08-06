@@ -28,13 +28,14 @@ use work.psi_common_logic_pkg.all;
 -- $$ tbpkg=work.psi_tb_compare_pkg,work.psi_tb_activity_pkg,work.psi_tb_txt_util $$
 entity psi_common_spi_master is
   generic(
-    ClockDivider_g : natural range 4 to 1_000_000; -- Must be a multiple of two	$$ constant=8 $$
-    TransWidth_g   : positive;          -- SPI Transaction width		$$ constant=8 $$
-    CsHighCycles_g : positive;          -- $$ constant=2 $$
-    SpiCPOL_g      : natural range 0 to 1; -- $$ export=true $$
-    SpiCPHA_g      : natural range 0 to 1; -- $$ export=true $$
-    SlaveCnt_g     : positive := 1;     -- $$ constant=2 $$
-    LsbFirst_g     : boolean  := false  -- $$ export=true $$
+    ClockDivider_g   : natural range 4 to 1_000_000; -- Must be a multiple of two	$$ constant=8 $$
+    TransWidth_g     : positive;          -- SPI Transaction width		$$ constant=8 $$
+    CsHighCycles_g   : positive;          -- $$ constant=2 $$
+    SpiCPOL_g        : natural range 0 to 1; -- $$ export=true $$
+    SpiCPHA_g        : natural range 0 to 1; -- $$ export=true $$
+    SlaveCnt_g       : positive := 1;     -- $$ constant=2 $$
+    LsbFirst_g       : boolean  := false;  -- $$ export=true $$
+    MosiIdleState_g	 : std_logic := '0'
   );
   port(
     -- Control Signals
@@ -170,6 +171,7 @@ begin
         if r.ClkDivCnt = ClkDivThres_c then
           -- All bits done
           if r.BitCnt = TransWidth_g then
+            v.SpiMosi := MosiIdleState_g;
             v.State := CsHigh_s;
           -- Otherwise contintue
           else
@@ -200,7 +202,6 @@ begin
         end if;
 
       when CsHigh_s =>
-        v.SpiMosi := '0';
         v.SpiCs_n := (others => '1');
         if r.CsHighCnt = CsHighCycles_g - 1 then
           v.State  := Idle_s;
@@ -241,7 +242,7 @@ begin
         r.SpiSck  <= GetClockLevel(false);
         r.Busy    <= '0';
         r.Done    <= '0';
-        r.SpiMosi <= '0';
+        r.SpiMosi <= MosiIdleState_g;
       end if;
     end if;
   end process;
