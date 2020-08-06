@@ -31,4 +31,4 @@ InData |Input |_Width_g_ |Data Input
 OutVld |Output |1 |AXI-S handshaking signal for output
 OutData |Output |_Width\_g_ |Data Output
 
-[Index](../psi_common_index.md) **|** Previous: [Misc > debouncer](../ch11_misc/ch11_8_debouncer.md)
+[Index](../psi_common_index.md) **|** Previous: [Misc > debouncer](../ch11_misc/ch11_10_trigger_digital.md)
