@@ -43,6 +43,7 @@ architecture RTL of psi_common_pulse_generator_ctrl_static is
  
  signal str_s : std_logic;
  signal sts_s : std_logic_vector(1 downto 0);
+ signal dat_s : std_logic_vector(length_g-1 downto 0);
  -- set of constant for static pulse generation
  constant time_array_c  : t_areal(2 downto 0):=(time_up_g,time_dw_g,time_flat_g); -- defining the max time to bound counter value
  constant max_time_c    : real    := max_a(time_array_c);                         -- most probably the flat top
@@ -50,6 +51,8 @@ architecture RTL of psi_common_pulse_generator_ctrl_static is
  -- TODO define try/catch function
  constant inc_up_c      : std_logic_vector(length_g-1 downto 0) := to_uslv(integer(real(2**length_g-1)/(time_up_g*str_freq_g)),length_g);
  constant inc_dw_c      : std_logic_vector(length_g-1 downto 0) := to_uslv(integer(real(2**length_g-1)/(time_dw_g*str_freq_g)),length_g);
+ 
+ --helpers
  constant tgt_lvl_c     : std_logic_vector(length_g-1 downto 0) := to_uslv(2**length_g-1,length_g);
  constant rat_c : integer :=  ratio(1.0/str_freq_g,time_flat_g);
  -- 2 process ctrl
@@ -59,6 +62,7 @@ architecture RTL of psi_common_pulse_generator_ctrl_static is
   init_cmd : std_logic;
   count    : integer range 0 to ratio(1.0/str_freq_g,time_flat_g);
   lvl      : std_logic_vector(length_g-1 downto 0);
+  trig_dff : std_logic;
  end record;
  
  signal r, rin : two_process_t;
@@ -67,7 +71,6 @@ begin
   
   --*** assert declaration ***
   assert max_time_c = time_flat_g report "[INFO]: The maximum time set isn't the flat top" severity note;
-  
   
   --*** Strobe generator ***
   inst_strobe : entity work.psi_common_strobe_generator
@@ -99,55 +102,71 @@ begin
       init_cmd_i => r.init_cmd,
       sts_o      => sts_s,
       str_o      => str_o,
-      puls_o     => dat_o
+      puls_o     => dat_s
     );
-
-  comb_proc : process(sts_s,stop_i,trig_i,r,str_s)
+    
+  dat_o <= dat_s;
+  
+  proc_comb : process(sts_s,stop_i,trig_i,r,str_s,dat_s)
     variable v : two_process_t;
   begin
     v:=r;    
+    -- edge detect
+    v.trig_dff := trig_i;
     -- abort pulse --
     if stop_i = '1' then
       v.init_cmd := '1';
+      v.count    :=  ratio(1.0/str_freq_g,time_flat_g)-2;
     else  
       v.init_cmd := '0';
       -- wait for trigger --
       if sts_s = "00" then
         v.lvl := to_uslv(2**length_g-1,length_g);
-        if trig_i ='1' then
+        if trig_i ='1' and r.trig_dff = '0'  then
           v.inc_val  := inc_up_c;
           v.ramp_cmd := '1';
+        else
+          v.ramp_cmd := '0';
         end if;
-      -- counter flat top --  
+      -- counter flat top/bottom --  
       elsif sts_s = "11" then
-        v.lvl      := (others=>'0');  
-        v.inc_val  := inc_dw_c;
-        if str_s = '1' then
-          if r.count < ratio(1.0/str_freq_g,time_flat_g)-2 then
-           v.count := r.count+1;
-           v.ramp_cmd := '0';
-         else
-           v.count := 0;
-           v.ramp_cmd := '1';
-          end if;
-        end if;
-      elsif sts_s = "10" then
-        
-        v.ramp_cmd := '0';
-        v.count := 0;
+         if str_s = '1' then
+           if r.count /= 0 then
+             v.count := r.count-1;
+             v.ramp_cmd := '0';
+           else
+             v.count := 0;
+             if dat_s = to_uslv(0,length_g) then
+               if trig_i ='1' then
+                 v.lvl      := to_uslv(2**length_g-1,length_g);
+                 v.inc_val  := inc_up_c;
+                 v.ramp_cmd := '1';
+               end if;
+             else
+               v.lvl      := (others=>'0');  
+               v.inc_val  := inc_dw_c;
+               v.ramp_cmd := '1';
+             end if;
+           end if;     
+         end if;
+       -- --  
+      elsif sts_s = "10" or sts_s= "01" then
+          v.ramp_cmd := '0';
+          v.count := ratio(1.0/str_freq_g,time_flat_g)-2;
       end if;
-    end if;
+     end if;
     rin <= v;
   end process;
   
-  clk_proc:process(clk_i)
+  proc_clk:process(clk_i)
   begin
     if rising_edge(clk_i) then
       if rst_i = rst_pol_g then
-        r.inc_val  <=(others=>'0');
-        r.ramp_cmd <='0';
-        r.count    <= 0;
+        r.inc_val  <= (others=>'0');
+        r.ramp_cmd <= '0';
+        r.count    <=  ratio(1.0/str_freq_g,time_flat_g)-2;
         r.lvl      <= (others=>'0');
+        r.trig_dff <= '0';
       end if;
       r <= rin;
     end if;

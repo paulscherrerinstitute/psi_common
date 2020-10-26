@@ -7,6 +7,16 @@
 ------------------------------------------------------------------------------
 -- Description
 ------------------------------------------------------------------------------
+-- This TB shows a a non conventional way to use the pulse generator within
+-- the PSI COMMON, the target level is always moidified and it doesn't produce 
+-- pulse but allow the user to ramp up/down to a desired value, datagram can
+-- be observed here below  
+--                                                   ________
+--                 _______                          /  
+--                /       \       _____            /
+--               /         \_____/     \          /
+--        ______/                       \        /
+-- ______/                               \______/
 
 ------------------------------------------------------------------------------
 -- Libraries
@@ -17,6 +27,7 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 
 use work.psi_tb_activity_pkg.all;
+use work.psi_tb_txt_util.all;
 
 entity psi_common_pulse_generator_tb is
   generic(freq_clk_g : real    := 100.0E6;
@@ -45,20 +56,26 @@ begin
   --*** automatic check process ***
   process(clk_i)
   begin
-    if rising_edge(clk_i) then
+    if falling_edge(clk_i) then
       OutPuls_dff <= OutPuls;
-      if OutStr = '1' then
-        if OutSts = "01" then
-          assert (OutPuls_dff < OutPuls) report "###ERROR### info: ramp is not increasing" severity error;
-        elsif OutSts = "11" then
-          assert TgtLevel = OutPuls report "###ERROR### info: error arrival data, expected " &
-												to_string(to_integer(unsigned(TgtLevel))) 	  	 &
-												", got " & to_string(to_integer(unsigned(OutPuls))) severity error;
-        elsif OutSts = "10" then
-          assert (OutPuls_dff > OutPuls) report "###ERROR### info: ramp is not decreasing" severity error;
+      if RampCmd = '1' and OutSts="11" then
+        print("[info]: new ramp command sent at" &to_string(now,ns));
+      else
+        if OutStr = '1' then
+          if OutSts = "01" then
+            assert (OutPuls_dff < OutPuls) report "###ERROR### info: ramp is not increasing" severity error;
+          elsif OutSts = "11" then
+            if RampCmd = '0' then
+              assert TgtLevel = OutPuls report "###ERROR### info: error arrival data, expected " &
+                                        to_string(to_integer(unsigned(TgtLevel)))&
+                                        ", got " & to_string(to_integer(unsigned(OutPuls))) severity error;
+            end if;
+          elsif OutSts = "10" then
+            assert (OutPuls_dff > OutPuls) report "###ERROR### info: ramp is not decreasing" severity error;
+          end if;
         end if;
       end if;
-    end if;
+      end if;
   end process;
 
   --*** clock process ***
@@ -97,16 +114,16 @@ begin
     generic map(width_g   => width_g,
                 rst_pol_g => '1')
     port map(
-    clk_i => clk_i,
-    rst_i => rst_i,
-    str_i => InStr,
-    tgt_lvl_i => TgtLevel,
-    ramp_inc_i => RampInc,
-    ramp_cmd_i => RampCmd,
-    init_cmd_i => InInitCmd,
-    sts_o => OutSts,
-    str_o => OutStr,
-    puls_o => OutPuls);
+      clk_i      => clk_i,
+      rst_i      => rst_i,
+      str_i      => InStr,
+      tgt_lvl_i  => TgtLevel,
+      ramp_inc_i => RampInc,
+      ramp_cmd_i => RampCmd,
+      init_cmd_i => InInitCmd,
+      sts_o      => OutSts,
+      str_o      => OutStr,
+      puls_o     => OutPuls);
 
   --*** stimuli process ***
   proc_stim : process

@@ -79,6 +79,7 @@ add_sources "../hdl" {
 	psi_common_trigger_digital.vhd \
   psi_common_dyn_sft.vhd \
   psi_common_pulse_generator.vhd \
+  psi_common_pulse_generator_ctrl_static.vhd \
 } -tag src
 
 # testbenches
@@ -140,9 +141,17 @@ add_sources "../testbench" {
 	psi_common_debouncer_tb/psi_common_debouncer_tb.vhd \
   psi_common_dyn_sft_tb/psi_common_dyn_sft_tb.vhd \
   psi_common_pulse_generator/psi_common_pulse_generator_tb.vhd \
+  psi_common_pulse_generator_ctrl_static_tb/psi_common_pulse_generator_ctrl_static_tb.vhd \
 } -tag tb
 
 #TB Runs
+create_tb_run "psi_common_pulse_generator_ctrl_static_tb"
+tb_run_add_arguments \
+	"-glength_g=16 -gfreq_clk_g=100.0e6 -gstr_freq_g=10.0e6 -gtime_up_g=10.0e-6 -gtime_dw_g=5.0e-6 -gtime_flat_g=300.0e-6" \
+	"-glength_g=16 -gfreq_clk_g=100.0e6 -gstr_freq_g=1.0e6  -gtime_up_g=10.0e-6 -gtime_dw_g=5.0e-6 -gtime_flat_g=300.0e-6" \
+  "-glength_g=16 -gfreq_clk_g=100.0e6 -gstr_freq_g=10.0e6 -gtime_up_g=7.5e-6 -gtime_dw_g=13.0e-6 -gtime_flat_g=310.0e-6" 
+add_tb_run
+
 create_tb_run "psi_common_pulse_generator_tb"
 add_tb_run
 

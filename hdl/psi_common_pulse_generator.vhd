@@ -14,11 +14,11 @@
 -- increment should be fed at the input.
 -- A small state machine allows knowing in which state the pulse is see below:
 --          
---         ____________
---        /|          |\
---       / |          | \
--- _____/  |          |  \____ 
---   00 |01|    11    |10| 00
+--  init   ____________     flat     init
+--        /|          |\           |
+--       / |          | \          |
+-- _____/  |          |  \_________| 
+--   00 |01|    11    |10| 11      | 00
 
 ------------------------------------------------------------------------------
 -- Libraries
