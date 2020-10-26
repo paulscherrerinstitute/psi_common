@@ -33,6 +33,12 @@ package psi_common_math_pkg is
 
   function min(a : in integer;
                b : in integer) return integer;
+    
+  function max(a : in real;
+               b : in real) return real;
+
+  function min(a : in real;
+               b : in real) return real;
 
   -- choose t if s=true else f
   function choose(s : in boolean;
@@ -95,6 +101,22 @@ package psi_common_math_pkg is
   -- convert string  to real array
   function from_str(input : string) return t_areal; 
 
+  -- get ratio constant for counter max value
+  function ratio(ina : real;
+                 inb : real) return integer;
+ 
+  function ratio(ina : integer;
+                 inb : integer) return integer; 
+  
+  -- get max/min from array type interger /real  
+  function max_a(a : in t_ainteger) return integer;
+    
+  function max_a(a : in t_areal) return real;
+    
+  function min_a(a : in t_ainteger) return integer;
+    
+  function min_a(a : in t_areal) return real;
+    
 end psi_common_math_pkg;
 
 ------------------------------------------------------------------------------
@@ -176,10 +198,30 @@ package body psi_common_math_pkg is
       return b;
     end if;
   end function;
+  
+  function max(a : in real;
+               b : in real) return real is
+  begin
+    if a > b then
+      return a;
+    else
+      return b;
+    end if;
+  end function;
 
   -- *** Min ***      
   function min(a : in integer;
                b : in integer) return integer is
+  begin
+    if a > b then
+      return b;
+    else
+      return a;
+    end if;
+  end function;
+  
+  function min(a : in real;
+               b : in real) return real is
   begin
     if a > b then
       return b;
@@ -444,4 +486,83 @@ package body psi_common_math_pkg is
     return arr;
   end function;
 
+ --*** get ratio value between two values REAL, used for counter max ***
+ function ratio(ina : real; inb : real) return integer is
+  variable res : integer;
+ begin
+  if ina > inb then
+    res := integer(ceil(ina/inb));
+  elsif ina = inb then
+    assert false report "both freq. are similar" severity warning; 
+    res := 1;
+  else
+    res := integer(ceil(inb/ina));
+  end if;
+  return res;
+ end function;
+   
+ --*** get ratio value between two values INT, used for counter max ***
+ function ratio(ina : integer; inb : integer) return integer is
+  variable res : integer;
+ begin
+   if ina > inb then
+     res := integer(ceil(real(ina)/real(inb)));
+   elsif ina = inb then
+     assert false report "both freq. are similar" severity warning; 
+     res := 1;
+   else
+     res := integer(ceil(real(inb)/real(ina)));
+   end if;
+ return res;
+ end function;
+
+ --*** get the maximum out of an array of integer ***
+ function max_a(  a : in t_ainteger) return integer is
+    variable max_v : integer := 0;
+  begin
+    for idx in a'low to a'high loop
+      if max(max_v,a(idx))>max_v then
+        max_v := a(idx);
+      end if;
+    end loop;
+    return max_v;
+  end function;
+
+ --*** get the maximum out of an array of real ***
+ function max_a(  a : in t_areal) return real is
+    variable max_v : real := 0.0;
+  begin
+    for idx in a'low to a'high loop
+      if max(max_v,a(idx))>max_v then
+        max_v := a(idx);
+      end if;
+    end loop;
+    return max_v;
+ end function;
+ 
+  --*** get the minimum out of an array of integer ***
+ function min_a(  a : in t_ainteger) return integer is
+    variable min_v : integer := 0;
+  begin
+    for idx in a'low to a'high loop
+      if min(min_v,a(idx))<min_v then
+        min_v := a(idx);
+      end if;
+    end loop;
+    return min_v;
+  end function;
+
+ --*** get the minimum out of an array of real ***
+ function min_a(  a : in t_areal) return real is
+    variable min_v : real := 0.0;
+  begin
+    for idx in a'low to a'high loop
+      if min(min_v,a(idx))<min_v then
+        min_v := a(idx);
+      end if;
+    end loop;
+    return min_v;
+ end function;
+ 
+  
 end psi_common_math_pkg;

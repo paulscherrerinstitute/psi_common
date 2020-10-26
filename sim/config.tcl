@@ -78,6 +78,7 @@ add_sources "../hdl" {
   psi_common_trigger_analog.vhd \
 	psi_common_trigger_digital.vhd \
   psi_common_dyn_sft.vhd \
+  psi_common_pulse_generator.vhd \
 } -tag src
 
 # testbenches
@@ -138,9 +139,13 @@ add_sources "../testbench" {
 	psi_common_axilite_slave_ipif_tb/psi_common_axilite_slave_ipif_tb.vhd \
 	psi_common_debouncer_tb/psi_common_debouncer_tb.vhd \
   psi_common_dyn_sft_tb/psi_common_dyn_sft_tb.vhd \
+  psi_common_pulse_generator/psi_common_pulse_generator_tb.vhd \
 } -tag tb
 
 #TB Runs
+create_tb_run "psi_common_pulse_generator_tb"
+add_tb_run
+
 create_tb_run "psi_common_delay_cfg_tb"
 tb_run_add_arguments \
 	"-gMaxDelay_g=50" \
