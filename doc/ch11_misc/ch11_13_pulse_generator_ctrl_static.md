@@ -4,7 +4,7 @@
 # psi_common_pulse_generator_ctrl_static
 
 - VHDL source: [psi_common_pulse_generator_ctrl_static.vhd](../../hdl/psi_common_pulse_generator_ctrl_static.vhd)
-- Testbench:  [psi_common_pulse_generator_ctrl_static_tb.vhd](../../testbench/psi_common_pulse_generator_ctrl_static/psi_common_pulse_generator_ctrl_static_tb.vhd)
+- Testbench:  [psi_common_pulse_generator_ctrl_static_tb.vhd](../../testbench/psi_common_pulse_generator_ctrl_static_tb/psi_common_pulse_generator_ctrl_static_tb.vhd)
 
 ### Description
 This component implements a pulse generator with static parameters via generics. It create pulses from 0 to the max value defined by the vector data length. The user can set the rising time, the flat top duration and the falling time. The component is responsive to the trigger input (_edge detection_), however if the signal is left to '1' then the block will perform consecutive pulses with the selected parameters. Another parameter allow to define the time duration when a pulse returns to 0.
