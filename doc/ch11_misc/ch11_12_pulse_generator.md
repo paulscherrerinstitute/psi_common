@@ -4,7 +4,7 @@
 # psi_common_pulse_generator
 
 - VHDL source: [psi_common_pulse_generator.vhd](../../hdl/psi_common_pulse_generator.vhd)
-- Testbench:  [psi_common_pulse_generator_tb.vhd](../../testbench/psi_common_pulse_generator/psi_common_pulse_generator_tb.vhd)
+- Testbench:  [psi_common_pulse_generator_tb.vhd](../../testbench/psi_common_pulse_generator_tb/psi_common_pulse_generator_tb.vhd)
 
 ### Description
 This component implements a ramp generator where the user can set the target level to reach and the step number prior to reach this level. It can from a certain value either continue ramping up either ramping down as the figure below shows.

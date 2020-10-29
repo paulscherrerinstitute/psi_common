@@ -140,7 +140,7 @@ add_sources "../testbench" {
 	psi_common_axilite_slave_ipif_tb/psi_common_axilite_slave_ipif_tb.vhd \
 	psi_common_debouncer_tb/psi_common_debouncer_tb.vhd \
   psi_common_dyn_sft_tb/psi_common_dyn_sft_tb.vhd \
-  psi_common_pulse_generator/psi_common_pulse_generator_tb.vhd \
+  psi_common_pulse_generator_tb/psi_common_pulse_generator_tb.vhd \
   psi_common_pulse_generator_ctrl_static_tb/psi_common_pulse_generator_ctrl_static_tb.vhd \
 } -tag tb
 
