@@ -7,7 +7,7 @@
 - Testbench:  [psi_common_pulse_generator_tb.vhd](../../testbench/psi_common_pulse_generator/psi_common_pulse_generator_tb.vhd)
 
 ### Description
-This component implements a ramp generator where the user can set the target the level to reach and number the step prior to reach this level. it can from a certain value reach either continue ramping up either ramping down as the figure below shows.
+This component implements a ramp generator where the user can set the target level to reach and the step number prior to reach this level. It can from a certain value either continue ramping up either ramping down as the figure below shows.
 
 <p align="center"><img src="ch11_12_fig50.png"></p>
 
