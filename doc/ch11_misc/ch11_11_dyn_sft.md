@@ -31,4 +31,4 @@ InData |Input |_Width_g_ |Data Input
 OutVld |Output |1 |AXI-S handshaking signal for output
 OutData |Output |_Width\_g_ |Data Output
 
-[Index](../psi_common_index.md) **|** Previous: [Misc > trigger digital](../ch11_misc/ch11_10_trigger_digital.md)
+[Index](../psi_common_index.md) **|** Previous: [Misc > trigger digital](../ch11_misc/ch11_10_trigger_digital.md) **|** Next: [Misc > pulse generator](../ch11_misc/ch11_12_pulse_generator.md)

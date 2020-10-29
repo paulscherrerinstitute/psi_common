@@ -138,6 +138,7 @@
 
 [11.11 psi\_common\_dyn\_sft](ch11_misc/ch11_11_dyn_sft.md)
 
+[11.12 psi\_common\_pulse_\_generator](ch11_misc/ch11_12_pulse_generator.md)
 ### Others
 
 [presentation](presentation/psi_common_presentation.pdf)
