@@ -116,6 +116,10 @@ package psi_common_math_pkg is
   function min_a(a : in t_ainteger) return integer;
     
   function min_a(a : in t_areal) return real;
+  
+  -- function to determine if ratio clock/strobe is an integer
+  function is_int_ratio(a : in real;    b : in real)   return boolean;
+  function is_int_ratio(a : in integer; b: in integer) return boolean;
     
 end psi_common_math_pkg;
 
@@ -564,5 +568,46 @@ package body psi_common_math_pkg is
     return min_v;
  end function;
  
+ --*** is ratio an integer REAL ***
+ function is_int_ratio(a : in real; b: in real) return boolean is
+   variable a_v, b_v : real := 0.0;
+ begin
+   -- check > < prior to eval
+   if a > b then
+    a_v := real(a);
+    b_v := real(b);
+   else
+    a_v := real(b);
+    b_v := real(a);
+   end if;
+   
+   --eval val 
+   if a_v/b_v = ceil(a_v/b_v) or a_v/b_v= floor(a_v/b_v) then
+     return true;
+   else
+     return false;
+   end if;
+ end function; 
+ 
+  --*** is ratio an integer REAL ***
+ function is_int_ratio(a : in integer; b: in integer) return boolean is
+  variable a_v , b_v : real := 0.0;
+begin
+   -- check > < prior to eval
+   if a > b then
+    a_v := real(a);
+    b_v := real(b);
+   else
+    a_v := real(b);
+    b_v := real(a);
+  end if;
   
+   --eval val   
+   if a_v/b_v = ceil(a_v/b_v ) or a_v/b_v = floor(a_v/b_v) then
+     return true;
+   else
+     return false;
+   end if;
+   
+ end function; 
 end psi_common_math_pkg;

@@ -147,9 +147,9 @@ add_sources "../testbench" {
 #TB Runs
 create_tb_run "psi_common_pulse_generator_ctrl_static_tb"
 tb_run_add_arguments \
-	"-glength_g=16 -gfreq_clk_g=100.0e6 -gstr_freq_g=10.0e6 -gtime_up_g=10.0e-6 -gtime_dw_g=5.0e-6 -gtime_flat_g=300.0e-6" \
-	"-glength_g=16 -gfreq_clk_g=100.0e6 -gstr_freq_g=1.0e6  -gtime_up_g=10.0e-6 -gtime_dw_g=5.0e-6 -gtime_flat_g=300.0e-6" \
-  "-glength_g=16 -gfreq_clk_g=100.0e6 -gstr_freq_g=10.0e6 -gtime_up_g=7.5e-6 -gtime_dw_g=13.0e-6 -gtime_flat_g=310.0e-6" 
+	"-glength_g=16 -gfreq_clk_g=100e6 -gstr_freq_g=12e6 -gstep_dw_g=5 -gstep_up_g=10 -gstep_fll_g=50 -gstep_flh_g=60"\
+	"-glength_g=16 -gfreq_clk_g=100e6 -gstr_freq_g=1e6  -gstep_dw_g=17 -gstep_up_g=29 -gstep_fll_g=301 -gstep_flh_g=400"\
+  "-glength_g=16 -gfreq_clk_g=100e6 -gstr_freq_g=10e6 -gstep_dw_g=129 -gstep_up_g=738 -gstep_fll_g=12302 -gstep_flh_g=8789"
 add_tb_run
 
 create_tb_run "psi_common_pulse_generator_tb"
