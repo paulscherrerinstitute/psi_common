@@ -78,7 +78,7 @@ add_sources "../hdl" {
   psi_common_trigger_analog.vhd \
 	psi_common_trigger_digital.vhd \
   psi_common_dyn_sft.vhd \
-  psi_common_pulse_generator.vhd \
+  psi_common_ramp_gene.vhd \
   psi_common_pulse_generator_ctrl_static.vhd \
 } -tag src
 
@@ -140,7 +140,7 @@ add_sources "../testbench" {
 	psi_common_axilite_slave_ipif_tb/psi_common_axilite_slave_ipif_tb.vhd \
 	psi_common_debouncer_tb/psi_common_debouncer_tb.vhd \
   psi_common_dyn_sft_tb/psi_common_dyn_sft_tb.vhd \
-  psi_common_pulse_generator_tb/psi_common_pulse_generator_tb.vhd \
+  psi_common_ramp_gene_tb/psi_common_ramp_gene_tb.vhd \
   psi_common_pulse_generator_ctrl_static_tb/psi_common_pulse_generator_ctrl_static_tb.vhd \
 } -tag tb
 
@@ -152,7 +152,7 @@ tb_run_add_arguments \
   "-glength_g=16 -gfreq_clk_g=100e6 -gstr_freq_g=10e6 -gstep_dw_g=129 -gstep_up_g=738 -gstep_fll_g=12302 -gstep_flh_g=8789"
 add_tb_run
 
-create_tb_run "psi_common_pulse_generator_tb"
+create_tb_run "psi_common_ramp_gene_tb"
 add_tb_run
 
 create_tb_run "psi_common_delay_cfg_tb"

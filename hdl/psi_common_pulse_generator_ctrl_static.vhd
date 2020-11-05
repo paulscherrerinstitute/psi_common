@@ -43,7 +43,9 @@ entity psi_common_pulse_generator_ctrl_static is
           stop_i: in  std_logic;                             -- Abort pulse
           busy_o: out std_logic;                             -- pulse in action
           dat_o : out std_logic_vector(length_g-1 downto 0); -- pulse output
-          str_o : out std_logic);                            -- pulse strobe
+          str_o : out std_logic;                             -- pulse strobe
+          dbg_o : out std_logic_vector(1 downto 0)           -- use for tb purpose and avoid using externalname GHDL
+  );
 end entity;
 
 architecture RTL of psi_common_pulse_generator_ctrl_static is
@@ -87,7 +89,7 @@ begin
       OutVld => str_s);
   
   --*** Pulse generator ***  
-  inst_pulse : entity work.psi_common_pulse_generator
+  inst_pulse : entity work.psi_common_ramp_gene
     generic map(
       width_g   => length_g,
       rst_pol_g => rst_pol_g)
@@ -102,7 +104,8 @@ begin
       sts_o      => sts_s,
       str_o      => str_o,
       puls_o     => dat_s);
-    
+  
+  dbg_o  <= sts_s;  
   dat_o  <= dat_s;
   busy_o <= r.busy;
   

@@ -40,4 +40,4 @@ busy_o 	| output    |1   	 	 | set to 1 when the block is in process
 str_o  	| output    |1   	 	 |  strobe Output
 dat_o   | output    | length_g   |  data output
 
-[Index](../psi_common_index.md) **|** Previous: [Misc > pulse generator](../ch11_misc/ch11_12_pulse_generator.md)
+[Index](../psi_common_index.md) **|** Previous: [Misc > ramp generator](../ch11_misc/ch11_12_ramp_gene.md)

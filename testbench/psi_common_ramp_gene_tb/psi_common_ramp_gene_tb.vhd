@@ -29,13 +29,13 @@ use ieee.math_real.all;
 use work.psi_tb_activity_pkg.all;
 use work.psi_tb_txt_util.all;
 
-entity psi_common_pulse_generator_tb is
+entity psi_common_ramp_gene_tb is
   generic(freq_clk_g : real    := 100.0E6;
           width_g    : natural := 16
          );
 end entity;
 
-architecture tb of psi_common_pulse_generator_tb is
+architecture tb of psi_common_ramp_gene_tb is
 
   constant period_c           : time                                   := (1 sec) / freq_clk_g;
   signal clk_i                : std_logic                              := '0';
@@ -110,7 +110,7 @@ begin
   end process;
 
   --*** DUT ***
-  i_dut : entity work.psi_common_pulse_generator
+  i_dut : entity work.psi_common_ramp_gene
     generic map(width_g   => width_g,
                 rst_pol_g => '1')
     port map(

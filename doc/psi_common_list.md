@@ -90,7 +90,7 @@ Generic Debouncer  					| [psi_common_debouncer.vhd](../hdl/psi_common_debouncer
 Analog Trigger Generator  	| [psi_common_trigger_analog.vhd](../hdl/psi_trigger_analog.vhd)  | [link](ch11_misc/ch11_9_trigger_analog.md)  
 Digital Trigger Generator  	| [psi_common_trigger_digital.vhd](../hdl/psi_trigger_digital.vhd)  | [link](ch11_misc/ch11_10_trigger_digital.md)
 Dynamic Shifter             | [psi_common_dyn_sft.vhd](../hdl/psi_common_dyn_sft.vhd)     | [link](ch11_misc/ch11_11_dyn_sft.md)
-Pulse/Ramp generator        | [psi_common_pulse_generator.vhd](../hdl/psi_common_pulse_generator.vhd)     | [link](ch11_misc/ch11_12_pulse_generator.md)   
+Pulse/Ramp generator        | [psi_common_ramp_gene.vhd](../hdl/psi_common_ramp_gene.vhd)     | [link](ch11_misc/ch11_12_ramp_gene.md)   
 Pulse generator ctrl static | [psi_common_pulse_generator_ctrl_static.vhd](../hdl/psi_common_pulse_generator_ctrl_static.vhd)     | [link](ch11_misc/ch11_13_pulse_generator_ctrl_static.md)    |   |  
 ***
 

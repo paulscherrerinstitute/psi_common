@@ -27,7 +27,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity psi_common_pulse_generator is
+entity psi_common_ramp_gene is
   generic(width_g   : natural   := 16;                          -- accumulator width
           rst_pol_g : std_logic := '1');                        -- polarity reset	
   port(clk_i      : in  std_logic;                              -- system clock
@@ -45,7 +45,7 @@ entity psi_common_pulse_generator is
       );
 end entity;
 
-architecture rtl of psi_common_pulse_generator is
+architecture rtl of psi_common_ramp_gene is
   --*** internal declaration ***
   type fsm_t is (zero, up, flat, dw);
   attribute enum_encoding : string;

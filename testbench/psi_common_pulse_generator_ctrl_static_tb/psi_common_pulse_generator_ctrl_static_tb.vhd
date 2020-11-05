@@ -53,10 +53,10 @@ begin
   assert is_int_ratio(freq_clk_g, str_freq_g) report "[WARNING]: the ratio between clock and strobe isn't integer " severity warning;
 
   --*** External name declaration ***
-  externalname_elaboration_blk : block
-  begin
-    status_pulse_s <= <<signal .psi_common_pulse_generator_ctrl_static_tb.inst_dut.sts_s : std_logic_vector(1 downto 0)  >>;
-  end block;
+  --externalname_elaboration_blk : block
+  --begin
+  --  status_pulse_s <= <<signal .psi_common_pulse_generator_ctrl_static_tb.inst_dut.sts_s : std_logic_vector(1 downto 0)  >>;
+  --end block;
 
   --*** Reset generation ***
   proc_rst : process
@@ -103,7 +103,8 @@ begin
       stop_i => stop_sti,
       busy_o => busy_obs,
       dat_o  => dat_obs,
-      str_o  => str_obs
+      str_o  => str_obs,
+      dbg_o  => status_pulse_s
     );
 
 
