@@ -52,6 +52,8 @@ architecture rtl of psi_common_delay is
   constant MemTaps_c : natural := Delay_g - 1;
 
   signal RstStateCnt : integer range 0 to Delay_g - 1;
+  attribute shreg_extract : string;
+  attribute srl_style : string;
 
 begin
 
@@ -64,6 +66,8 @@ begin
   g_srl : if (Delay_g > 1) and ((Resource_g = "SRL") or ((Resource_g = "AUTO") and (Delay_g < BramThreshold_g))) generate
     type Srl_t is array (0 to MemTaps_c - 1) of std_logic_vector(Width_g - 1 downto 0);
     signal SrlSig : Srl_t := (others => (others => '0'));
+	attribute shreg_extract of SrlSig : signal is "true";
+	attribute srl_style of SrlSig : signal is "srl"; 
   begin
     p_srl : process(Clk)
     begin

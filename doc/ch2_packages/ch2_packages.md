@@ -19,6 +19,6 @@ This package contains record definitions to allow representing a complete AXI in
 
 ## 2.4	psi_common_math_pkg
 
-This package contains various mathematical functions (e.g. log2). The functions are meant for calculating compile-time constants (i.e. constans, port-widths, etc.). They can potentially be synthesized as combinatorial functions but this is neither guaranteed nor will it lead to optimal results.
+This package contains various mathematical functions (e.g. log2). The functions are meant for calculating compile-time constants (i.e. constants, port-widths, etc.). They can potentially be synthesized as combinatorial functions but this is neither guaranteed nor will it lead to optimal results.
 
 [Index](../psi_common_index.md) **|** Previous: [Introduction](../ch1_introduction/ch1_introduction.md)  **|** Next: [Memories > sdp ram](../ch3_memories/ch3_1_sdp_ram.md)
