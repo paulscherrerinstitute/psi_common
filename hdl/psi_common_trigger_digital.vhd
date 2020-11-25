@@ -39,7 +39,7 @@ entity psi_common_trigger_digital is
     InTrgArmCfg           : in  std_logic; -- Arm/dis--arm the trigger, rising edge sensitive
     InTrgEdgeCfg          : in  std_logic_vector(1 downto 0); -- Trigger edge direction configuration register (bit0:falling edge sensitive, bit1: rising edge sensitive)
 
-    InTrgDigitalSourceCfg : in  std_logic_vector(log2ceil(digital_input_number_g)-1 downto 0); -- Trigger source configuration  register
+    InTrgDigitalSourceCfg : in  std_logic_vector(choose(digital_input_number_g>1,log2ceil(digital_input_number_g)-1,0) downto 0); -- Trigger source configuration  register
     InDigitalTrg          : in  std_logic_vector(digital_input_number_g - 1 downto 0); -- digital trigger input 
     InExtDisarm           : in  std_logic; -- if different trigger causes are armed at the same time for a single trigger all the other cause must be disarmed once a trigger is generated
     
