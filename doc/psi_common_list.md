@@ -92,8 +92,8 @@ Digital Trigger Generator  	| [psi_common_trigger_digital.vhd](../hdl/psi_trigge
 Dynamic Shifter             | [psi_common_dyn_sft.vhd](../hdl/psi_common_dyn_sft.vhd)     | [link](ch11_misc/ch11_11_dyn_sft.md)
 Pulse/Ramp generator        | [psi_common_ramp_gene.vhd](../hdl/psi_common_ramp_gene.vhd)     | [link](ch11_misc/ch11_12_ramp_gene.md)   
 Pulse generator ctrl static | [psi_common_pulse_generator_ctrl_static.vhd](../hdl/psi_common_pulse_generator_ctrl_static.vhd)     | [link](ch11_misc/ch11_13_pulse_generator_ctrl_static.md)  
-Parallel to serial  				| [psi_common_par_ser.vhd](../hdl/psi_common_par_ser.vhd)   | [link](ch11_14_par_ser.md)  
-Serial to parallel  				| [psi_common_ser_par.vhd](../hdl/psi_common_ser_par.vhd)   | [link](ch11_15_ser_par.md)     
+Parallel to serial  				| [psi_common_par_ser.vhd](../hdl/psi_common_par_ser.vhd)   | [link](ch11_misc/ch11_14_par_ser.md)  
+Serial to parallel  				| [psi_common_ser_par.vhd](../hdl/psi_common_ser_par.vhd)   | [link](ch11_misc/ch11_15_ser_par.md)     
 ***
 
 ### Packages
