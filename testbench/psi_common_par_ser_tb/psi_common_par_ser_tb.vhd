@@ -14,9 +14,9 @@ use work.psi_tb_activity_pkg.all;
 use work.psi_common_math_pkg.all;
 
 entity psi_common_par_ser_tb is
-  generic(length_g : natural := 32;
+  generic(length_g : natural := 4;
           msb_g    : boolean := false;
-          ratio_g : natural  := 5);
+          ratio_g : natural  := 3);
 end entity;
 
 architecture tb of psi_common_par_ser_tb is

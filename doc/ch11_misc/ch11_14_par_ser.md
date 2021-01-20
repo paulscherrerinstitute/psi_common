@@ -40,4 +40,4 @@ ld_o    |Input 		  |1 			 |flag load output is high at first output bit
 frm_o  	| output    |1   	   |flag frame output is high at last output bit
 err_o  	| output    |1   	   |error occurs when *vld_i* arrives before the serializing ended
 
-[Index](../psi_common_index.md) **|** Previous: [Misc > Pulse generator ctrl static](../ch11_misc/ch11_13_pulse_generator_ctrl_static.md)
+[Index](../psi_common_index.md) **|** Previous: [Misc > Pulse generator ctrl static](../ch11_misc/ch11_13_pulse_generator_ctrl_static.md) **|** Next [Misc > Serial to parallel](../ch11_misc/ch11_15_ser_par.md)

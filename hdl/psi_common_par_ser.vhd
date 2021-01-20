@@ -67,9 +67,14 @@ begin
     --*** ratio counter sync with vld_i for slower throughput ***
     if ratio_g > 1 then
       if vld_i = '1' then
-        v.tick  := '0';
-        v.count := r.count+1;
-        v.idat  := dat_i;        
+        if ratio_g = 2 then
+          v.count := (others=>'0');
+          v.tick  := '1';
+        else
+          v.count := r.count+1;
+          v.tick  := '0';
+        end if;
+        v.idat  := dat_i;
       else
         if r.active = '1' then
           if r.count = ratio_g - 1 then
@@ -79,24 +84,41 @@ begin
           end if;
           
           --*** mng vld output ***
-          if r.count = ratio_g - 2 then
-            v.tick := '1';
+          if ratio_g = 2 then
+            if r.count = ratio_g - 1 then
+               v.tick := '1';
+            else
+               v.tick := '0';
+            end if;
           else
-            v.tick := '0';
+             if r.count = ratio_g - 2 then
+               v.tick := '1';
+            else
+               v.tick := '0';
+            end if;
           end if;
         end if;
       end if;   
              
       --*** load output handling ***
-      if r.active ='1' and r.cnt =0 and r.count = to_unsigned(ratio_g-1,r.count'length) then
-        v.ld := '1';   
+      if ratio_g = 2 then
+        if r.active ='1' and r.cnt=0 and r.count = 0 then
+          v.ld := '1';   
+        else
+          v.ld := '0';
+        end if;
       else
-        v.ld := '0';
-      end if;   
+        if r.active ='1' and r.cnt=0 and r.count = to_unsigned(ratio_g-1,r.count'length) then
+          v.ld := '1';   
+        else
+          v.ld := '0';
+        end if;  
+      end if;
+       
       --*** serializer active ***
       if vld_i = '1' then
         v.active := '1';
-      elsif r.cnt = length_g - 1 and r.tick = '1' and vld_i='0'then
+      elsif r.cnt = length_g - 1 and r.tick = '1' and vld_i='0' then
         v.active := '0';
       end if;
       
