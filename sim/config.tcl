@@ -80,6 +80,8 @@ add_sources "../hdl" {
   psi_common_dyn_sft.vhd \
   psi_common_ramp_gene.vhd \
   psi_common_pulse_generator_ctrl_static.vhd \
+  psi_common_par_ser.vhd \
+  psi_common_ser_par.vhd \
 } -tag src
 
 # testbenches
@@ -142,6 +144,8 @@ add_sources "../testbench" {
   psi_common_dyn_sft_tb/psi_common_dyn_sft_tb.vhd \
   psi_common_ramp_gene_tb/psi_common_ramp_gene_tb.vhd \
   psi_common_pulse_generator_ctrl_static_tb/psi_common_pulse_generator_ctrl_static_tb.vhd \
+  psi_common_par_ser_tb/psi_common_par_ser_tb.vhd \
+  psi_common_ser_par_tb/psi_common_ser_par_tb.vhd \
 } -tag tb
 
 #TB Runs
@@ -153,6 +157,16 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_ramp_gene_tb"
+add_tb_run
+
+create_tb_run "psi_common_par_ser_tb"
+tb_run_add_arguments \
+  "-glength_g=8 -gmsb_g=true -gratio_g=4"\
+  "-glength_g=16 -gmsb_g=false -gratio_g=1"\
+  "-glength_g=32 -gmsb_g=true -gratio_g=5"
+add_tb_run
+
+create_tb_run "psi_common_ser_par_tb"
 add_tb_run
 
 create_tb_run "psi_common_delay_cfg_tb"
