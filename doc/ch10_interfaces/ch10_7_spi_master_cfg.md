@@ -4,7 +4,7 @@
 # psi_common_spi_master_cfg
 
 - VHDL source: [psi_common_spi_master_cfg.vhd](../../hdl/psi_common_spi_master_cfg.vhd)
-- Testbench: [psi_common_spi_master_cfg_tb.vhd](../../testbench/psi_common_spi_master_tb/psi_common_spi_master_cfg_tb.vhd)
+- Testbench: [psi_common_spi_master_cfg_tb.vhd](../../testbench/psi_common_spi_master_cfg_tb/psi_common_spi_master_cfg_tb.vhd)
 
 ### Description
 
