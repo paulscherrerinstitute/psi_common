@@ -67,6 +67,7 @@ Round robin  			  | [psi_common_arb_round_robin.vhd](../hdl/psi_common_arb_round
 Package   								| 									Source                                    						  	| Description
 --------------------------|-----------------------------------------------------------------------------|:----------------------------------------:
 SPI master  							| [psi_common_spi_master.vhd](../hdl/psi_common_spi_master.vhd)   					  | [link](ch10_interfaces/ch10_1_spi_master.md)  
+SPI master configurable width  | [psi_common_spi_master_cfg.vhd](../hdl/psi_common_spi_master_cfg.vhd)  		  |  [link](ch10_interfaces/ch10_7_spi_master_cfg.md)  
 I2C master  							| [psi_common_i2c_master.vhd](../hdl/psi_common_i2c_master.vhd)   						| [link](ch10_interfaces/ch10_2_i2c_master.md)  
 AXI master Simple   			| [psi_common_axi_master_simple.vhd](../hdl/psi_common_axi_master_simple.vhd) | [link](ch10_interfaces/ch10_3_axi_master_simple.md)  
 AXI master Full  	  			| [psi_common_axi_master_full.vhd](../hdl/psi_common_axi_master_full.vhd) 		| [link](ch10_interfaces/ch10_4_axi_master_full.md)  

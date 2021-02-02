@@ -114,6 +114,8 @@
 
 [10.6 psi\_common\_axilit\_slave\_ipif](ch10_interfaces/ch10_6_axilite_slave_ipif.md)
 
+[10.7 psi\_common\_spi\_master](ch10_interfaces/ch10_7_spi_master_cfg.md)
+
 ### 11 Miscellaneous
 
 [11.1 psi\_common\_delay](ch11_misc/ch11_1_delay.md)
