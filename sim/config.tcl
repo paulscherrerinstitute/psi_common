@@ -80,6 +80,9 @@ add_sources "../hdl" {
   psi_common_dyn_sft.vhd \
   psi_common_ramp_gene.vhd \
   psi_common_pulse_generator_ctrl_static.vhd \
+  psi_common_par_ser.vhd \
+  psi_common_ser_par.vhd \
+  psi_common_spi_master_cfg.vhd \
 } -tag src
 
 # testbenches
@@ -142,9 +145,22 @@ add_sources "../testbench" {
   psi_common_dyn_sft_tb/psi_common_dyn_sft_tb.vhd \
   psi_common_ramp_gene_tb/psi_common_ramp_gene_tb.vhd \
   psi_common_pulse_generator_ctrl_static_tb/psi_common_pulse_generator_ctrl_static_tb.vhd \
+  psi_common_par_ser_tb/psi_common_par_ser_tb.vhd \
+  psi_common_ser_par_tb/psi_common_ser_par_tb.vhd \
+  psi_common_spi_master_cfg_tb/psi_common_spi_master_cfg_tb.vhd \
 } -tag tb
 
 #TB Runs
+create_tb_run "psi_common_spi_master_cfg_tb"
+tb_run_add_arguments \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=0 -gLsbFirst_g=false -gMaxTransWidth_g=8" \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=1 -gLsbFirst_g=false -gMaxTransWidth_g=16" \
+	"-gSpiCPOL_g=1 -gSpiCPHA_g=0 -gLsbFirst_g=false -gMaxTransWidth_g=24" \
+	"-gSpiCPOL_g=1 -gSpiCPHA_g=1 -gLsbFirst_g=false -gMaxTransWidth_g=8" \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=0 -gLsbFirst_g=true -gMaxTransWidth_g=8" \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=1 -gLsbFirst_g=true -gMaxTransWidth_g=8"
+add_tb_run
+
 create_tb_run "psi_common_pulse_generator_ctrl_static_tb"
 tb_run_add_arguments \
 	"-glength_g=16 -gfreq_clk_g=100e6 -gstr_freq_g=12e6 -gstep_dw_g=5 -gstep_up_g=10 -gstep_fll_g=50 -gstep_flh_g=60"\
@@ -153,6 +169,16 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_ramp_gene_tb"
+add_tb_run
+
+create_tb_run "psi_common_par_ser_tb"
+tb_run_add_arguments \
+  "-glength_g=8 -gmsb_g=true -gratio_g=4"\
+  "-glength_g=16 -gmsb_g=false -gratio_g=1"\
+  "-glength_g=32 -gmsb_g=true -gratio_g=5"
+add_tb_run
+
+create_tb_run "psi_common_ser_par_tb"
 add_tb_run
 
 create_tb_run "psi_common_delay_cfg_tb"

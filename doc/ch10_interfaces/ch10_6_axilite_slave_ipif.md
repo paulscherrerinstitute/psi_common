@@ -11,5 +11,5 @@
 This entity is equal to [psi_common_axi_slave_ipif](./ch10_5_axi_slave_ipif.md) but it does only implement the AXILite protocol (e.g. no bursts, no exclusive access, no pending transfers, etc.). See [psi_common_axi_slave_ipif](./ch10_5_axi_slave_ipif.md) for details.
 
 ***
-[Index](../psi_common_index.md) **|** Previous: [Interfaces > axi slave ipif](./ch10_5_axi_slave_ipif.md) **|**
-Next: [Miscellaneous > delay](../ch11_misc/ch11_1_delay.md)
+[Index](../psi_common_index.md) **|** Previous: [Interfaces > axi slave ipif](../ch10_interfaces/ch10_5_axi_slave_ipif.md) **|**
+Next: [Interfaces > SPI Master cfg](../ch10_interfaces/ch10_7_spi_master_cfg.md)

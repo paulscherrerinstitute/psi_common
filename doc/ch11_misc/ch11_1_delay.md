@@ -50,4 +50,4 @@ OutData                |Output     |Width\_g  |Data output
 
 
 ***
-[Index](../psi_common_index.md) **|** Previous: [Interfaces > axi slave ipif](../ch10_interfaces/ch10_5_axi_slave_ipif.md) **|** Next: [Misc > pl stage](../ch11_misc/ch11_2_pl_stage.md)
+[Index](../psi_common_index.md) **|** Previous: [Interfaces > SPI Master cfg](../ch10_interfaces/ch10_7_spi_master_cfg.md) **|** Next: [Misc > pl stage](../ch11_misc/ch11_2_pl_stage.md)

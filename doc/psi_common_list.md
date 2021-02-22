@@ -67,6 +67,7 @@ Round robin  			  | [psi_common_arb_round_robin.vhd](../hdl/psi_common_arb_round
 Package   								| 									Source                                    						  	| Description
 --------------------------|-----------------------------------------------------------------------------|:----------------------------------------:
 SPI master  							| [psi_common_spi_master.vhd](../hdl/psi_common_spi_master.vhd)   					  | [link](ch10_interfaces/ch10_1_spi_master.md)  
+SPI master configurable width  | [psi_common_spi_master_cfg.vhd](../hdl/psi_common_spi_master_cfg.vhd)  		  |  [link](ch10_interfaces/ch10_7_spi_master_cfg.md)  
 I2C master  							| [psi_common_i2c_master.vhd](../hdl/psi_common_i2c_master.vhd)   						| [link](ch10_interfaces/ch10_2_i2c_master.md)  
 AXI master Simple   			| [psi_common_axi_master_simple.vhd](../hdl/psi_common_axi_master_simple.vhd) | [link](ch10_interfaces/ch10_3_axi_master_simple.md)  
 AXI master Full  	  			| [psi_common_axi_master_full.vhd](../hdl/psi_common_axi_master_full.vhd) 		| [link](ch10_interfaces/ch10_4_axi_master_full.md)  
@@ -91,7 +92,9 @@ Analog Trigger Generator  	| [psi_common_trigger_analog.vhd](../hdl/psi_trigger_
 Digital Trigger Generator  	| [psi_common_trigger_digital.vhd](../hdl/psi_trigger_digital.vhd)  | [link](ch11_misc/ch11_10_trigger_digital.md)
 Dynamic Shifter             | [psi_common_dyn_sft.vhd](../hdl/psi_common_dyn_sft.vhd)     | [link](ch11_misc/ch11_11_dyn_sft.md)
 Pulse/Ramp generator        | [psi_common_ramp_gene.vhd](../hdl/psi_common_ramp_gene.vhd)     | [link](ch11_misc/ch11_12_ramp_gene.md)   
-Pulse generator ctrl static | [psi_common_pulse_generator_ctrl_static.vhd](../hdl/psi_common_pulse_generator_ctrl_static.vhd)     | [link](ch11_misc/ch11_13_pulse_generator_ctrl_static.md)    |   |  
+Pulse generator ctrl static | [psi_common_pulse_generator_ctrl_static.vhd](../hdl/psi_common_pulse_generator_ctrl_static.vhd)     | [link](ch11_misc/ch11_13_pulse_generator_ctrl_static.md)  
+Parallel to serial  				| [psi_common_par_ser.vhd](../hdl/psi_common_par_ser.vhd)   | [link](ch11_misc/ch11_14_par_ser.md)  
+Serial to parallel  				| [psi_common_ser_par.vhd](../hdl/psi_common_ser_par.vhd)   | [link](ch11_misc/ch11_15_ser_par.md)     
 ***
 
 ### Packages

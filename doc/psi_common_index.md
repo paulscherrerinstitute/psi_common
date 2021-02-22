@@ -114,6 +114,8 @@
 
 [10.6 psi\_common\_axilit\_slave\_ipif](ch10_interfaces/ch10_6_axilite_slave_ipif.md)
 
+[10.7 psi\_common\_spi\_master\_cfg](ch10_interfaces/ch10_7_spi_master_cfg.md)
+
 ### 11 Miscellaneous
 
 [11.1 psi\_common\_delay](ch11_misc/ch11_1_delay.md)
@@ -140,7 +142,11 @@
 
 [11.12 psi\_common\_ramp_\_gene](ch11_misc/ch11_12_ramp_gene.md)
 
-[11.13 psi\_common\_pulse_\_generator_\ctrl_\_static](ch11_misc/ch11_12_pulse_generator_ctrl_static.md)
+[11.13 psi\_common\_pulse_\_generator_\ctrl_\_static](ch11_misc/ch11_13_pulse_generator_ctrl_static.md)
+
+[11.14 psi\_common\_par_\_ser](ch11_misc/ch11_14_par_ser.md)
+
+[11.15 psi\_common\_ser_\_par](ch11_misc/ch11_15_ser_par.md)
 ### Others
 
 [presentation](presentation/psi_common_presentation.pdf)

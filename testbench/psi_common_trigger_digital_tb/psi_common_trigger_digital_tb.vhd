@@ -44,7 +44,7 @@ architecture sim of psi_common_trigger_digital_tb is
   signal InTrgArmCfg           : std_logic                                                                  := '0';
   signal InTrgEdgeCfg          : std_logic_vector(1 downto 0)                                               := (others => '0');
   signal InDigitalTrg          : std_logic_vector(digital_input_number_g - 1 downto 0) := (others => '0');
-  signal InTrgDigitalSourceCfg : std_logic_vector(log2ceil(digital_input_number_g)-1 downto 0):= (others => '0');
+  signal InTrgDigitalSourceCfg : std_logic_vector(choose(digital_input_number_g>1,log2ceil(digital_input_number_g)-1,0) downto 0):= (others => '0');
   signal InExtDisarm           : std_logic  := '0';
   signal OutTrgIsArmed         : std_logic;
   signal OutTrigger            : std_logic;

@@ -13,6 +13,12 @@
   * Added *psi\_common\_pulse\_gene - Pulse generator
   * Added max min within an array & ratio computation to determine if integer in Math package
   
+## 2.14.0
+*Added Features
+  * Added *psi\_common\_ramp\_gene - Ramp generator 
+  * Added *psi\_common\_pulse\_gene - Pulse generator
+  * Added max min within an array & ratio computation to determine if integer in Math package
+  
 ## 2.13.0
 *Added Features
   * Added *psi\_common\_trigger\_analog* - Generic Analog trigger 
