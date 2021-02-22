@@ -84,8 +84,16 @@ begin
 
     -- *** Outputs ***
     Tdm     <= r.ShiftReg(ChannelWidth_g - 1 downto 0);
-    TdmVld  <= '1' when r.ChCnt /= 0 else '0';
-    TdmLast <= '1' when r.ChCnt = 1 else '0';
+    if r.ChCnt /= 0 then 
+      TdmVld  <= '1'; 
+    else 
+      TdmVld  <= '0'; 
+    end if;
+    if r.ChCnt = 1 then 
+      TdmLast <= '1'; 
+    else 
+      TdmLast <= '0'; 
+    end if;
 
     -- Apply to record
     r_next <= v;
