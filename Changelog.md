@@ -1,3 +1,12 @@
+## 2.15.0
+*Added Features
+  * Added *psi\_common\_spi\_master\_cfg* - SPI master with dynamically change of the data length to forward on bus 
+  * Added *psi\_common\_ser\_par* - Generic serialize to parallel
+  * Added *psi\_common\_par\_ser* - Generic parallel to serialize
+*Bugfixes
+  * Remove VHDL 2008 statements in *psi\_common\_par\_tdm\_cfg*
+  * Correct *psi\_common\_trigger\_digital* in case of one bit only
+  
 ## 2.14.0
 *Added Features
   * Added *psi\_common\_ramp\_gene - Ramp generator 
