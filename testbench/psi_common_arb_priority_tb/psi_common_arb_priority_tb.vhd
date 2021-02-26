@@ -13,13 +13,13 @@
 -- Libraries
 ------------------------------------------------------------
 library ieee;
-	use ieee.std_logic_1164.all;
-	use ieee.numeric_std.all;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 library work;
-	use work.psi_common_math_pkg.all;
-	use work.psi_common_logic_pkg.all;
-	use work.psi_tb_compare_pkg.all;
+use work.psi_common_math_pkg.all;
+use work.psi_common_logic_pkg.all;
+use work.psi_tb_compare_pkg.all;
 
 ------------------------------------------------------------
 -- Entity Declaration
@@ -31,142 +31,139 @@ end entity;
 -- Architecture
 ------------------------------------------------------------
 architecture sim of psi_common_arb_priority_tb is
-	-- *** Fixed Generics ***
-	constant Size_g : natural := 5;
-	constant OutputRegister_g : boolean := true ;
-	
-	-- *** TB Control ***
-	signal TbRunning : boolean := True;
-	signal NextCase : integer := -1;
-	signal ProcessDone : std_logic_vector(0 to 0) := (others => '0');
-	constant AllProcessesDone_c : std_logic_vector(0 to 0) := (others => '1');
-	constant TbProcNr_stimuli_c : integer := 0;
-	
-	-- *** DUT Signals ***
-	signal Clk : std_logic := '1';
-	signal Rst : std_logic := '1';
-	signal Request : std_logic_vector(Size_g-1 downto 0) := (others => '0');
-	signal Grant : std_logic_vector(Size_g-1 downto 0) := (others => '0');
-	
+  -- *** Fixed Generics ***
+  constant Size_g           : natural := 5;
+  constant OutputRegister_g : boolean := true;
+
+  -- *** TB Control ***
+  signal TbRunning            : boolean                  := True;
+  signal NextCase             : integer                  := -1;
+  signal ProcessDone          : std_logic_vector(0 to 0) := (others => '0');
+  constant AllProcessesDone_c : std_logic_vector(0 to 0) := (others => '1');
+  constant TbProcNr_stimuli_c : integer                  := 0;
+
+  -- *** DUT Signals ***
+  signal Clk     : std_logic                             := '1';
+  signal Rst     : std_logic                             := '1';
+  signal Request : std_logic_vector(Size_g - 1 downto 0) := (others => '0');
+  signal Grant   : std_logic_vector(Size_g - 1 downto 0) := (others => '0');
+
 begin
-	------------------------------------------------------------
-	-- DUT Instantiation
-	------------------------------------------------------------
-	i_dut : entity work.psi_common_arb_priority
-		generic map (
-			Size_g => Size_g,
-			OutputRegister_g => OutputRegister_g
-		)
-		port map (
-			Clk => Clk,
-			Rst => Rst,
-			Request => Request,
-			Grant => Grant
-		);
-	
-	------------------------------------------------------------
-	-- Testbench Control !DO NOT EDIT!
-	------------------------------------------------------------
-	p_tb_control : process
-	begin
-		wait until Rst = '0';
-		wait until ProcessDone = AllProcessesDone_c;
-		TbRunning <= false;
-		wait;
-	end process;
-	
-	------------------------------------------------------------
-	-- Clocks !DO NOT EDIT!
-	------------------------------------------------------------
-	p_clock_Clk : process
-		constant Frequency_c : real := real(100e6);
-	begin
-		while TbRunning loop
-			wait for 0.5*(1 sec)/Frequency_c;
-			Clk <= not Clk;
-		end loop;
-		wait;
-	end process;
-	
-	
-	------------------------------------------------------------
-	-- Resets
-	------------------------------------------------------------
-	p_rst_Rst : process
-	begin
-		wait for 1 us;
-		-- Wait for two clk edges to ensure reset is active for at least one edge
-		wait until rising_edge(Clk);
-		wait until rising_edge(Clk);
-		Rst <= '0';
-		wait;
-	end process;
-	
-	
-	------------------------------------------------------------
-	-- Processes
-	------------------------------------------------------------
-	-- *** stimuli ***
-	p_stimuli : process
-	begin
-		-- start of process !DO NOT EDIT
-		wait until Rst = '0';
-		
-		-- Single Bit
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		StdlvCompareStdlv ("00000", Grant, "Wrong value after reset");
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		Request <= "01000";		
-		StdlvCompareStdlv ("00000", Grant, "Grant asserted without register delay");
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		StdlvCompareStdlv ("01000", Grant, "Grant 1 Wrong");
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		Request <= "00000";
-		StdlvCompareStdlv ("01000", Grant, "Grant 2 Wrong");		
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		StdlvCompareStdlv ("00000", Grant, "Grant not de-asserted");
-		
-		-- Multi Bit
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		Request <= "10111";
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		StdlvCompareStdlv ("10000", Grant, "Grant 3 Wrong");
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		StdlvCompareStdlv ("10000", Grant, "Grant 4 Wrong");
-		Request <= "00111";
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		StdlvCompareStdlv ("00100", Grant, "Grant 4 Wrong");
-		Request <= "00011";
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		StdlvCompareStdlv ("00010", Grant, "Grant 4 Wrong");
-		Request <= "10001";
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		StdlvCompareStdlv ("10000", Grant, "Grant 4 Wrong");
-		Request <= "00001";
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		StdlvCompareStdlv ("00001", Grant, "Grant 4 Wrong");		
-		Request <= "00000";
-		wait until rising_edge(Clk);
-		wait for 1 ns;
-		StdlvCompareStdlv ("00000", Grant, "Grant 4 Wrong");	
-		wait for 1 us;
-		
-		-- end of process !DO NOT EDIT!
-		ProcessDone(TbProcNr_stimuli_c) <= '1';
-		wait;
-	end process;
-	
-	
+  ------------------------------------------------------------
+  -- DUT Instantiation
+  ------------------------------------------------------------
+  i_dut : entity work.psi_common_arb_priority
+    generic map(
+      Size_g           => Size_g,
+      OutputRegister_g => OutputRegister_g
+    )
+    port map(
+      Clk     => Clk,
+      Rst     => Rst,
+      Request => Request,
+      Grant   => Grant
+    );
+
+  ------------------------------------------------------------
+  -- Testbench Control !DO NOT EDIT!
+  ------------------------------------------------------------
+  p_tb_control : process
+  begin
+    wait until Rst = '0';
+    wait until ProcessDone = AllProcessesDone_c;
+    TbRunning <= false;
+    wait;
+  end process;
+
+  ------------------------------------------------------------
+  -- Clocks !DO NOT EDIT!
+  ------------------------------------------------------------
+  p_clock_Clk : process
+    constant Frequency_c : real := real(100e6);
+  begin
+    while TbRunning loop
+      wait for 0.5 * (1 sec) / Frequency_c;
+      Clk <= not Clk;
+    end loop;
+    wait;
+  end process;
+
+  ------------------------------------------------------------
+  -- Resets
+  ------------------------------------------------------------
+  p_rst_Rst : process
+  begin
+    wait for 1 us;
+    -- Wait for two clk edges to ensure reset is active for at least one edge
+    wait until rising_edge(Clk);
+    wait until rising_edge(Clk);
+    Rst <= '0';
+    wait;
+  end process;
+
+  ------------------------------------------------------------
+  -- Processes
+  ------------------------------------------------------------
+  -- *** stimuli ***
+  p_stimuli : process
+  begin
+    -- start of process !DO NOT EDIT
+    wait until Rst = '0';
+
+    -- Single Bit
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    StdlvCompareStdlv("00000", Grant, "Wrong value after reset");
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    Request <= "01000";
+    StdlvCompareStdlv("00000", Grant, "Grant asserted without register delay");
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    StdlvCompareStdlv("01000", Grant, "Grant 1 Wrong");
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    Request <= "00000";
+    StdlvCompareStdlv("01000", Grant, "Grant 2 Wrong");
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    StdlvCompareStdlv("00000", Grant, "Grant not de-asserted");
+
+    -- Multi Bit
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    Request <= "10111";
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    StdlvCompareStdlv("10000", Grant, "Grant 3 Wrong");
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    StdlvCompareStdlv("10000", Grant, "Grant 4 Wrong");
+    Request <= "00111";
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    StdlvCompareStdlv("00100", Grant, "Grant 4 Wrong");
+    Request <= "00011";
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    StdlvCompareStdlv("00010", Grant, "Grant 4 Wrong");
+    Request <= "10001";
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    StdlvCompareStdlv("10000", Grant, "Grant 4 Wrong");
+    Request <= "00001";
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    StdlvCompareStdlv("00001", Grant, "Grant 4 Wrong");
+    Request <= "00000";
+    wait until rising_edge(Clk);
+    wait for 1 ns;
+    StdlvCompareStdlv("00000", Grant, "Grant 4 Wrong");
+    wait for 1 us;
+
+    -- end of process !DO NOT EDIT!
+    ProcessDone(TbProcNr_stimuli_c) <= '1';
+    wait;
+  end process;
+
 end;

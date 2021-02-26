@@ -52,6 +52,11 @@
 			<locationURI>sigasiresource:/vhdl/2008/STD</locationURI>
 		</link>
 		<link>
+			<name>Common Libraries/modelsim_lib</name>
+			<type>2</type>
+			<locationURI>PARENT-1-SIGASI_TOOLCHAIN_MODELSIM/vhdl_src/modelsim_lib</locationURI>
+		</link>
+		<link>
 			<name>Common Libraries/psi_tb</name>
 			<type>2</type>
 			<locationURI>PARENT-2-PROJECT_LOC/psi_tb</locationURI>

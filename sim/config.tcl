@@ -1,5 +1,6 @@
 ##############################################################################
-#  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
+#  Copyright (c) 2018-2020 by Paul Scherrer Institute, Switzerland
+#  Copyright (c) 2020 by Enclustra GmbH, Switzerland
 #  All rights reserved.
 #  Authors: Oliver Bruendler, Benoit Stef
 ##############################################################################
@@ -61,6 +62,7 @@ add_sources "../hdl" {
 	psi_common_axi_master_simple.vhd \
 	psi_common_axi_master_full.vhd \
 	psi_common_axi_slave_ipif.vhd \
+	psi_common_axi_slave_ipif64.vhd \
 	psi_common_tdp_ram_be.vhd \
 	psi_common_i2c_master.vhd \
 	psi_common_ping_pong.vhd \
@@ -70,6 +72,17 @@ add_sources "../hdl" {
 	psi_common_dont_opt.vhd \
 	psi_common_axi_multi_pl_stage.vhd \
 	psi_common_par_tdm_cfg.vhd \
+	psi_common_axilite_slave_ipif.vhd \
+	psi_common_watchdog.vhd \
+	psi_common_debouncer.vhd \
+  psi_common_trigger_analog.vhd \
+	psi_common_trigger_digital.vhd \
+  psi_common_dyn_sft.vhd \
+  psi_common_ramp_gene.vhd \
+  psi_common_pulse_generator_ctrl_static.vhd \
+  psi_common_par_ser.vhd \
+  psi_common_ser_par.vhd \
+  psi_common_spi_master_cfg.vhd \
 } -tag src
 
 # testbenches
@@ -113,6 +126,8 @@ add_sources "../testbench" {
 	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb_case_large.vhd \
 	psi_common_axi_master_full_tb/psi_common_axi_master_full_tb.vhd \
 	psi_common_axi_slave_ipif_tb/psi_common_axi_slave_ipif_tb.vhd \
+	psi_common_axi_slave_ipif64_tb/psi_common_axi_slave_ipif64_tb.vhd \
+	psi_common_axi_slave_ipif64_tb/psi_common_axi_slave_ipif64_sram_tb.vhd \
 	psi_common_tdp_ram_be_tb/psi_common_tdp_ram_be_tb.vhd \
 	psi_common_i2c_master_tb/psi_common_i2c_master_tb.vhd \
 	psi_common_ping_pong_tb/psi_common_ping_pong_tb.vhd \
@@ -122,9 +137,50 @@ add_sources "../testbench" {
 	psi_common_watchdog_tb/psi_common_watchdog_tb.vhd \
 	psi_common_axi_multi_pl_stage_tb/psi_common_axi_multi_pl_stage_tb.vhd \
 	psi_common_par_tdm_cfg_tb/psi_common_par_tdm_cfg_tb.vhd \
+  psi_common_debouncer_tb/psi_common_debouncer_tb.vhd \
+  psi_common_trigger_analog_tb/psi_common_trigger_analog_tb.vhd \
+	psi_common_trigger_digital_tb/psi_common_trigger_digital_tb.vhd \
+	psi_common_axilite_slave_ipif_tb/psi_common_axilite_slave_ipif_tb.vhd \
+	psi_common_debouncer_tb/psi_common_debouncer_tb.vhd \
+  psi_common_dyn_sft_tb/psi_common_dyn_sft_tb.vhd \
+  psi_common_ramp_gene_tb/psi_common_ramp_gene_tb.vhd \
+  psi_common_pulse_generator_ctrl_static_tb/psi_common_pulse_generator_ctrl_static_tb.vhd \
+  psi_common_par_ser_tb/psi_common_par_ser_tb.vhd \
+  psi_common_ser_par_tb/psi_common_ser_par_tb.vhd \
+  psi_common_spi_master_cfg_tb/psi_common_spi_master_cfg_tb.vhd \
 } -tag tb
 
 #TB Runs
+create_tb_run "psi_common_spi_master_cfg_tb"
+tb_run_add_arguments \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=0 -gLsbFirst_g=false -gMaxTransWidth_g=8" \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=1 -gLsbFirst_g=false -gMaxTransWidth_g=16" \
+	"-gSpiCPOL_g=1 -gSpiCPHA_g=0 -gLsbFirst_g=false -gMaxTransWidth_g=24" \
+	"-gSpiCPOL_g=1 -gSpiCPHA_g=1 -gLsbFirst_g=false -gMaxTransWidth_g=8" \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=0 -gLsbFirst_g=true -gMaxTransWidth_g=8" \
+	"-gSpiCPOL_g=0 -gSpiCPHA_g=1 -gLsbFirst_g=true -gMaxTransWidth_g=8"
+add_tb_run
+
+create_tb_run "psi_common_pulse_generator_ctrl_static_tb"
+tb_run_add_arguments \
+	"-glength_g=16 -gfreq_clk_g=100e6 -gstr_freq_g=12e6 -gstep_dw_g=5 -gstep_up_g=10 -gstep_fll_g=50 -gstep_flh_g=60"\
+	"-glength_g=16 -gfreq_clk_g=100e6 -gstr_freq_g=1e6  -gstep_dw_g=17 -gstep_up_g=29 -gstep_fll_g=301 -gstep_flh_g=400"\
+  "-glength_g=16 -gfreq_clk_g=100e6 -gstr_freq_g=10e6 -gstep_dw_g=129 -gstep_up_g=738 -gstep_fll_g=12302 -gstep_flh_g=8789"
+add_tb_run
+
+create_tb_run "psi_common_ramp_gene_tb"
+add_tb_run
+
+create_tb_run "psi_common_par_ser_tb"
+tb_run_add_arguments \
+  "-glength_g=8 -gmsb_g=true -gratio_g=4"\
+  "-glength_g=16 -gmsb_g=false -gratio_g=1"\
+  "-glength_g=32 -gmsb_g=true -gratio_g=5"
+add_tb_run
+
+create_tb_run "psi_common_ser_par_tb"
+add_tb_run
+
 create_tb_run "psi_common_delay_cfg_tb"
 tb_run_add_arguments \
 	"-gMaxDelay_g=50" \
@@ -306,16 +362,37 @@ tb_run_add_arguments \
 	"-gNumReg_g=4 -gUseMem_g=false -gAxiThrottling_g=0"
 add_tb_run
 
+create_tb_run "psi_common_axi_slave_ipif64_tb"
+#Vivado does not support unconstrained records as required by this TB
+tb_run_skip Vivado
+tb_run_add_arguments \
+	"-gUseMem_g=true -gAxiThrottling_g=3" 
+add_tb_run
+
+create_tb_run "psi_common_axi_slave_ipif64_sram_tb"
+#Vivado does not support unconstrained records as required by this TB
+tb_run_skip Vivado
+tb_run_add_arguments \
+	"-gUseMem_g=true -gAxiThrottling_g=3"
+add_tb_run
+
 create_tb_run "psi_common_tdp_ram_be_tb"
 add_tb_run
 
 create_tb_run "psi_common_i2c_master_tb"
+
 #Vivado does not support unconstrained records as required by this TB
 #a GHDL bug prevents this TB to run in Version 0.36. The bug is reported. Maybe test again in future.
 tb_run_skip "Vivado GHDL"
 tb_run_add_arguments \
 	"-gInternalTriState_g=true" \
 	"-gInternalTriState_g=false"
+add_tb_run
+
+create_tb_run "psi_common_trigger_analog_tb"
+add_tb_run
+
+create_tb_run "psi_common_trigger_digital_tb"
 add_tb_run
 
 create_tb_run "psi_common_ping_pong_tdm_burst_tb"
@@ -328,4 +405,24 @@ create_tb_run "psi_common_axi_multi_pl_stage_tb"
 add_tb_run
 
 create_tb_run "psi_common_par_tdm_cfg_tb"
+add_tb_run
+
+create_tb_run "psi_common_axilite_slave_ipif_tb"
+#Vivado does not support unconstrained records as required by this TB
+tb_run_skip Vivado
+tb_run_add_arguments \
+	"-gNumReg_g=4 -gUseMem_g=true" \
+	"-gNumReg_g=4 -gUseMem_g=false"
+add_tb_run
+
+create_tb_run "psi_common_debouncer_tb"
+add_tb_run
+
+create_tb_run "psi_common_dyn_sft_tb"
+tb_run_add_arguments \
+	"-gDirection_g=LEFT -gSelectBitsPerStage_g=2 -gSignExtend_g=false" \
+  "-gDirection_g=LEFT -gSelectBitsPerStage_g=3 -gSignExtend_g=false" \
+  "-gDirection_g=RIGHT -gSelectBitsPerStage_g=2 -gSignExtend_g=false" \
+  "-gDirection_g=RIGHT -gSelectBitsPerStage_g=2 -gSignExtend_g=true" \
+  "-gDirection_g=LEFT -gSelectBitsPerStage_g=2 -gSignExtend_g=true"
 add_tb_run

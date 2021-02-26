@@ -6,12 +6,14 @@ Benoît Stef [benoit.stef@psi.ch]
 ## Authors
 * Oliver Bründler [oli.bruendler@gmx.ch]
 * Benoît Stef [benoit.stef@psi.ch]
+* Daniele Felici [daniele.felici@psi.ch]
+* Patric Bucher [patric.bucher@psi.ch]
 
 ## License
 This library is published under [PSI HDL Library License](License.txt), which is [LGPL](LGPL2_1.txt) plus some additional exceptions to clarify the LGPL terms in the context of firmware development.
 
 ## Detailed Documentation
-See [Documentation](doc/psi_common.pdf)
+See [Documentation](doc/psi_common_index.md)
 
 ## Changelog
 See [Changelog](Changelog.md)
@@ -53,7 +55,7 @@ Alternatively the repository [psi\_fpga\_all](https://github.com/paulscherrerins
   * [PsiSim](https://github.com/paulscherrerinstitute/PsiSim) (2.1.0 or higher)
 * VHDL
   * [**psi\_common**](https://github.com/paulscherrerinstitute/psi_common)
-  * [psi\_tb](https://github.com/paulscherrerinstitute/psi_tb) (2.4.1 or higher)
+  * [psi\_tb](https://github.com/paulscherrerinstitute/psi_tb) (2.6.0 or higher)
 
 <!-- END OF PARSED SECTION -->
 

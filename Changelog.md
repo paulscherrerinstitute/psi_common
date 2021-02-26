@@ -1,11 +1,54 @@
+## 2.15.0
+*Added Features
+  * Added *psi\_common\_spi\_master\_cfg* - SPI master with dynamically change of the data length to forward on bus 
+  * Added *psi\_common\_ser\_par* - Generic serialize to parallel
+  * Added *psi\_common\_par\_ser* - Generic parallel to serialize
+*Bugfixes
+  * Remove VHDL 2008 statements in *psi\_common\_par\_tdm\_cfg*
+  * Correct *psi\_common\_trigger\_digital* in case of one bit only
+  
+## 2.14.0
+*Added Features
+  * Added *psi\_common\_ramp\_gene - Ramp generator 
+  * Added *psi\_common\_pulse\_gene - Pulse generator
+  * Added max min within an array & ratio computation to determine if integer in Math package
+  
+## 2.14.0
+*Added Features
+  * Added *psi\_common\_ramp\_gene - Ramp generator 
+  * Added *psi\_common\_pulse\_gene - Pulse generator
+  * Added max min within an array & ratio computation to determine if integer in Math package
+  
+## 2.13.0
+*Added Features
+  * Added *psi\_common\_trigger\_analog* - Generic Analog trigger 
+  * Added *psi\_common\_trigger\_digital* - Generic Digital trigger
+  * Added *psi\_common\_dyn\_sft* - Dynamic barrel shifter
+  
+## 2.12.0
+*Added Features
+  * Added *psi\_common\_axi\_slave\_ipif64* - AXI BUS interface 64 bits capable 
+  * Added *psi\_common\_axilight\_slave\_ipif* - AXI LIGHT BUS interface 
+  * Added string to real conversion function
+
+## 2.11.0
+* Added Features
+	* Added *psi\_common\_psi\_common\_debouncer* - Configurable debounce component
+	* Added InvertBitOrder function in *psi\_common\_logic\_pkg*
+	* Added backpressure handling to *psi\_common\_tdm\_par* - **Warning** as port has changed
+	* Added backpressure handling to *psi\_common\_par\_tdm* - **Warning** as port has changed
+	* Added interactiveGhdl.tcl
+* Documentation
+	* MD file instead of docx
+
 ## 2.10.0
   * Added Features
     * Added *psi\_common\_psi\_common\_par\_tdm\_cfg* - // to TDM with configurable number of enabled channels
-    
+
 ## 2.9.0
   * Added Features
     * Added *psi\_common\_psi\_common\_axi\_multi_pl_stage* - Axi Multi pipeline stage
-    
+
 ## 2.8.0
   * Added Features
     * Added *psi\_common\_watchdog* - Watchdog with several settable parameters
