@@ -83,6 +83,8 @@ add_sources "../hdl" {
   psi_common_par_ser.vhd \
   psi_common_ser_par.vhd \
   psi_common_spi_master_cfg.vhd \
+  psi_common_find_min_max.vhd \
+  psi_common_min_max_mean.vhd \
 } -tag src
 
 # testbenches
@@ -148,9 +150,27 @@ add_sources "../testbench" {
   psi_common_par_ser_tb/psi_common_par_ser_tb.vhd \
   psi_common_ser_par_tb/psi_common_ser_par_tb.vhd \
   psi_common_spi_master_cfg_tb/psi_common_spi_master_cfg_tb.vhd \
+  psi_common_find_min_max_tb/psi_common_find_min_max_tb.vhd \
+  psi_common_min_max_mean_tb/psi_common_min_max_mean_tb.vhd \
 } -tag tb
 
 #TB Runs
+create_tb_run "psi_common_min_max_mean_tb"
+tb_run_add_arguments \
+  "-gclock_cycle_g=100 -gsigned_data_g=true -gdata_length_g=16 -gaccu_length_g=64" \
+  "-gclock_cycle_g=10 -gsigned_data_g=false -gdata_length_g=8 -gaccu_length_g=16" \
+  "-gclock_cycle_g=10 -gsigned_data_g=true -gdata_length_g=24 -gaccu_length_g=48" \
+  "-gclock_cycle_g=10 -gsigned_data_g=false -gdata_length_g=32 -gaccu_length_g=40"
+add_tb_run
+
+create_tb_run "psi_common_find_min_max_tb"
+tb_run_add_arguments \
+  "-glength_g=16 -gsigned_g=true -gmode_g=MIN -gdisplay_g=false" \
+  "-glength_g=16 -gsigned_g=false -gmode_g=MIN -gdisplay_g=false" \
+  "-glength_g=16 -gsigned_g=true -gmode_g=MAX -gdisplay_g=false" \
+  "-glength_g=16 -gsigned_g=false -gmode_g=MAX -gdisplay_g=false"
+add_tb_run
+
 create_tb_run "psi_common_spi_master_cfg_tb"
 tb_run_add_arguments \
 	"-gSpiCPOL_g=0 -gSpiCPHA_g=0 -gLsbFirst_g=false -gMaxTransWidth_g=8" \
