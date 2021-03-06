@@ -7,9 +7,9 @@
 - Testbench:  [psi_common_find_min_max_tb.vhd](../../testbench/psi_common_find_min_max_tb/psi_common_find_min_max_tb.vhd)
 
 ### Description
-This component allows finding minimum value or maximum value for a given stream data.
-The raz_i signal reset results.
+This basic component allows finding minimum value or maximum value for signed or unsigned standard logic vector input of a given stream data. The **raz_i** signal output results and reset the internal threshold vector .
 
+<p align="center"><img src="ch11_16_fig55.png"> </p>
 
 ### Generics
 
@@ -33,4 +33,4 @@ raz_i 	|Input 			|1			 |reset output and results
 dat_o 	|Input 	  	|1			 |data output
 str_o   |Input 		  |1 			 |strobe output
 
-[Index](../psi_common_index.md) **|** Previous: [Misc > Serial to parallel](../ch11_misc/ch11_15_ser_par.md) **|** Next: [Misc > min max mean](../ch11_misc/ch11_17_min_max_mean.md) 
+[Index](../psi_common_index.md) **|** Previous: [Misc > Serial to parallel](../ch11_misc/ch11_15_ser_par.md) **|** Next: [Misc > min max mean](../ch11_misc/ch11_17_min_max_mean.md)
