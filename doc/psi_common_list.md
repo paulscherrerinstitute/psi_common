@@ -95,6 +95,8 @@ Pulse/Ramp generator        | [psi_common_ramp_gene.vhd](../hdl/psi_common_ramp_
 Pulse generator ctrl static | [psi_common_pulse_generator_ctrl_static.vhd](../hdl/psi_common_pulse_generator_ctrl_static.vhd)     | [link](ch11_misc/ch11_13_pulse_generator_ctrl_static.md)  
 Parallel to serial  				| [psi_common_par_ser.vhd](../hdl/psi_common_par_ser.vhd)   | [link](ch11_misc/ch11_14_par_ser.md)  
 Serial to parallel  				| [psi_common_ser_par.vhd](../hdl/psi_common_ser_par.vhd)   | [link](ch11_misc/ch11_15_ser_par.md)     
+Find Min Max  							| [psi_common_find_min_max.vhd](../hdl/psi_common_find_min_max.vhd)   | [link](ch11_misc/ch11_16_find_min_max.md)    
+Min Max Mean  							| [psi_common_find_min_max.vhd](../hdl/psi_common_min_max_mean.vhd)   | [link](ch11_misc/ch11_17_min_max_mean.md)
 ***
 
 ### Packages

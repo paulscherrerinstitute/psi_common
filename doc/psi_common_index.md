@@ -147,6 +147,11 @@
 [11.14 psi\_common\_par_\_ser](ch11_misc/ch11_14_par_ser.md)
 
 [11.15 psi\_common\_ser_\_par](ch11_misc/ch11_15_ser_par.md)
+
+[11.16 psi\_common\_find_\_min_\_max](ch11_misc/ch11_16_find_min_max.md)
+
+[11.17 psi\_common\_min_\_max_\_mean](ch11_misc/ch11_17_min_max_mean.md)
+
 ### Others
 
 [presentation](presentation/psi_common_presentation.pdf)
