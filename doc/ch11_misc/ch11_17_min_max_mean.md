@@ -1,7 +1,7 @@
 <img align="right" src="../psi_logo.png">
 
 ***
-# psi_common_find_min_max
+# psi_common_min_max_mean
 
 - VHDL source: [psi_common_min_max_mean.vhd](../../hdl/psi_common_min_max_mean.vhd)
 - Testbench:  [psi_common_min_max_mean_tb.vhd](../../testbench/psi_common_min_max_mean_tb/psi_common_min_max_mean_tb.vhd)
