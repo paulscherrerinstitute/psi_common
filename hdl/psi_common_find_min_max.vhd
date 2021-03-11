@@ -29,14 +29,16 @@ entity psi_common_find_min_max is
           raz_i     : in  std_logic;                               --reset  output
           data_i    : in  std_logic_vector(length_g - 1 downto 0); --data input
           str_o     : out std_logic;                               --strobe output
-          data_o    : out std_logic_vector(length_g - 1 downto 0)  --data output
+          data_o    : out std_logic_vector(length_g - 1 downto 0); --data output
+          run_dat_o : out std_logic_vector(length_g - 1 downto 0);    --data output running
+          run_str_o : out std_logic
       );
 end entity;
 --@formater:on
 architecture rtl of psi_common_find_min_max is
   signal data_s    : std_logic_vector(length_g - 1 downto 0) := (others => '0');
   signal raz_dff_s : std_logic                               := '0';
-
+  signal str_s     : std_logic;
 begin
 
   proc_min_max : process(clk_i)
@@ -47,7 +49,7 @@ begin
         data_s    <= (others => '0');
         data_o    <= (others => '0');
       else
-
+        str_s<= str_i;
         raz_dff_s <= raz_i;
 
         if raz_i = '1' and raz_dff_s = '0' then
@@ -81,6 +83,10 @@ begin
             end if;
           end if;
         end if;
+        
+        --*** running output ***
+        run_dat_o <= data_s ;
+        run_str_o <= str_s;
 
       end if;
     end if;

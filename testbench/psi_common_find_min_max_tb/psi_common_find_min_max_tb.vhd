@@ -18,10 +18,10 @@ use work.psi_common_math_pkg.all;
 use work.psi_tb_compare_pkg.all;
 
 entity psi_common_find_min_max_tb is
-  generic(length_g : natural := 16;
-          signed_g : boolean := true;
-          mode_g   : string  := "MAX";
-          display_g: boolean := true);
+  generic(length_g  : natural := 16;
+          signed_g  : boolean := true;
+          mode_g    : string  := "MAX";
+          display_g : boolean := true);
 end entity;
 
 architecture tb of psi_common_find_min_max_tb is
@@ -34,9 +34,11 @@ architecture tb of psi_common_find_min_max_tb is
   signal data_sti   : std_logic_vector(length_g - 1 downto 0) := (others => '0');
   signal str_obs    : std_logic;
   signal data_obs   : std_logic_vector(length_g - 1 downto 0);
+  signal run_dat_obs : std_logic_vector(length_g - 1 downto 0);
+  signal run_str_obs : std_logic;
 
 begin
-  
+
   --*** Reset generation ***
   proc_rst : process
   begin
@@ -69,21 +71,23 @@ begin
                 length_g  => length_g,
                 signed_g  => signed_g,
                 mode_g    => mode_g)
-    port map(clk_i  => clk_sti,
-             rst_i  => rst_sti,
-             str_i  => '1',
-             raz_i  => raz_sti,
-             data_i => data_sti,
-             str_o  => str_obs,
-             data_o => data_obs
+    port map(clk_i     => clk_sti,
+             rst_i     => rst_sti,
+             str_i     => '1',
+             raz_i     => raz_sti,
+             data_i    => data_sti,
+             str_o     => str_obs,
+             data_o    => data_obs,
+             run_dat_o => run_dat_obs,
+             run_str_o => run_str_obs
             );
 
   --*** stim process ***
   proc_stim : process
-    variable seed1_v : positive := 1;
-    variable seed2_v : positive := 2;
-    variable rand_v :real := 0.0;
-    variable val_v : std_logic_Vector(length_g-1 downto 0):=(others=>'0');
+    variable seed1_v : positive                                := 1;
+    variable seed2_v : positive                                := 2;
+    variable rand_v  : real                                    := 0.0;
+    variable val_v   : std_logic_Vector(length_g - 1 downto 0) := (others => '0');
   begin
     ------------------------------------------------------------
     print(" *************************************************  ");
@@ -92,12 +96,12 @@ begin
     print(" *************************************************  ");
     ------------------------------------------------------------
     raz_sti  <= '0';
-    data_sti <= (others=>'0');
-    wait for 10*period_c;
+    data_sti <= (others => '0');
+    wait for 10 * period_c;
     for i in 0 to 100 loop
       uniform(seed1_v, seed2_v, rand_v);
       if signed_g then
-        data_sti <= to_sslv(integer(rand_v*2.0**length_g-1.0),length_g);
+        data_sti <= to_sslv(integer(rand_v * 2.0**length_g - 1.0), length_g);
         if mode_g = "MIN" then
           if signed(val_v) > signed(data_sti) then
             val_v := data_sti;
@@ -111,7 +115,7 @@ begin
           print(to_string(from_sslv(val_v)));
         end if;
       else
-        data_sti <= to_uslv(integer(rand_v*2.0**length_g-1.0),length_g);
+        data_sti <= to_uslv(integer(rand_v * 2.0**length_g - 1.0), length_g);
         if mode_g = "MIN" then
           if unsigned(val_v) > unsigned(data_sti) then
             val_v := data_sti;
@@ -124,19 +128,19 @@ begin
         if display_g then
           print(to_string(from_uslv(val_v)));
         end if;
-      end if;     
+      end if;
       wait for period_c;
     end loop;
-    
+
     wait until rising_edge(clk_sti);
     raz_sti <= '1';
-    wait until str_obs='1';
+    wait until str_obs = '1';
     if signed_g then
-      IntCompare(from_sslv(val_v),from_sslv(data_obs),"output data is not as expected");
+      IntCompare(from_sslv(val_v), from_sslv(data_obs), "output data is not as expected");
     else
-      IntCompare(from_uslv(val_v),from_uslv(data_obs),"otuput data is not as expected");
+      IntCompare(from_uslv(val_v), from_uslv(data_obs), "otuput data is not as expected");
     end if;
-  
+
     tb_run_s <= false;
     wait;
   end process;
