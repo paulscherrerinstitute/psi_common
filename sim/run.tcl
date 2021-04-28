@@ -14,7 +14,7 @@ namespace import psi::sim::*
 init
 
 #Configure
-source ./config.tcl
+source ./config2.tcl
 
 #Run Simulation
 puts "------------------------------"
