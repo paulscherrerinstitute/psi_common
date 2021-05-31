@@ -28,9 +28,10 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity psi_common_ramp_gene is
-  generic(width_g   : natural   := 16;                          -- accumulator width
-          is_sign_g : boolean   := false;                       -- sign / unsign
-          rst_pol_g : std_logic := '1');                        -- polarity reset	
+  generic(width_g    : natural   := 16;                         -- accumulator width
+          is_sign_g  : boolean   := false;                      -- sign / unsign
+          rst_pol_g  : std_logic := '1';                        -- polarity reset	
+          init_val_g : integer  := 50);                         -- init output value at start-up
   port(clk_i      : in  std_logic;                              -- system clock
        rst_i      : in  std_logic;                              -- sync reset
        ---------------------------------------------------------
@@ -74,7 +75,8 @@ begin
       when zero =>
         v.status := "00";
         -- *** pulse set to 0 ***
-        v.pulse  := (others => '0');
+        v.pulse  := to_unsigned(init_val_g, width_g + 1); 
+        v.spulse := to_signed(init_val_g, width_g +1);    
         -- *** decision maker ::  states change ***
         if ramp_cmd_i = '1' and init_cmd_i = '0' then
           v.fsm_state := up;

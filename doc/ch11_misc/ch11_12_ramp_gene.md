@@ -20,6 +20,7 @@ Generics        | Description
 **rst\_pol\_g** | reset polarity ('1' or '0')
 **width\_g** 		| Width of the data in bits
 **is\_sign\_g** | sign = True / unsign = False
+**init\_val\_g**| init value integer
 
 
 ### Interfaces
