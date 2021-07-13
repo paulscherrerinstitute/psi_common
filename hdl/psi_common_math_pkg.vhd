@@ -397,6 +397,7 @@ package body psi_common_math_pkg is
   
   -- convert string to real
   function from_str(input : string) return real is
+    constant Nbsp_c : character := character'val(160);
     variable Idx_v : integer := input'low;
     variable IsNeg_v : boolean := false;
     variable ValInt_v : integer := 0;
@@ -406,14 +407,14 @@ package body psi_common_math_pkg is
     variable ExpNeg_v : boolean := false;
     variable ValAbs_v : real := 0.0;
   begin
-    -- skip leading white-spaces
-    while (Idx_v <= input'high) and input(Idx_v) = ' ' loop
+    -- skip leading white-spaces (space, non-breaking space or horizontal tab)
+    while (Idx_v <= input'high) and (input(Idx_v) = ' ' or input(Idx_v) = Nbsp_c or input(Idx_v) = HT) loop
       Idx_v := Idx_v + 1;
     end loop;
     
     -- Check sign
-    if (Idx_v <= input'high) and (input(Idx_v) = '-') then
-      IsNeg_v := true;
+    if (Idx_v <= input'high) and ((input(Idx_v) = '-') or (input(Idx_v) = '+')) then
+      IsNeg_v := (input(Idx_v) = '-');
       Idx_v := Idx_v + 1;
     end if;
     
@@ -442,8 +443,8 @@ package body psi_common_math_pkg is
       if (input(Idx_v) = 'E') or (input(Idx_v) = 'e') then
         Idx_v := Idx_v + 1;
         -- Check sign
-        if (Idx_v <= input'high) and (input(Idx_v) = '-') then
-          ExpNeg_v := true;
+        if (Idx_v <= input'high) and ((input(Idx_v) = '-') or (input(Idx_v) = '+')) then
+          ExpNeg_v := (input(Idx_v) = '-');
           Idx_v := Idx_v + 1;
         end if;
         
