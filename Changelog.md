@@ -1,3 +1,11 @@
+## 2.16.0
+*Added Features
+  * Added *psi\_common\_find\_min\_max* - find min and max value withn a dedicated time period
+  * Added *psi\_common\_min\_max\_mean* - quick statistics within a dedicated time period
+  * Added new generic for init value into *psi\_common\_ramp\_gene* 
+*Bugfixes
+  * Add support for explicit "+" signs in front of number and/or exponent
+
 ## 2.15.0
 *Added Features
   * Added *psi\_common\_spi\_master\_cfg* - SPI master with dynamically change of the data length to forward on bus 
