@@ -28,8 +28,10 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity psi_common_ramp_gene is
-  generic(width_g   : natural   := 16;                          -- accumulator width
-          rst_pol_g : std_logic := '1');                        -- polarity reset	
+  generic(width_g    : natural   := 16;                         -- accumulator width
+          is_sign_g  : boolean   := false;                      -- sign / unsign
+          rst_pol_g  : std_logic := '1';                        -- polarity reset	
+          init_val_g : integer  := 50);                         -- init output value at start-up
   port(clk_i      : in  std_logic;                              -- system clock
        rst_i      : in  std_logic;                              -- sync reset
        ---------------------------------------------------------
@@ -55,6 +57,7 @@ architecture rtl of psi_common_ramp_gene is
     fsm_state : fsm_t;
     status    : std_logic_vector(1 downto 0);
     pulse     : unsigned(width_g downto 0);
+    spulse    : signed(width_g downto 0);
     str_s     : std_logic;
   end record;
   --signals
@@ -72,7 +75,8 @@ begin
       when zero =>
         v.status := "00";
         -- *** pulse set to 0 ***
-        v.pulse  := (others => '0');
+        v.pulse  := to_unsigned(init_val_g, width_g + 1); 
+        v.spulse := to_signed(init_val_g, width_g +1);    
         -- *** decision maker ::  states change ***
         if ramp_cmd_i = '1' and init_cmd_i = '0' then
           v.fsm_state := up;
@@ -82,11 +86,21 @@ begin
         v.status := "01";
         -- *** increase pulse :: accu ***
         if str_i = '1' then
-          v.pulse := r.pulse + resize(unsigned(ramp_inc_i), width_g + 1);
-          if r.pulse(width_g downto 0) >= resize(unsigned(tgt_lvl_i) - unsigned(ramp_inc_i), width_g + 1) or
-             (unsigned(tgt_lvl_i) <= unsigned(ramp_inc_i)) then
-            v.fsm_state := flat;
-            v.pulse     := resize(unsigned(tgt_lvl_i), width_g + 1);
+          if not is_sign_g then
+            v.pulse := r.pulse + resize(unsigned(ramp_inc_i), width_g + 1);
+            if r.pulse(width_g downto 0) >= resize(unsigned(tgt_lvl_i) - unsigned(ramp_inc_i), width_g + 1) or
+               (unsigned(tgt_lvl_i) <= unsigned(ramp_inc_i)) then
+              v.fsm_state := flat;
+              v.pulse     := resize(unsigned(tgt_lvl_i), width_g + 1);
+            end if;
+          else
+            -- *** signed ***
+             v.spulse := r.spulse + resize(signed(ramp_inc_i), width_g + 1);
+            if r.spulse(width_g downto 0) >= resize(signed(tgt_lvl_i) - signed(ramp_inc_i), width_g + 1) or
+               (signed(tgt_lvl_i) <= signed(ramp_inc_i)) then
+              v.fsm_state := flat;
+              v.spulse     := resize(signed(tgt_lvl_i), width_g + 1);
+            end if;
           end if;
         end if;
         -- *** decision maker :: states change ***
@@ -100,10 +114,18 @@ begin
         if init_cmd_i = '1' then
           v.fsm_state := zero;
         elsif ramp_cmd_i = '1' then
-          if unsigned(tgt_lvl_i) > r.pulse then
-            v.fsm_state := up;
+          if not is_sign_g then
+            if unsigned(tgt_lvl_i) > r.pulse then
+              v.fsm_state := up;
+            else
+              v.fsm_state := dw;
+            end if;
           else
-            v.fsm_state := dw;
+            if signed(tgt_lvl_i) > r.spulse then
+              v.fsm_state := up;
+            else
+              v.fsm_state := dw;
+            end if;
           end if;
         end if;
 
@@ -111,13 +133,21 @@ begin
         v.status := "10";
         -- *** decrease pulse :: accu ***
         if str_i = '1' then
-          v.pulse := r.pulse - resize(unsigned(ramp_inc_i), width_g + 1);
-           if r.pulse(width_g downto 0) <= resize((unsigned(tgt_lvl_i) + unsigned(ramp_inc_i)), width_g + 1) then
-            v.fsm_state := flat;
-            v.pulse     := resize(unsigned(tgt_lvl_i), width_g + 1);
+          if not is_sign_g then
+            v.pulse := r.pulse - resize(unsigned(ramp_inc_i), width_g + 1);
+            if r.pulse(width_g downto 0) <= resize((unsigned(tgt_lvl_i) + unsigned(ramp_inc_i)), width_g + 1) then
+              v.fsm_state := flat;
+              v.pulse     := resize(unsigned(tgt_lvl_i), width_g + 1);
+            end if;
+          else
+            --*** is signed ***
+           v.spulse := r.spulse - resize(signed(ramp_inc_i), width_g + 1);
+            if r.spulse(width_g downto 0) <= resize((signed(tgt_lvl_i) + signed(ramp_inc_i)), width_g + 1) then
+              v.fsm_state := flat;
+              v.spulse    := resize(signed(tgt_lvl_i), width_g + 1);
+            end if;
           end if;
         end if;
-        
         -- *** decision maker :: states change ***
         if init_cmd_i = '1' then
           v.fsm_state := zero;
@@ -139,6 +169,7 @@ begin
       if rst_i = rst_pol_g then
         r.fsm_state <= zero;
         r.pulse     <= (others => '0');
+        r.spulse    <= (others => '0');
         r.status    <= "00";
         r.str_s     <= '0';
       end if;
@@ -148,6 +179,15 @@ begin
   --*** out mapping ***--
   str_o  <= r.str_s;
   sts_o  <= r.status;
-  puls_o <= std_logic_vector(r.pulse(width_g - 1 downto 0));
+  
+  gen_output_usign : if not is_sign_g generate 
+  begin
+   puls_o <= std_logic_vector(r.pulse(width_g - 1 downto 0));
+  end generate;
 
+  gen_output_sign : if is_sign_g generate 
+  begin
+   puls_o <= std_logic_vector(r.spulse(width_g - 1 downto 0));
+ end generate;
+ 
 end architecture;

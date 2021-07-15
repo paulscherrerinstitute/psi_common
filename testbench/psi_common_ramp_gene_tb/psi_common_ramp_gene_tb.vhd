@@ -28,6 +28,7 @@ use ieee.math_real.all;
 
 use work.psi_tb_activity_pkg.all;
 use work.psi_tb_txt_util.all;
+use work.psi_common_math_pkg.all;
 
 entity psi_common_ramp_gene_tb is
   generic(freq_clk_g : real    := 100.0E6;
@@ -37,20 +38,25 @@ end entity;
 
 architecture tb of psi_common_ramp_gene_tb is
 
-  constant period_c           : time                                   := (1 sec) / freq_clk_g;
-  signal clk_i                : std_logic                              := '0';
-  signal tb_run               : boolean                                := true;
+  constant period_c             : time                                   := (1 sec) / freq_clk_g;
+  signal clk_i                  : std_logic                              := '0';
+  signal tb_run                 : boolean                                := true;
   --------------------------------------------------------------------
-  signal rst_i                : std_logic                              := '1';
-  signal InStr                : std_logic                              := '0';
-  signal RampInc              : std_logic_vector(width_g - 1 downto 0) := (std_logic_vector(to_unsigned(100, width_g)));
-  signal RampCmd              : std_logic                              := '0';
-  signal InInitCmd            : std_logic                              := '0';
+  signal rst_i                  : std_logic                              := '1';
+  signal InStr                  : std_logic                              := '0';
+  signal RampInc                : std_logic_vector(width_g - 1 downto 0) := (std_logic_vector(to_unsigned(100, width_g)));
+  signal RampCmd                : std_logic                              := '0';
+  signal InInitCmd              : std_logic                              := '0';
   -------------------------------------------------------------------
-  signal OutSts               : std_logic_vector(1 downto 0);
-  signal OutStr               : std_logic;
-  signal OutPuls, OutPuls_dff : std_logic_vector(width_g - 1 downto 0);
-  signal TgtLevel             : std_logic_vector(width_g - 1 downto 0) := (std_logic_vector(to_unsigned(2000, width_g)));
+  signal OutSts                 : std_logic_vector(1 downto 0);
+  signal OutStr                 : std_logic;
+  signal OutPuls, OutPuls_dff   : std_logic_vector(width_g - 1 downto 0);
+  signal TgtLevel               : std_logic_vector(width_g - 1 downto 0) := (std_logic_vector(to_unsigned(2000, width_g)));
+  -------------------------------------------------------------------
+  signal TgtLevel2              : std_logic_vector(width_g - 1 downto 0) := to_sslv(2000, width_g);
+  signal sOutSts                : std_logic_vector(1 downto 0);
+  signal sOutStr                : std_logic;
+  signal sOutPuls, sOutPuls_dff : std_logic_vector(width_g - 1 downto 0);
 
 begin
   --*** automatic check process ***
@@ -58,8 +64,8 @@ begin
   begin
     if falling_edge(clk_i) then
       OutPuls_dff <= OutPuls;
-      if RampCmd = '1' and OutSts="11" then
-        print("[info]: new ramp command sent at" &to_string(now,ns));
+      if RampCmd = '1' and OutSts = "11" then
+        print("[info]: new ramp command sent at" & to_string(now, ns));
       else
         if OutStr = '1' then
           if OutSts = "01" then
@@ -68,14 +74,39 @@ begin
             if RampCmd = '0' then
               assert TgtLevel = OutPuls report "###ERROR### info: error arrival data, expected " &
                                         to_string(to_integer(unsigned(TgtLevel)))&
-                                        ", got " & to_string(to_integer(unsigned(OutPuls))) severity error;
+                                        ", got " & to_string(to_integer(unsigned(sOutPuls))) severity error;
             end if;
           elsif OutSts = "10" then
             assert (OutPuls_dff > OutPuls) report "###ERROR### info: ramp is not decreasing" severity error;
           end if;
         end if;
       end if;
+    end if;
+  end process;
+
+  --*** automatic check process 2 ***
+  process(clk_i)
+  begin
+    if falling_edge(clk_i) then
+      sOutPuls_dff <= sOutPuls;
+      if RampCmd = '1' and sOutSts = "11" then
+        print("[info]: new ramp command sent at" & to_string(now, ns));
+      else
+        if sOutStr = '1' then
+          if sOutSts = "01" then
+            assert (signed(sOutPuls_dff) < signed(sOutPuls)) report "###ERROR### info: ramp is not increasing" severity error;
+          elsif sOutSts = "11" then
+            if RampCmd = '0' then
+              assert TgtLevel2 = sOutPuls report "###ERROR### info: error arrival data, expected " &
+                                        to_string(to_integer(signed(TgtLevel2)))&
+                                        ", got " & to_string(to_integer(signed(sOutPuls))) severity error;
+            end if;
+          elsif sOutSts = "10" then
+            assert (signed(sOutPuls_dff) > signed(sOutPuls)) report "###ERROR### info: ramp is not decreasing" severity error;
+          end if;
+        end if;
       end if;
+    end if;
   end process;
 
   --*** clock process ***
@@ -125,6 +156,22 @@ begin
       str_o      => OutStr,
       puls_o     => OutPuls);
 
+  i_dut_sign : entity work.psi_common_ramp_gene
+    generic map(width_g   => width_g,
+                rst_pol_g => '1',
+                is_sign_g => true)
+    port map(
+      clk_i      => clk_i,
+      rst_i      => rst_i,
+      str_i      => InStr,
+      tgt_lvl_i  => TgtLevel2,
+      ramp_inc_i => RampInc,
+      ramp_cmd_i => RampCmd,
+      init_cmd_i => InInitCmd,
+      sts_o      => sOutSts,
+      str_o      => sOutStr,
+      puls_o     => sOutPuls);
+
   --*** stimuli process ***
   proc_stim : process
   begin
@@ -141,14 +188,16 @@ begin
 
     for i in 0 to 3 loop
       --go up
-      RampInc  <= std_logic_vector(to_unsigned(100, width_g));
-      TgtLevel <= std_logic_vector(to_unsigned(8103, width_g));
+      RampInc   <= to_uslv(100, width_g); --std_logic_vector(to_unsigned(100, width_g));
+      TgtLevel  <= to_uslv(8103, width_g); --std_logic_vector(to_unsigned(8103, width_g));
+      TgtLevel2 <= to_sslv(8103 / 2, width_g);
       PulseSig(RampCmd, clk_i);
       wait until OutSts = "11";
       wait for 10_000 * period_c;
       --go dw
-      TgtLevel <= std_logic_vector(to_unsigned(2000, width_g));
-      RampInc  <= std_logic_vector(to_unsigned(300, width_g));
+      TgtLevel  <= to_uslv(2000, width_g); --std_logic_vector(to_unsigned(2000, width_g));
+      TgtLevel2 <= to_sslv(-8103 / 2, width_g);
+      RampInc   <= to_uslv(300, width_g); --std_logic_vector(to_unsigned(300, width_g));
       PulseSig(RampCmd, clk_i);
       wait until OutSts = "11";
       wait for 20_000 * period_c;
@@ -156,28 +205,32 @@ begin
     end loop;
 
     --go up
-    RampInc  <= std_logic_vector(to_unsigned(100, width_g));
-    TgtLevel <= std_logic_vector(to_unsigned(8103, width_g));
+    RampInc   <= to_uslv(100, width_g); --std_logic_vector(to_unsigned(100, width_g));
+    TgtLevel  <= to_uslv(8103, width_g); --std_logic_vector(to_unsigned(8103, width_g));
+    TgtLevel2 <= to_sslv(8103 / 2, width_g);
     PulseSig(RampCmd, clk_i);
     wait until OutSts = "11";
     wait for 10_000 * period_c;
     --go dw
-    RampInc  <= std_logic_vector(to_unsigned(300, width_g));
-    TgtLevel <= std_logic_vector(to_unsigned(4009, width_g));
+    RampInc   <= to_uslv(300, width_g); -- std_logic_vector(to_unsigned(300, width_g));
+    TgtLevel  <= to_uslv(300, width_g); --std_logic_vector(to_unsigned(4009, width_g));
+    TgtLevel2 <= to_sslv(150, width_g);
     PulseSig(RampCmd, clk_i);
     wait until OutSts = "11";
     wait for 50_000 * period_c;
 
     --go up
-    RampInc  <= std_logic_vector(to_unsigned(50, width_g));
-    TgtLevel <= std_logic_vector(to_unsigned(7029, width_g));
+    RampInc   <= to_uslv(50, width_g);  --std_logic_vector(to_unsigned(50, width_g));
+    TgtLevel  <= to_uslv(7029, width_g); --std_logic_vector(to_unsigned(7029, width_g));
+    TgtLevel2 <= to_sslv(7029 / 2, width_g);
     PulseSig(RampCmd, clk_i);
     wait until OutSts = "11";
     wait for 50_000 * period_c;
 
     --go dw
-    RampInc  <= std_logic_vector(to_unsigned(200, width_g));
-    TgtLevel <= std_logic_vector(to_unsigned(0, width_g));
+    RampInc   <= to_uslv(200, width_g); --std_logic_vector(to_unsigned(200, width_g));
+    TgtLevel  <= to_uslv(0, width_g);   --std_logic_vector(to_unsigned(0, width_g));
+    TgtLevel2 <= to_sslv(-1000, width_g);
     PulseSig(RampCmd, clk_i);
     wait until OutSts = "11";
     wait for 50_000 * period_c;
