@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
---  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
---  All rights reserved.
+--	Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
+--	All rights reserved.
 --  Authors: Oliver Bruendler
 ------------------------------------------------------------------------------
 
@@ -27,36 +27,35 @@ use work.psi_common_logic_pkg.all;
 -- $$ processes=stim,spi $$
 -- $$ tbpkg=work.psi_tb_compare_pkg,work.psi_tb_activity_pkg,work.psi_tb_txt_util $$
 entity psi_common_spi_master is
-  generic (
-    ClockDivider_g  : natural range 4 to 1_000_000;  -- Must be a multiple of two    $$ constant=8 $$
-    TransWidth_g    : positive;  -- SPI Transaction width      $$ constant=8 $$
-    CsHighCycles_g  : positive;  -- $$ constant=2 $$
-    SpiCPOL_g       : natural range 0 to 1;          -- $$ export=true $$
-    SpiCPHA_g       : natural range 0 to 1;          -- $$ export=true $$
-    SlaveCnt_g      : positive  := 1;                -- $$ constant=2 $$
-    LsbFirst_g      : boolean   := false;            -- $$ export=true $$
-    MosiIdleState_g : std_logic := '0'
-    );
-  port (
+  generic(
+    ClockDivider_g   : natural range 4 to 1_000_000; -- Must be a multiple of two	$$ constant=8 $$
+    TransWidth_g     : positive;          -- SPI Transaction width		$$ constant=8 $$
+    CsHighCycles_g   : positive;          -- $$ constant=2 $$
+    SpiCPOL_g        : natural range 0 to 1; -- $$ export=true $$
+    SpiCPHA_g        : natural range 0 to 1; -- $$ export=true $$
+    SlaveCnt_g       : positive := 1;     -- $$ constant=2 $$
+    LsbFirst_g       : boolean  := false;  -- $$ export=true $$
+    MosiIdleState_g	 : std_logic := '0'
+  );
+  port(
     -- Control Signals
-    Clk : in std_logic;          -- $$ type=clk; freq=100e6 $$
-    Rst : in std_logic;          -- $$ type=rst; clk=Clk $$
+    Clk     : in  std_logic;            -- $$ type=clk; freq=100e6 $$
+    Rst     : in  std_logic;            -- $$ type=rst; clk=Clk $$
 
     -- Parallel Interface
-    Start  : in  std_logic;
-    Slave  : in  std_logic_vector(log2ceil(SlaveCnt_g)-1 downto 0);
-    Busy   : out std_logic;
-    Done   : out std_logic;
-    WrData : in  std_logic_vector(TransWidth_g-1 downto 0);
-    RdData : out std_logic_vector(TransWidth_g-1 downto 0);
-
+    Start   : in  std_logic;
+    Slave   : in  std_logic_vector(log2ceil(SlaveCnt_g) - 1 downto 0);
+    Busy    : out std_logic;
+    Done    : out std_logic;
+    WrData  : in  std_logic_vector(TransWidth_g - 1 downto 0);
+    RdData  : out std_logic_vector(TransWidth_g - 1 downto 0);
     -- SPI 
     SpiSck  : out std_logic;
     SpiMosi : out std_logic;
     SpiMiso : in  std_logic;
-    SpiCs_n : out std_logic_vector(SlaveCnt_g-1 downto 0);
+    SpiCs_n : out std_logic_vector(SlaveCnt_g - 1 downto 0);
     SpiLe   : out std_logic_vector(SlaveCnt_g-1 downto 0)
-    );
+  );
 end entity;
 
 ------------------------------------------------------------------------------
@@ -74,15 +73,15 @@ architecture rtl of psi_common_spi_master is
   type two_process_r is record
     State     : State_t;
     StateLast : State_t;
-    ShiftReg  : std_logic_vector(TransWidth_g-1 downto 0);
-    RdData    : std_logic_vector(TransWidth_g-1 downto 0);
-    SpiCs_n   : std_logic_vector(SlaveCnt_g-1 downto 0);
-    SpiLe     : std_logic_vector(SlaveCnt_g-1 downto 0);
+    ShiftReg  : std_logic_vector(TransWidth_g - 1 downto 0);
+    RdData    : std_logic_vector(TransWidth_g - 1 downto 0);
+    SpiCs_n   : std_logic_vector(SlaveCnt_g - 1 downto 0);
+    SpiLe     : std_logic_vector(SlaveCnt_g - 1 downto 0);
     SpiSck    : std_logic;
     SpiMosi   : std_logic;
     ClkDivCnt : integer range 0 to ClkDivThres_c;
     BitCnt    : integer range 0 to TransWidth_g;
-    CsHighCnt : integer range 0 to CsHighCycles_g-1;
+    CsHighCnt : integer range 0 to CsHighCycles_g - 1;
     Busy      : std_logic;
     Done      : std_logic;
     MosiNext  : std_logic;
@@ -107,9 +106,9 @@ architecture rtl of psi_common_spi_master is
     end if;
   end function;
 
-  procedure ShiftReg(signal BeforeShift  : in  std_logic_vector(TransWidth_g-1 downto 0);
+  procedure ShiftReg(signal BeforeShift  : in std_logic_vector(TransWidth_g-1 downto 0);
                      variable AfterShift : out std_logic_vector(TransWidth_g-1 downto 0);
-                     signal InputBit     : in  std_logic;
+                     signal InputBit     : in std_logic;
                      variable OutputBit  : out std_logic) is
   begin
     if LsbFirst_g then
@@ -117,7 +116,7 @@ architecture rtl of psi_common_spi_master is
       AfterShift := InputBit & BeforeShift(BeforeShift'high downto 1);
     else
       OutputBit  := BeforeShift(BeforeShift'high);
-      AfterShift := BeforeShift(BeforeShift'high-1 downto 0) & InputBit;
+      AfterShift := BeforeShift(BeforeShift'high - 1 downto 0) & InputBit;
     end if;
   end procedure;
 
@@ -188,7 +187,7 @@ begin
 
       when ClkAct_s =>
         v.SpiSck := GetClockLevel(true);
-          -- Apply data if required
+        -- Apply data if required
         if r.ClkDivCnt = 0 then
           if SpiCPHA_g = 1 then
             v.SpiMosi := r.MosiNext;
@@ -196,7 +195,7 @@ begin
             ShiftReg(r.ShiftReg, v.ShiftReg, SpiMiso, v.MosiNext);
           end if;
         end if;
-          -- Clock period handling
+        -- Clock period handling
         if r.ClkDivCnt = ClkDivThres_c then
           v.State     := ClkInact_s;
           v.ClkDivCnt := 0;
@@ -208,7 +207,7 @@ begin
       when CsHigh_s =>
         v.SpiMosi := '0';
         v.SpiCs_n := (others => '1');
-        if r.CsHighCnt = CsHighCycles_g-1 then
+        if r.CsHighCnt = CsHighCycles_g - 1 then
           v.State  := Idle_s;
           v.Busy   := '0';
           v.Done   := '1';
@@ -248,7 +247,7 @@ begin
         r.SpiSck  <= GetClockLevel(false);
         r.Busy    <= '0';
         r.Done    <= '0';
-        r.SpiMosi <= '0';
+        r.SpiMosi <= MosiIdleState_g;
       end if;
     end if;
   end process;
