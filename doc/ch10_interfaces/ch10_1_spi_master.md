@@ -49,7 +49,8 @@ Signal           | Direction | Width           | Description
  SpiSck          | Output    | 1               | SPI clock      
  SpiMosi         | Output    | 1               | SPI master to slave data signal         
  SpiMiso         | Input     | 1               | SPI slave to master data signal          
- SpiCs\_n        | Output    | *SlaveCnt\_g*   | SPI slave select signal (low active)
+ SpiCs\_n        | Output    | *SlaveCnt\_g*   | SPI slave select signal (low active)  
+ SpiLe           | Output    | *SlaveCnt\_g*   | SPI slave latch enable (high active)  
 
 
 <p align="center"><img src="ch10_1_fig24.png"> </p>
