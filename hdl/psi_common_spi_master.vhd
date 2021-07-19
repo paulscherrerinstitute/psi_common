@@ -53,7 +53,8 @@ entity psi_common_spi_master is
     SpiSck  : out std_logic;
     SpiMosi : out std_logic;
     SpiMiso : in  std_logic;
-    SpiCs_n : out std_logic_vector(SlaveCnt_g - 1 downto 0)
+    SpiCs_n : out std_logic_vector(SlaveCnt_g - 1 downto 0);
+    SpiLe   : out std_logic_vector(SlaveCnt_g-1 downto 0)
   );
 end entity;
 
@@ -75,6 +76,7 @@ architecture rtl of psi_common_spi_master is
     ShiftReg  : std_logic_vector(TransWidth_g - 1 downto 0);
     RdData    : std_logic_vector(TransWidth_g - 1 downto 0);
     SpiCs_n   : std_logic_vector(SlaveCnt_g - 1 downto 0);
+    SpiLe     : std_logic_vector(SlaveCnt_g - 1 downto 0);
     SpiSck    : std_logic;
     SpiMosi   : std_logic;
     ClkDivCnt : integer range 0 to ClkDivThres_c;
@@ -149,7 +151,7 @@ begin
         v.CsHighCnt := 0;
         v.ClkDivCnt := 0;
         v.BitCnt    := 0;
-
+        v.SpiLe     := (others => '0');
       when SftComp_s =>
         v.State := ClkInact_s;
         -- Compensate shift for CPHA 0
@@ -172,7 +174,8 @@ begin
           -- All bits done
           if r.BitCnt = TransWidth_g then
             v.SpiMosi := MosiIdleState_g;
-            v.State := CsHigh_s;
+            v.State   := CsHigh_s;
+            v.SpiLe   := not r.SpiCs_n;
           -- Otherwise contintue
           else
             v.State := ClkAct_s;
@@ -202,6 +205,7 @@ begin
         end if;
 
       when CsHigh_s =>
+        v.SpiMosi := '0';
         v.SpiCs_n := (others => '1');
         if r.CsHighCnt = CsHighCycles_g - 1 then
           v.State  := Idle_s;
@@ -228,7 +232,7 @@ begin
   SpiSck  <= r.SpiSck;
   SpiCs_n <= r.SpiCs_n;
   SpiMosi <= r.SpiMosi;
-
+  SpiLe   <= r.SpiLe;
   --------------------------------------------------------------------------
   -- Sequential Proccess
   --------------------------------------------------------------------------
@@ -239,6 +243,7 @@ begin
       if Rst = '1' then
         r.State   <= Idle_s;
         r.SpiCs_n <= (others => '1');
+        r.SpiLe   <= (others => '0');
         r.SpiSck  <= GetClockLevel(false);
         r.Busy    <= '0';
         r.Done    <= '0';
@@ -246,6 +251,7 @@ begin
       end if;
     end if;
   end process;
+
 
 end;
 

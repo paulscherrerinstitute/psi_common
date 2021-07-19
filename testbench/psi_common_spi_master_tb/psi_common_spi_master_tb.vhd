@@ -69,6 +69,7 @@ architecture sim of psi_common_spi_master_tb is
   signal SpiSck  : std_logic                                           := '0';
   signal SpiMosi : std_logic                                           := '0';
   signal SpiMiso : std_logic                                           := '0';
+  signal SpiLe   : std_logic_vector(SlaveCnt_g-1 downto 0)             := (others => '0');
   signal SpiCs_n : std_logic_vector(SlaveCnt_g - 1 downto 0)           := (others => '0');
 
   -- *** Handwritten Stuff ***
@@ -105,7 +106,8 @@ begin
       SpiSck  => SpiSck,
       SpiMosi => SpiMosi,
       SpiMiso => SpiMiso,
-      SpiCs_n => SpiCs_n
+      SpiCs_n => SpiCs_n,
+      SpiLe   => SpiLe
     );
 
   ------------------------------------------------------------
@@ -289,10 +291,11 @@ begin
             ShiftRegRx_v := ShiftRegRx_v(TransWidth_g - 2 downto 0) & SpiMosi;
           end if;
         end loop;
-
+        StdlCompare ('0', SpiLe(SlaveNr),  "LE is not low");
         -- wait fir CS going high
         wait until SpiCs_n = "11";
-        StdlvCompareStdlv(ExpectedSlaveRx, ShiftRegRx_v, "SPI slave received wrong data");
+        StdlCompare ('1', SpiLe(SlaveNr), "LE not high after transmission");
+        StdlvCompareStdlv (ExpectedSlaveRx, ShiftRegRx_v, "SPI slave received wrong data");
       else
         wait until rising_edge(Clk);
       end if;

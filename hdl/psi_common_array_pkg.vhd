@@ -47,7 +47,8 @@ package psi_common_array_pkg is
   type t_aslv36   is array (natural range <>) of std_logic_vector(35 downto 0);
   type t_aslv48   is array (natural range <>) of std_logic_vector(47 downto 0);
   type t_aslv64   is array (natural range <>) of std_logic_vector(63 downto 0);
-  
+  type t_aslv512  is array (natural range <>) of std_logic_vector(511 downto 0);
+
   type t_ainteger is array (natural range <>) of integer;
   type t_areal is array (natural range <>) of real;
   type t_abool is array (natural range <>) of boolean;
