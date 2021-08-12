@@ -122,7 +122,9 @@ begin
       if rising_edge(Clk) then
         r <= r_next;
         if Rst = '1' then
+          r.DataMain <= (others => '0');
           r.DataMainVld <= '0';
+          r.DataShad <= (others => '0');
           r.DataShadVld <= '0';
           r.InRdy       <= '1';
         end if;
