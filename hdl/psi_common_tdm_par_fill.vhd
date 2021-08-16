@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
+--  Copyright (c) 2021 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
 --  Authors: Oliver Bruendler, Elmar Schmid
 ------------------------------------------------------------------------------
