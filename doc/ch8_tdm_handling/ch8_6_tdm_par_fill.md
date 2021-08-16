@@ -3,8 +3,8 @@
 ***
 # psi_common_tdm_par_fill
 
-- VHDL source: [psi_common_tdm_par.vhd](../../hdl/psi_common_tdm_par_fill.vhd)
-- Testbench: [psi_common_tdm_par_tb.vhd](../../testbench/psi_common_tdm_par_fill_tb/psi_common_tdm_par_fill_tb.vhd)
+- VHDL source: [psi_common_tdm_par_fill.vhd](../../hdl/psi_common_tdm_par_fill.vhd)
+- Testbench: [psi_common_tdm_par_fill_tb.vhd](../../testbench/psi_common_tdm_par_fill_tb/psi_common_tdm_par_fill_tb.vhd)
 
 ### Description
 
