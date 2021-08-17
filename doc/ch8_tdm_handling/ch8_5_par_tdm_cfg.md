@@ -37,4 +37,4 @@ TdmLast | Output | 1 | AXI-S TLAST signal, set for the last transfer in a packet
 Tdm | Output | ChannelWidth | Data signal output
 
 ***
-[Index](../psi_common_index.md) **|** Previous: [TDM hanlding > tdm mux](../ch8_tdm_handling/ch8_4_tdm_mux.md) **|** Next: [Arbiters > arb priority](../ch9_arbiters/ch9_1_arb_priority.md)
+[Index](../psi_common_index.md) **|** Previous: [TDM hanlding > tdm mux](../ch8_tdm_handling/ch8_4_tdm_mux.md) **|** Next: [Arbiters > tdm par fill](../ch8_tdm_handling/ch8_6_tdm_par_fill.md)

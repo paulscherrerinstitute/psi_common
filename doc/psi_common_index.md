@@ -94,6 +94,8 @@
 
 [8.5 psi\_common\_tdm\_mux](ch8_tdm_handling/ch8_5_par_tdm_cfg.md)
 
+[8.6 psi\_common\_tdm\_par\_fill](ch8_tdm_handling/ch8_6_tdm_par_fill.md)
+
 ### 9 Arbiters
 
 [9.1 psi\_common\_arb\_priority](ch9_arbiters/ch9_1_arb_priority.md)
