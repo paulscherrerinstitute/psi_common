@@ -91,8 +91,10 @@ begin
   --*** Pulse generator ***  
   inst_pulse : entity work.psi_common_ramp_gene
     generic map(
-      width_g   => length_g,
-      rst_pol_g => rst_pol_g)
+      width_g     => length_g,
+      is_sign_g   => false,
+      rst_pol_g   => rst_pol_g,
+      init_val_g  => 0)
     port map(
       clk_i      => clk_i,
       rst_i      => rst_i,
