@@ -144,12 +144,12 @@ begin
     RamRdAddr <= v.RdAddr;
 
     -- Read side status
-    if unsigned(r.RdLevel) = 0 then
-      OutVld <= '0';
-      Empty  <= '1';
-    else
+    if unsigned(r.RdLevel) > 0 then
       OutVld <= '1';
       Empty  <= '0';
+    else
+      OutVld <= '0';
+      Empty  <= '1';
     end if;
 
     if AlmEmptyOn_g and unsigned(r.RdLevel) <= AlmEmptyLevel_g then
