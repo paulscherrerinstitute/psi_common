@@ -1,3 +1,9 @@
+## 2.17.0
+* Added Features
+  * Added *psi\_common\_tdm_par_fill* - update tdm par to cope with AXI
+* Bugfixes
+  * update static_pulse due to new egenric for ramp gene
+  * solve issue in sync fifo - outvld no assign to 1 prior reset is release
 ## 2.16.0
 * Added Features
   	* Added *psi\_common\_find\_min\_max* - find min and max value withn a dedicated time period
