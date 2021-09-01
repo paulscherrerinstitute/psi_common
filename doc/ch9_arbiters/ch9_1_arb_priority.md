@@ -30,10 +30,10 @@ Generics						  | Description
 ### Interfaces
 
 Signal              | Direction | Width     | Description
---------------------|-----------|-----------|-----------------------------------------------         
-Clk                 | Input     | 1         | Clock               
+--------------------|-----------|-----------|-----------------------------------------------
+Clk                 | Input     | 1         | Clock
 Rst                 | Input     | 1         | Reset (high active)
-Request             | Input     | *Size\_g* | Request input signals, The highest (left-most) bit has highest priority  
+Request             | Input     | *Size\_g* | Request input signals, The highest (left-most) bit has highest priority
 Grant               | Output    | *Size\_g* | Grant output signal
 
 ### Architecture
@@ -50,4 +50,4 @@ The figure below shows the parallel prefix computation graphically.
 
 
 ***
-[Index](../psi_common_index.md) **|** Previous: [TDM hanlding > par tdm cfg](../ch8_tdm_handling/ch8_5_par_tdm_cfg.md) **|** Next: [Arbiters > arb round_robin](../ch9_arbiters/ch9_2_arb_round_robin.md)
+[Index](../psi_common_index.md) **|** Previous: [TDM hanlding > par tdm fill](../ch8_tdm_handling/ch8_6_tdm_par_fill.md) **|** Next: [Arbiters > arb round_robin](../ch9_arbiters/ch9_2_arb_round_robin.md)

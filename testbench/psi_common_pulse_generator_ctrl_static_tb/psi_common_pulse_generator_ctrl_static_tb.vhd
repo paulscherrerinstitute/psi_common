@@ -240,9 +240,9 @@ begin
     trig_sti     <= '1';
     wait for (step_fll_g*200)*(1 sec /str_freq_g);
     stop_sti <= '1';
-     print("[INFO]: pulse ABORT at " & to_string(now, ns));
-    wait until str_obs = '1';
-    wait until str_obs = '1';
+    print("[INFO]: pulse ABORT at " & to_string(now, ns));
+    wait until rising_edge(str_obs);
+    wait until rising_edge(str_obs);
     assert dat_obs =to_uslv(0,length_g) report"[ERROR]: It didn't stop " severity error; 
    
     print(" *********************************************************");

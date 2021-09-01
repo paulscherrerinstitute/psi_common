@@ -43,7 +43,7 @@ architecture tb of psi_common_min_max_mean_tb is
   signal max_s        : std_logic_vector(data_length_g - 1 downto 0) := (others => '0');
   signal counter_s    : integer :=0;
 begin
-
+  assert data_length_g < 32 report "[ERROR]: for this test bench only data length less than 32 are authorized" severity failure;
   --*** Reset generation ***
   proc_rst : process
   begin
