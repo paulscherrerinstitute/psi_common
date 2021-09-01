@@ -90,15 +90,13 @@ begin
         v.counter := r.counter-1;
       end if;
     end if;
-    
+
     --*** check pol I/O and counter done => assign output ***
-    if pol_eq_c then
-      if r.counter = 0 and r.output /= r.inp_dff then
-        v.output := r.inp_dff; 
-      end if;
-    else
-      if r.counter = 0 and r.output =r.inp_dff then
-        v.output := not r.inp_dff; 
+    if r.counter = 0 then
+      if pol_eq_c then
+        v.output := r.inp_dff;
+      else
+        v.output := not r.inp_dff;
       end if;
     end if;
     
