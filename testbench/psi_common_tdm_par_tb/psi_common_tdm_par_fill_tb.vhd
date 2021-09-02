@@ -74,25 +74,24 @@ architecture sim of psi_common_tdm_par_fill_tb is
                           Msg    : in string) is
   begin
     wait until rising_edge(Clk) and ParallelVld = '1' for 1 us;
-    -- Check channel value
-    for ch in Values'range loop
-      if Keep(ch) = '1' then
-        StdlvCompareInt(Values(ch), Parallel((ch+1) * ChannelWidth_g - 1 downto ch * ChannelWidth_g), Msg & "Wrong value Channel " & integer'image(ch), false);
-      else
-        StdlvCompareInt(         0, Parallel((ch+1) * ChannelWidth_g - 1 downto ch * ChannelWidth_g), Msg & "Wrong value Channel " & integer'image(ch), false);
-      end if;
-    end loop;
     -- Check Keep vector
     StdlvCompareStdlv(Keep, ParallelKeep, Msg & "Mismatching Keep:");
     -- Check Last signal
     StdlCompare(Last, ParallelLast, Msg & "Mismatching Last:");
+    -- Check channel value
+    for ch in Values'range loop
+       -- Only check value if keep is set (otherwise the value does not play any role)
+      if Keep(ch) = '1' then
+        StdlvCompareInt(Values(ch), Parallel((ch+1) * ChannelWidth_g - 1 downto ch * ChannelWidth_g), Msg & "Wrong value Channel " & integer'image(ch), false);
+      end if;
+    end loop; 
   end procedure;
 
 begin
   ------------------------------------------------------------
   -- DUT Instantiation
   ------------------------------------------------------------
-  i_dut : entity work.psi_common_tdm_par_fill
+  i_dut : entity work.psi_common_tdm_par
     generic map(
       ChannelCount_g => ChannelCount_g,
       ChannelWidth_g => ChannelWidth_g
@@ -221,9 +220,9 @@ begin
         wait until rising_edge(Clk);
         TdmVld <= '0';
         Tdm    <= (others => '0');
-        for del in 0 to 9 loop
-          wait until rising_edge(Clk);
-        end loop;
+        --for del in 0 to 9 loop
+        --  wait until rising_edge(Clk);
+        --end loop;
         if (sample = 2 and channel = 0) or
            (sample = 4 and channel = 1) or
            (sample = 6 and channel = 2) then
