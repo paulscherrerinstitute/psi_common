@@ -18,7 +18,7 @@ use ieee.math_real.all;
 
 use work.psi_common_math_pkg.all;
 --@formatter:off
-entity psi_common_min_max_mean is
+entity psi_common_min_max_sum is
   generic(clock_cycle_g : positive  := 128;                                   -- clock cycle for accumulator time
           signed_data_g : boolean   := true;                                  -- data signed/unsigned
           data_length_g : natural   := 16;                                    -- data length 
@@ -32,10 +32,10 @@ entity psi_common_min_max_mean is
           str_o         : out std_logic;                                      -- output strobe/valid
           min_o         : out std_logic_vector(data_length_g - 1 downto 0);   -- output min val
           max_o         : out std_logic_vector(data_length_g - 1 downto 0);   -- output max val
-          mean_o        : out std_logic_vector(accu_length_g-1 downto 0));    -- output vector sum
+          sum_o         : out std_logic_vector(accu_length_g-1 downto 0));    -- output vector sum
 end entity;
 --@formatter:on
-architecture RTL of psi_common_min_max_mean is
+architecture RTL of psi_common_min_max_sum is
   --internals
   signal counter_s        : unsigned(log2ceil(clock_cycle_g) downto 0):=(others=>'0');
   signal raz_s            : std_logic;
@@ -99,7 +99,7 @@ begin
           str_o  <= '1';
           min_o  <= min_dat_s;
           max_o  <= max_dat_s;
-          mean_o <= mean_s;
+          sum_o <= mean_s;
         else
           str_o <= '0';
         end if;

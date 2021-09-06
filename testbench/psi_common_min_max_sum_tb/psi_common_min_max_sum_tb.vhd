@@ -10,7 +10,7 @@ use work.psi_tb_activity_pkg.all;
 use work.psi_tb_compare_pkg.all;
 use work.psi_common_math_pkg.all;
 
-entity psi_common_min_max_mean_tb is
+entity psi_common_min_max_sum_tb is
   generic(clock_cycle_g : integer := 100;
           signed_data_g : boolean := true;
           data_length_g : natural := 16;
@@ -19,7 +19,7 @@ entity psi_common_min_max_mean_tb is
          );
 end entity;
 
-architecture tb of psi_common_min_max_mean_tb is
+architecture tb of psi_common_min_max_sum_tb is
   --internals
   constant freq_clk_c : real                                         := 100.0E6;
   constant period_c   : time                                         := (1 sec) / freq_clk_c;
@@ -85,7 +85,7 @@ begin
   end process;
 
   --*** DUT ***
-  inst_dut : entity work.psi_common_min_max_mean
+  inst_dut : entity work.psi_common_min_max_sum
     generic map(clock_cycle_g => clock_cycle_g,
                 signed_data_g => signed_data_g,
                 data_length_g => data_length_g,
@@ -99,7 +99,7 @@ begin
              str_o  => str_obs,
              min_o  => min_obs,
              max_o  => max_obs,
-             mean_o => mean_obs);
+             sum_o => mean_obs);
 
   process(clk_sti)
     variable seed1_v  : positive := 1;

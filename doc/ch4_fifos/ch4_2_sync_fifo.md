@@ -46,16 +46,12 @@ InRdy                              |Output     |1         |AXI-S handshaking sig
 OutData                            |Output     |Width\_g  |Read data
 OutVld                             |Output     |1         |AXI-S handshaking signal
 OutRdy                             |Input      |1         |AXI-S handshaking signal
-InFull                             | Output    |1         |FIFO full signal synchronous to *InClk*          
-InEmpty                            | Output    |1         |FIFO empty signal synchronous to *InClk*          
-InAlmFull                          | Output    |1         | FIFO almost full signal synchronous to *InClk* Only exists if *AlmFullOn\_g* = true            
-InAlmEmpty                         | Output    |1         | FIFO almost empty signal synchronous to *InClk*  Only exists if *AlmEmptyOn\_g* = true  
-InLevel                            | Output    | ceil(log2(Depth\_g))+1    | FIFO level synchronous to *InClk*   
-OutFull                            | Output    | 1        | FIFO full signal synchronous to *OutClk*       
-OutEmpty                           | Output    | 1        | FIFO empty signal synchronous to *OutClk*         
-OutAlmFull                         | Output    | 1        | FIFO almost full signal synchronous to *OutClk*  Only exists if *AlmFullOn\_g* =  true      
-OutAlmEmpty                        | Output    | 1        | FIFO almost  empty signal synchronous to *OutClk* Only exists if *AlmEmptyOn\_g*= true           
-OutLevel                           | Output    | ceil(log2(Depth\_g))+1  | FIFO level     synchronous to  *OutClk*
+Full                               | Output    |1         |FIFO full signal          
+AlmFull                            | Output    |1         | FIFO almost full signal Only exists if *AlmFullOn\_g* = true       
+InLevel                            | Output    | ceil(log2(Depth\_g))+1    | FIFO level In      
+Empty                              | Output    | 1        | FIFO empty signal         
+AlmEmpty                           | Output    | 1        | FIFO almost  empty signal Only exists if *AlmEmptyOn\_g*= true           
+OutLevel                           | Output    | ceil(log2(Depth\_g))+1  | FIFO level out
 
 ***
 [Index](../psi_common_index.md)**|** Previous: [FIFO > async fifo](../ch4_fifos/ch4_1_async_fifo.md) **|** Next: [CC | Pulse cc](../ch5_cc/ch5_1_pulse_cc.md)
