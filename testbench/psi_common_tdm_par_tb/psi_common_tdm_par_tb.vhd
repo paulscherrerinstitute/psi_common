@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
---  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
+--  Copyright (c) 2021 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
---  Authors: Oliver Bruendler
+--  Authors: Oliver Bruendler, Elmar Schmid
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------
@@ -48,25 +48,43 @@ architecture sim of psi_common_tdm_par_tb is
   constant TbProcNr_outp_c    : integer                  := 1;
 
   -- *** DUT Signals ***
-  signal Clk         : std_logic                                                      := '1';
-  signal Rst         : std_logic                                                      := '1';
-  signal Tdm         : std_logic_vector(ChannelWidth_g - 1 downto 0)                  := (others => '0');
-  signal TdmVld      : std_logic                                                      := '0';
-  signal TdmRdy      : std_logic                                                      := '0';
-  signal Parallel    : std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0) := (others => '0');
-  signal ParallelVld : std_logic                                                      := '0';
-  signal ParallelRdy : std_logic                                                      := '1';
+  signal Clk          : std_logic                                                      := '1';
+  signal Rst          : std_logic                                                      := '1';
+  signal Tdm          : std_logic_vector(ChannelWidth_g - 1 downto 0)                  := (others => '0');
+  signal TdmVld       : std_logic                                                      := '0';
+  signal TdmRdy       : std_logic                                                      := '0';
+  signal TdmLast      : std_logic                                                      := '0';
+  signal Parallel     : std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0) := (others => '0');
+  signal ParallelVld  : std_logic                                                      := '0';
+  signal ParallelRdy  : std_logic                                                      := '1';
+  signal ParallelKeep : std_logic_vector(ChannelCount_g - 1 downto 0)                  := (others => '1');
+  signal ParallelLast : std_logic                                                      := '0';
 
   -- handwritten
   signal TestCase : integer         := -1;
   signal Channels : t_aslv8(0 to 2) := (others => (others => '0'));
 
-  procedure ExpectChannels(Values : in t_ainteger(0 to 2)) is
+  -- Target Values
+  constant KeepTargetValues : t_aslv3(0 to 7)          := ("111", "111", "001", "111", "011", "111", "111", "111");
+  constant LastTargetValues : std_logic_vector(0 to 7) := "00101010";
+
+  procedure ExpectOutputs(Values : in t_ainteger(0 to 2);
+                          Keep   : in std_logic_vector(ParallelKeep'range);
+                          Last   : in std_logic;
+                          Msg    : in string) is
   begin
     wait until rising_edge(Clk) and ParallelVld = '1' for 1 us;
-    StdlvCompareInt(Values(0), Parallel(1 * ChannelWidth_g - 1 downto 0 * ChannelWidth_g), "Wrong value Channel 0", false);
-    StdlvCompareInt(Values(1), Parallel(2 * ChannelWidth_g - 1 downto 1 * ChannelWidth_g), "Wrong value Channel 1", false);
-    StdlvCompareInt(Values(2), Parallel(3 * ChannelWidth_g - 1 downto 2 * ChannelWidth_g), "Wrong value Channel 2", false);
+    -- Check Keep vector
+    StdlvCompareStdlv(Keep, ParallelKeep, Msg & "Mismatching Keep:");
+    -- Check Last signal
+    StdlCompare(Last, ParallelLast, Msg & "Mismatching Last:");
+    -- Check channel value
+    for ch in Values'range loop
+       -- Only check value if keep is set (otherwise the value does not play any role)
+      if Keep(ch) = '1' then
+        StdlvCompareInt(Values(ch), Parallel((ch+1) * ChannelWidth_g - 1 downto ch * ChannelWidth_g), Msg & "Wrong value Channel " & integer'image(ch), false);
+      end if;
+    end loop; 
   end procedure;
 
 begin
@@ -79,14 +97,17 @@ begin
       ChannelWidth_g => ChannelWidth_g
     )
     port map(
-      Clk         => Clk,
-      Rst         => Rst,
-      Tdm         => Tdm,
-      TdmVld      => TdmVld,
-      TdmRdy      => TdmRdy,
-      Parallel    => Parallel,
-      ParallelVld => ParallelVld,
-      ParallelRdy => ParallelRdy
+      Clk          => Clk,
+      Rst          => Rst,
+      Tdm          => Tdm,
+      TdmVld       => TdmVld,
+      TdmRdy       => TdmRdy,
+      TdmLast      => TdmLast,
+      Parallel     => Parallel,
+      ParallelVld  => ParallelVld,
+      ParallelRdy  => ParallelRdy,
+      ParallelKeep => ParallelKeep,
+      ParallelLast => ParallelLast
     );
 
   ------------------------------------------------------------
@@ -138,6 +159,7 @@ begin
     -- *** Samples with much space in between ***
     TestCase <= 0;
     wait until rising_edge(Clk);
+    TdmLast  <= '0';
     for sample in 0 to 3 loop
       for channel in 0 to 2 loop
         TdmVld <= '1';
@@ -155,6 +177,7 @@ begin
     TestCase <= 1;
     wait until rising_edge(Clk);
     TdmVld   <= '1';
+    TdmLast  <= '0';
     for sample in 0 to 3 loop
       for channel in 0 to 2 loop
         Tdm <= std_logic_vector(to_unsigned(16#50# + channel * 16#10# + sample, Tdm'length));
@@ -162,12 +185,14 @@ begin
       end loop;
     end loop;
     TdmVld   <= '0';
+    wait until rising_edge(Clk);
     wait for 1 us;
 
     -- *** Handshaking ***
     TestCase <= 2;
     wait until rising_edge(Clk);
     TdmVld   <= '1';
+    TdmLast  <= '0';
     for sample in 0 to 3 loop
       for channel in 0 to 2 loop
         Tdm <= std_logic_vector(to_unsigned(channel * 16#10# + sample, Tdm'length));
@@ -175,6 +200,80 @@ begin
       end loop;
     end loop;
     TdmVld   <= '0';
+    wait until rising_edge(Clk);
+    wait for 1 us;
+
+    -- *** Samples with much space in between and last on first, middle and final input sample***
+    TestCase <= 3;
+    wait until rising_edge(Clk);
+    TdmLast  <= '0';
+    for sample in 0 to 7 loop
+      for channel in 0 to 2 loop
+        TdmVld  <= '1';
+        TdmLast <= '0';
+        Tdm    <= std_logic_vector(to_unsigned(channel * 16#10# + sample, Tdm'length));
+        if (sample = 2 and channel = 0) or
+           (sample = 4 and channel = 1) or
+           (sample = 6 and channel = 2) then
+          TdmLast  <= '1';
+        end if;
+        wait until rising_edge(Clk);
+        TdmVld <= '0';
+        Tdm    <= (others => '0');
+        --for del in 0 to 9 loop
+        --  wait until rising_edge(Clk);
+        --end loop;
+        if (sample = 2 and channel = 0) or
+           (sample = 4 and channel = 1) or
+           (sample = 6 and channel = 2) then
+          exit; -- if this was the last input, ignore the rest of the sample
+        end if;
+      end loop;
+    end loop;
+
+    -- *** Last on first, middle and final input sample ***
+    TestCase <= 4;
+    wait until rising_edge(Clk);
+    TdmVld   <= '1';
+    for sample in 0 to 7 loop
+      TdmLast  <= '0';
+      for channel in 0 to 2 loop
+        Tdm <= std_logic_vector(to_unsigned(channel * 16#10# + sample, Tdm'length));
+        if (sample = 2 and channel = 0) or
+           (sample = 4 and channel = 1) or
+           (sample = 6 and channel = 2) then
+          TdmLast  <= '1';
+          wait until rising_edge(Clk) and TdmRdy = '1';
+          exit;
+        end if;
+        wait until rising_edge(Clk) and TdmRdy = '1';
+      end loop;
+    end loop;
+    TdmVld   <= '0';
+    wait until rising_edge(Clk);
+    wait for 1 us;
+
+    -- *** Handshaking with last on first, middle and final input sample ***
+    TestCase <= 5;
+    wait until rising_edge(Clk);
+    TdmVld   <= '1';
+    for sample in 0 to 7 loop
+      TdmLast  <= '0';
+      for channel in 0 to 2 loop
+        Tdm <= std_logic_vector(to_unsigned(channel * 16#10# + sample, Tdm'length));
+        if (sample = 2 and channel = 0) or
+           (sample = 4 and channel = 1) or
+           (sample = 6 and channel = 2) then
+          TdmLast  <= '1';
+          wait until rising_edge(Clk) and TdmRdy = '1' for 1 us;
+          exit;
+        end if;
+        wait until rising_edge(Clk) and TdmRdy = '1' for 1 us;
+      end loop;
+    end loop;
+    TdmVld   <= '0';
+    wait until rising_edge(Clk);
+    wait for 1 us;
 
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_inp_c) <= '1';
@@ -190,26 +289,56 @@ begin
     -- *** Samples with much space in between ***
     wait until TestCase = 0;
     for sample in 0 to 3 loop
-      ExpectChannels((16#00# + sample, 16#10# + sample, 16#20# + sample));
+      ExpectOutputs((16#00# + sample, 16#10# + sample, 16#20# + sample), "111", '0', "Test case " & integer'image(TestCase) & " sample " & integer'image(sample) & ": ");
     end loop;
+    print("# info: Samples with much space in between completed");
 
     -- *** Samples back to back ***
     wait until TestCase = 1;
     for sample in 0 to 3 loop
-      ExpectChannels((16#50# + sample, 16#60# + sample, 16#70# + sample));
+      ExpectOutputs((16#50# + sample, 16#60# + sample, 16#70# + sample), "111", '0', "Test case " & integer'image(TestCase) & " sample " & integer'image(sample) & ": ");
     end loop;
-
+    print("# info: Samples back to back completed");
+    
     -- *** Handshaking ***
     wait until TestCase = 2;
     wait until rising_edge(Clk);
     for sample in 0 to 3 loop
-      ParallelRdy <= '0'; 
+      ParallelRdy <= '0';
       for i in 0 to 19 loop
         wait until rising_edge(Clk);
       end loop;
-      ParallelRdy <= '1'; 
-      ExpectChannels((16#00# + sample, 16#10# + sample, 16#20# + sample));
+      ParallelRdy <= '1';
+      ExpectOutputs((16#00# + sample, 16#10# + sample, 16#20# + sample), "111", '0', "Test case " & integer'image(TestCase) & " sample " & integer'image(sample) & ": ");
     end loop;
+    print("# info: sample back to back completed");
+    
+    -- *** Samples with much space in between and last on first, middle and final input sample***
+    wait until TestCase = 3;
+    for sample in 0 to 7 loop
+      ExpectOutputs((16#00# + sample, 16#10# + sample, 16#20# + sample), KeepTargetValues(sample), LastTargetValues(sample), "Test case " & integer'image(TestCase) & " sample " & integer'image(sample) & ": ");
+    end loop;
+    print("# info: Samples with much space in between completed");
+    
+    -- *** Last on first, middle and final input sample ***
+    wait until rising_edge(Clk) and TestCase = 4;
+    for sample in 0 to 7 loop
+      ExpectOutputs((16#00# + sample, 16#10# + sample, 16#20# + sample), KeepTargetValues(sample), LastTargetValues(sample), "Test case " & integer'image(TestCase) & " sample " & integer'image(sample) & ": ");
+    end loop;
+    print("# info: Last on first, middle and final input sample completed");
+    
+    -- *** Handshaking with last on first, middle and final input sample ***
+    wait until TestCase = 5;
+    wait until rising_edge(Clk);
+    for sample in 0 to 7 loop
+      ParallelRdy <= '0';
+      for i in 0 to 19 loop
+        wait until rising_edge(Clk);
+      end loop;
+      ParallelRdy <= '1';
+      ExpectOutputs((16#00# + sample, 16#10# + sample, 16#20# + sample), KeepTargetValues(sample), LastTargetValues(sample), "Test case " & integer'image(TestCase) & " sample " & integer'image(sample) & ": ");
+    end loop;
+    print("# info: Handshaking with last on first, middle and final input sample completed");
 
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_outp_c) <= '1';
