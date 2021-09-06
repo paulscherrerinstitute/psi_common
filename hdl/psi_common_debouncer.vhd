@@ -58,25 +58,20 @@ begin
 
   --*** double stage synchronizer ***  
   gene_sync : if sync_g generate
-    signal dff_s : std_logic_vector(len_g-1 downto 0);
-    --*** Set Attribute to avoid Xil - Synth moving to DFF to SRL ***
-    attribute syn_srlstyle : string;
-    attribute shreg_extract : string;
-    attribute syn_srlstyle of dff_s   : signal is "registers";
-    attribute shreg_extract of dff_s  : signal is "no";
-    begin
-      proc_dff : process(clk_i)
-      begin
-        if rising_edge(clk_i) then
-          dff_s       <= inp_i;
-          inp_sync_s  <= dff_s;
-        end if;
-      end process;
+    i_sync : entity work.psi_common_bit_cc
+      generic map (
+        NumBits_g => len_g
+      )
+      port map (
+        BitsA => inp_i,
+        ClkB  => clk_i,
+        BitsB => inp_sync_s
+    );
   end generate;
   
   --*** no sync ***
   gene_nosync : if not sync_g generate
-  inp_sync_s <= inp_i;
+    inp_sync_s <= inp_i;
   end generate;
 
   proc_comb : process(inp_sync_s, r)
@@ -95,15 +90,13 @@ begin
         v.counter := r.counter-1;
       end if;
     end if;
-    
+
     --*** check pol I/O and counter done => assign output ***
-    if pol_eq_c then
-      if r.counter = 0 and r.output /= r.inp_dff then
-        v.output := r.inp_dff; 
-      end if;
-    else
-      if r.counter = 0 and r.output =r.inp_dff then
-        v.output := not r.inp_dff; 
+    if r.counter = 0 then
+      if pol_eq_c then
+        v.output := r.inp_dff;
+      else
+        v.output := not r.inp_dff;
       end if;
     end if;
     
