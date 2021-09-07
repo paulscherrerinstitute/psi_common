@@ -25,38 +25,38 @@ use work.psi_common_math_pkg.all;
 ------------------------------------------------------------------------------
 entity psi_common_sync_fifo is
   generic(
-    Width_g         : positive  := 16;
-    Depth_g         : positive  := 32;
-    AlmFullOn_g     : boolean   := false;
-    AlmFullLevel_g  : natural   := 28;
-    AlmEmptyOn_g    : boolean   := false;
-    AlmEmptyLevel_g : natural   := 4;
-    RamStyle_g      : string    := "auto";
+    Width_g         : positive  := 16;    -- width
+    Depth_g         : positive  := 32;    -- depth
+    AlmFullOn_g     : boolean   := false; -- almost full signal active
+    AlmFullLevel_g  : natural   := 28;    -- almost full level threshold val
+    AlmEmptyOn_g    : boolean   := false; -- almost empty signal active
+    AlmEmptyLevel_g : natural   := 4;     -- almost empty level threshold val
+    RamStyle_g      : string    := "auto";-- RAM style selected -> "Auto" choose depedning size block-RAM or dist-RAM | "distributed" | "block"
     RamBehavior_g   : string    := "RBW"; -- "RBW" = read-before-write, "WBR" = write-before-read
-    RdyRstState_g   : std_logic := '1'  -- Use '1' for minimal logic on Rdy path
+    RdyRstState_g   : std_logic := '1'    -- Use '1' for minimal logic on Rdy path
   );
   port(
     -- Control Ports
-    Clk      : in  std_logic;
-    Rst      : in  std_logic;
+    Clk      : in  std_logic; -- clock in
+    Rst      : in  std_logic; -- system reset
     -- Input Data
-    InData   : in  std_logic_vector(Width_g - 1 downto 0);
-    InVld    : in  std_logic;
-    InRdy    : out std_logic;           -- not full
+    InData   : in  std_logic_vector(Width_g - 1 downto 0); -- data input
+    InVld    : in  std_logic; -- AXI-S handshaking signal | strobe in
+    InRdy    : out std_logic; -- AXI-S handshaking signal | not full
 
     -- Output Data
-    OutData  : out std_logic_vector(Width_g - 1 downto 0);
-    OutVld   : out std_logic;           -- not empty
-    OutRdy   : in  std_logic;
+    OutData  : out std_logic_vector(Width_g - 1 downto 0); -- Read Data
+    OutVld   : out std_logic; -- AXI-S handshaking signal | strobe out
+    OutRdy   : in  std_logic; -- AXI-S handshaking signal | not empty 
     -- Input Status
-    Full     : out std_logic;
-    AlmFull  : out std_logic;
-    InLevel  : out std_logic_vector(log2ceil(Depth_g) downto 0);
+    Full     : out std_logic; -- FIFO full 
+    AlmFull  : out std_logic; -- FIFO Almost full 
+    InLevel  : out std_logic_vector(log2ceil(Depth_g) downto 0); -- FIFO in level
     -- Output Status
-    Empty    : out std_logic;
-    AlmEmpty : out std_logic;
-    OutLevel : out std_logic_vector(log2ceil(Depth_g) downto 0)
-  );
+    Empty    : out std_logic; -- FIFO Empty 
+    AlmEmpty : out std_logic; -- FIFO Almost empty 
+    OutLevel : out std_logic_vector(log2ceil(Depth_g) downto 0) -- FIFO out level
+  ); 
 end entity;
 
 ------------------------------------------------------------------------------

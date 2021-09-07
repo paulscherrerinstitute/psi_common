@@ -3,8 +3,8 @@
 ***
 # psi_common_min_max_mean
 
-- VHDL source: [psi_common_min_max_mean.vhd](../../hdl/psi_common_min_max_mean.vhd)
-- Testbench:  [psi_common_min_max_mean_tb.vhd](../../testbench/psi_common_min_max_mean_tb/psi_common_min_max_mean_tb.vhd)
+- VHDL source: [psi_common_min_max_sum.vhd](../../hdl/psi_common_min_max_sum.vhd)
+- Testbench:  [psi_common_min_max_sum_tb.vhd](../../testbench/psi_common_min_max_sum_tb/psi_common_min_max_sum_tb.vhd)
 
 ### Description
 This component provides for a given time period **clock_cycle_g**, the minimum, the maximum and the accumulator of a single channel data stream. The stream can be synchronized with external input. In order to get average/mean value, output vector sum needs to be divided by the number required data sample; **clock_cycle_g** defines the number of samples.

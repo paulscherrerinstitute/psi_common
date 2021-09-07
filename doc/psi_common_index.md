@@ -152,7 +152,7 @@
 
 [11.16 psi\_common\_find_\_min_\_max](ch11_misc/ch11_16_find_min_max.md)
 
-[11.17 psi\_common\_min_\_max_\_mean](ch11_misc/ch11_17_min_max_mean.md)
+[11.17 psi\_common\_min_\_max_\_sum](ch11_misc/ch11_17_min_max_sum.md)
 
 ### Others
 
