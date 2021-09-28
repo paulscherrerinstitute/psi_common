@@ -4,7 +4,7 @@
 
 # psi\_common\_pulse\_cc
 
-- VHDL source: [psi_common_pulse_cc.vhd](../../hdl/psi_common_pulse_cc_.vhd)
+- VHDL source: [psi_common_pulse_cc.vhd](../../hdl/psi_common_pulse_cc.vhd)
 - Testbench: [psi_common_pulse_cc_tb.vhd](../../testbench/psi_common_pulse_cc_tb/psi_common_pulse_cc_tb.vhd)
 
 ### Description
