@@ -10,7 +10,7 @@
 - VHDL source: [psi_common_axi_slave_ipif64.vhd](../../hdl/psi_common_axi_slave_ipif64.vhd)
 - Testbench: [psi_common_axi_slave_ipif64_tb.vhd](../../testbench/psi_common_axi_slave_ipif64_tb) *(require library **psi_tb** release 2.6.0)*
 
-The description has been written for original 32 bits support, the 64 bits IP IP block doesn't have a dedicated description but it is essentially what is presented here below.
+The description has been written for original 32 bits support, the 64 bits IP block doesn't have a dedicated description but it is essentially what is presented here below.
 
 ### 1 Description
 
@@ -121,7 +121,7 @@ Generics              | Description
 **ResetVal\_g**       |Reset values for registers. The size of the array passed does not have to match *NumReg\_g*, if it does not, the reset values are applied to the first N registers and the other registers are reset to zero.
 **UseMem\_g**         |**True** = use memory interface, **False** = use registers only
 **AxiIdWidth\_g**     |Number of bits used for the AXI ID signals
-**AxiAddrWidth\_g**  |Number of AXI address bits supported
+**AxiAddrWidth\_g**   |Number of AXI address bits supported
 
 ### 4 Interfaces
 
@@ -133,8 +133,8 @@ Generics              | Description
  ***Register Interface***    |                 |                 |        
  o\_reg\_rd      | Output    | *NumReg\_g*     | Read-pulse for each register   
  i\_reg\_rdata   | Input     |*NumReg\_g x 32* | Register read values  
- o\_reg\_wr      | Input     | *NumReg\_g*     | Write-pulse for each register   
- o\_reg\_wdata   | Input     |*NumReg\_g x 32* | Register write values          
+ o\_reg\_wr      | Output     | *NumReg\_g*     | Write-pulse for each register   
+ o\_reg\_wdata   | Output     |*NumReg\_g x 32* | Register write values          
  ***Memory Interface***      |                 |                  |         
  o\_mem\_addr    | Output    | *AxiAddrWidth\_g* | Memory address  
  o\_mem\_wr      | Output    | *4*             | Memory byte write enables (one signal per byte)           
