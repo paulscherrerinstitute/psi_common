@@ -30,7 +30,7 @@ architecture sim of psi_common_sync_fifo_tb is
 
   -------------------------------------------------------------------------
   -- Constants
-  -------------------------------------------------------------------------	
+  -------------------------------------------------------------------------
   constant DataWidth_c     : integer := 16;
   constant AlmFullLevel_c  : natural := Depth_g - 3;
   constant AlmEmptyLevel_c : natural := 5;
@@ -45,20 +45,20 @@ architecture sim of psi_common_sync_fifo_tb is
   -------------------------------------------------------------------------
   -- Interface Signals
   -------------------------------------------------------------------------
-  signal Clk      : std_logic                                    := '0';
-  signal Rst      : std_logic                                    := '1';
-  signal InData   : std_logic_vector(DataWidth_c - 1 downto 0)   := (others => '0');
-  signal InVld    : std_logic                                    := '0';
-  signal InRdy    : std_logic                                    := '0';
-  signal OutData  : std_logic_vector(DataWidth_c - 1 downto 0)   := (others => '0');
-  signal OutVld   : std_logic                                    := '0';
-  signal OutRdy   : std_logic                                    := '0';
-  signal Full     : std_logic                                    := '0';
-  signal Empty    : std_logic                                    := '0';
-  signal AlmFull  : std_logic                                    := '0';
-  signal AlmEmpty : std_logic                                    := '0';
-  signal InLevel  : std_logic_vector(log2ceil(Depth_g) downto 0) := (others => '0');
-  signal OutLevel : std_logic_vector(log2ceil(Depth_g) downto 0) := (others => '0');
+  signal Clk      : std_logic                                               := '0';
+  signal Rst      : std_logic                                               := '1';
+  signal InData   : std_logic_vector(DataWidth_c - 1 downto 0)              := (others => '0');
+  signal InVld    : std_logic                                               := '0';
+  signal InRdy    : std_logic                                               := '0';
+  signal OutData  : std_logic_vector(DataWidth_c - 1 downto 0)              := (others => '0');
+  signal OutVld   : std_logic                                               := '0';
+  signal OutRdy   : std_logic                                               := '0';
+  signal Full     : std_logic                                               := '0';
+  signal Empty    : std_logic                                               := '0';
+  signal AlmFull  : std_logic                                               := '0';
+  signal AlmEmpty : std_logic                                               := '0';
+  signal InLevel  : std_logic_vector(log2ceil(Depth_g + 1) - 1 downto 0)    := (others => '0');
+  signal OutLevel : std_logic_vector(log2ceil(Depth_g + 1) - 1 downto 0)    := (others => '0');
 
 begin
 
