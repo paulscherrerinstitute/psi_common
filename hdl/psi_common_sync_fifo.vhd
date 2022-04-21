@@ -55,7 +55,7 @@ entity psi_common_sync_fifo is
     -- Output Status
     Empty    : out std_logic;
     AlmEmpty : out std_logic;
-    OutLevel : out std_logic_vector(log2ceil(Depth_g + 1) - 1 downto 0);
+    OutLevel : out std_logic_vector(log2ceil(Depth_g + 1) - 1 downto 0)
   );
 end entity;
 
