@@ -7,7 +7,7 @@
 ------------------------------------------------------------------------------
 -- Description
 ------------------------------------------------------------------------------
--- This is a very basic synchronous FIFO. It  has optional level- and 
+-- This is a very basic synchronous FIFO. It  has optional level- and
 -- almost-full/empty ports.
 
 ------------------------------------------------------------------------------
@@ -51,12 +51,12 @@ entity psi_common_sync_fifo is
     -- Input Status
     Full     : out std_logic; -- FIFO full 
     AlmFull  : out std_logic; -- FIFO Almost full 
-    InLevel  : out std_logic_vector(log2ceil(Depth_g) downto 0); -- FIFO in level
+    InLevel  : out std_logic_vector(log2ceil(Depth_g + 1) - 1 downto 0);  -- FIFO in level
     -- Output Status
     Empty    : out std_logic; -- FIFO Empty 
-    AlmEmpty : out std_logic; -- FIFO Almost empty 
-    OutLevel : out std_logic_vector(log2ceil(Depth_g) downto 0) -- FIFO out level
-  ); 
+    AlmEmpty : out std_logic; -- FIFO Almost empty
+    OutLevel : out std_logic_vector(log2ceil(Depth_g + 1) - 1 downto 0)  -- FIFO out leve
+  );
 end entity;
 
 ------------------------------------------------------------------------------
@@ -115,7 +115,7 @@ begin
       InRdy <= '1';
       Full  <= '0';
     end if;
-    -- Artificially keep InRdy low during reset if required 
+    -- Artificially keep InRdy low during reset if required
     if (RdyRstState_g = '0') and (Rst = '1') then
       InRdy <= '0';
     end if;
@@ -187,7 +187,7 @@ begin
 
   --------------------------------------------------------------------------
   -- Component Instantiations
-  --------------------------------------------------------------------------	
+  --------------------------------------------------------------------------
   i_ram : entity work.psi_common_sdp_ram
     generic map(
       Depth_g    => Depth_g,

@@ -56,13 +56,13 @@ entity psi_common_async_fifo is
     InEmpty     : out std_logic;
     InAlmFull   : out std_logic;
     InAlmEmpty  : out std_logic;
-    InLevel     : out std_logic_vector(log2ceil(Depth_g) downto 0);
+    InLevel     : out std_logic_vector(log2ceil(Depth_g + 1) - 1 downto 0);
     -- Output Status
     OutFull     : out std_logic;
     OutEmpty    : out std_logic;
     OutAlmFull  : out std_logic;
     OutAlmEmpty : out std_logic;
-    OutLevel    : out std_logic_vector(log2ceil(Depth_g) downto 0)
+    OutLevel    : out std_logic_vector(log2ceil(Depth_g + 1) - 1 downto 0)
   );
 end entity;
 
@@ -160,7 +160,7 @@ begin
         RamWr     <= '1';
       end if;
     end if;
-    -- Artificially keep InRdy low during reset if required 
+    -- Artificially keep InRdy low during reset if required
     if (RdyRstState_g = '0') and (RstInInt = '1') then
       InRdy <= '0';
     end if;
