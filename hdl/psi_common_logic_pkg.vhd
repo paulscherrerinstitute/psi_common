@@ -112,14 +112,14 @@ package body psi_common_logic_pkg is
                      bits : in integer;
                      fill : in std_logic := '0')
   return std_logic_vector is
-    constant argDt : std_logic_vector(arg'high downto 0) := arg;
+    constant argDt : std_logic_vector(arg'high downto arg'low) := arg;
     variable v     : std_logic_vector(argDt'range);
   begin
     if bits < 0 then
       return ShiftRight(argDt, -bits, fill);
     else
-      v(v'left downto bits) := argDt(argDt'left - bits downto 0);
-      v(bits - 1 downto 0)  := (others => fill);
+      v(v'left downto bits) := argDt(argDt'left - bits downto argDt'right);
+      v(bits - 1 downto v'right)  := (others => fill);
       return v;
     end if;
   end function;
@@ -129,13 +129,13 @@ package body psi_common_logic_pkg is
                       bits : in integer;
                       fill : in std_logic := '0')
   return std_logic_vector is
-    constant argDt : std_logic_vector(arg'high downto 0) := arg;
+    constant argDt : std_logic_vector(arg'high downto arg'low) := arg;
     variable v     : std_logic_vector(argDt'range);
   begin
     if bits < 0 then
       return ShiftLeft(argDt, -bits, fill);
     else
-      v(v'left - bits downto 0)          := argDt(argDt'left downto bits);
+      v(v'left - bits downto v'right)    := argDt(argDt'left downto bits);
       v(v'left downto v'left - bits + 1) := (others => fill);
       return v;
     end if;
@@ -146,7 +146,7 @@ package body psi_common_logic_pkg is
   return std_logic_vector is
     variable Gray_v : std_logic_vector(binary'range);
   begin
-    Gray_v := binary xor ('0' & binary(binary'left downto 1));
+    Gray_v := binary xor ('0' & binary(binary'high downto binary'low+1));
     return Gray_v;
   end function;
 
@@ -155,8 +155,8 @@ package body psi_common_logic_pkg is
   return std_logic_vector is
     variable Binary_v : std_logic_vector(gray'range);
   begin
-    Binary_v(Binary_v'left) := gray(gray'left);
-    for b in gray'left - 1 downto 0 loop
+    Binary_v(Binary_v'high) := gray(gray'high);
+    for b in gray'high - 1 downto gray'low loop
       Binary_v(b) := gray(b) xor Binary_v(b + 1);
     end loop;
     return Binary_v;
@@ -204,7 +204,7 @@ package body psi_common_logic_pkg is
     variable tmp : std_logic;
   begin
     tmp := '0';
-    for i in 0 to vec'high loop
+    for i in vec'low to vec'high loop
       tmp := tmp or vec(i);
     end loop;
     return tmp;
@@ -215,7 +215,7 @@ package body psi_common_logic_pkg is
     variable tmp : std_logic;
   begin
     tmp := '1';
-    for i in 0 to vec'high loop
+    for i in vec'low to vec'high loop
       tmp := tmp and vec(i);
     end loop;
     return tmp;
