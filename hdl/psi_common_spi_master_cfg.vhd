@@ -87,6 +87,7 @@ architecture rtl of psi_common_spi_master_cfg is
     Busy      : std_logic;
     Done      : std_logic;
     MosiNext  : std_logic;
+    TransWidth: std_logic_vector(log2ceil(MaxTransWidth_g) downto 0);
   end record;
   signal r, r_next : two_process_r;
 
@@ -149,6 +150,7 @@ begin
           v.SpiCs_n(to_integer(unsigned(Slave))) := '0';
           v.State                                := SftComp_s;
           v.Busy                                 := '1';
+          v.TransWidth                           := TransWidth;
         end if;
         v.CsHighCnt := 0;
         v.ClkDivCnt := 0;
@@ -174,7 +176,7 @@ begin
         -- Clock period handling
         if r.ClkDivCnt = ClkDivThres_c then
           -- All bits done
-          if r.BitCnt = to_integer(unsigned(TransWidth)) then
+          if r.BitCnt = to_integer(unsigned(r.TransWidth)) then
             v.SpiMosi := MosiIdleState_g;
             v.State   := CsHigh_s;
           -- Otherwise contintue

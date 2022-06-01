@@ -35,7 +35,7 @@ entity psi_common_spi_master_cfg_tb is
     SpiCPOL_g       : natural  := 0;
     SpiCPHA_g       : natural  := 0;
     LsbFirst_g      : boolean  := false;
-    MaxTransWidth_g : positive := 16
+    MaxTransWidth_g : positive := 32
   );
 end entity;
 
