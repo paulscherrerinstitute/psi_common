@@ -9,33 +9,31 @@
 ----------------------------------------------------------------------------------
 
 library IEEE;
+use IEEE.MATH_REAL.all;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
-
-use IEEE.MATH_REAL.all;
-
-library work;
-use work.psi_common_prbs_pkg.all;
 
 ----------------------------------------------------------------------------------
 -- Entity
 ----------------------------------------------------------------------------------
 
 entity psi_common_prbs_tb is
---  Port ( );
+	generic( width_g : natural range 2 to 32 := 4;
+			 seed_g  : std_logic_vector(31 downto 0)
+			);
 end psi_common_prbs_tb;
 
 ----------------------------------------------------------------------------------
 -- Architecture
 ----------------------------------------------------------------------------------
 
-architecture sim of psi_common_prbs_tb is
+architecture behav of psi_common_prbs_tb is
 
 
 	-- Constants
-	constant N 		:	natural := 8;
-	constant X 		:	natural range 2 to 16  := 4;					-- 2^X slower than the current clock
-	constant CYCLE 	:	integer := (2**N) - 1; -- Expected cycle
+	constant N 		:	natural 				:= width_g;		-- Data width
+	constant X 		:	natural range 2 to 16 	:= 4;			-- 2^X slower than the current clock
+	constant CYCLE 	:	integer 				:= (2**N) - 1;	-- Expected cycle
 
 	-- Type
 	type mem_t is array(0 to CYCLE-1) of std_logic_vector((N-1) downto 0);
@@ -43,7 +41,8 @@ architecture sim of psi_common_prbs_tb is
 	-- Signals
 	signal rst 	:	std_logic := '1';
 	signal clk 	:	std_logic := '0';
-	signal strb :	std_logic := '0';
+	signal istrb :	std_logic := '0';
+	signal ostrb :	std_logic;
 
 	signal seed :	std_logic_vector((N-1) downto 0) := (others => '0');
 	signal data :	std_logic_vector((N-1) downto 0);
@@ -64,7 +63,7 @@ architecture sim of psi_common_prbs_tb is
 	signal count : 	integer := 0;
 begin
 
-	strb <= pulse when en = '1' else delay(X-1);
+	istrb <= pulse when en = '1' else delay(X-1);
 	sync <= delay(X-1);
 
 	tb_ctrl_p : process
@@ -111,9 +110,9 @@ begin
 	stim_p : process
 	begin
 		rst <= '0' after 17 ns;
-		seed <= x"02";
+		seed <= seed_g((N-1) downto 0);
 		wait for 20 ns;
-		seed <= x"10";
+		seed <= seed + x"5";
 		wait;
 	end process;
 
@@ -146,9 +145,10 @@ begin
 			   )
 	port map( rst_i	 => rst,
 			  clk_i  => clk,
-			  str_i  => strb,
+			  strb_i => istrb,
 			  seed_i => seed,
+			  strb_o => ostrb,
 			  data_o => data
 			);
 
-end sim;
+end behav;

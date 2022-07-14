@@ -451,4 +451,9 @@ tb_run_add_arguments \
 add_tb_run
 
 create_tb_run "psi_common_prbs_tb"
+tb_run_add_arguments \
+	"-gwidth_g=8 -gseed_g=x\"00000015\"" \
+	"-gwidth_g=8 -gseed_g=x\"00000006\"" \
+	"-gwidth_g=12 -gseed_g=x\"00000F01\"" \
+  "-gwidth_g=12 -gseed_g=x\"00000031\""
 add_tb_run

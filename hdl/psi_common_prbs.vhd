@@ -24,14 +24,15 @@ use work.psi_common_prbs_pkg.all;
 ----------------------------------------------------------------------------------
 
 entity psi_common_prbs is
-	generic( width_g : natural range 2 to 32 := 8;				-- I/O data width
+	generic( width_g  : natural range 2 to 32 := 8;				-- I/O data width
 			 rst_pol_g: std_logic := '1'						-- Reset polarity
 	);
 
 	port( rst_i : in 	std_logic;								-- Input reset
 		  clk_i	: in 	std_logic;								-- Input clock
-		  str_i : in 	std_logic;								-- Input strobe
+		  strb_i: in 	std_logic;								-- Input strobe
 		  seed_i: in 	std_logic_vector((width_g-1) downto 0); -- Input seed
+		  strb_o: out 	std_logic; 								-- Output strobe
 		  data_o: out 	std_logic_vector((width_g-1) downto 0)	-- Output data
 	);
 end psi_common_prbs;
@@ -61,9 +62,10 @@ begin
 		if(rising_edge(clk_i)) then
 			if(rst_i = rst_pol_g) then
 				q_s <= seed_i;
-			elsif(str_i = '1') then		
+			elsif(strb_i = '1') then		
 				q_s <= q_s((width_g-2) downto 0) & d0_s;
-			end if;	
+			end if;
+			strb_o <= strb_i;
 		end if;
 	end process;
 
