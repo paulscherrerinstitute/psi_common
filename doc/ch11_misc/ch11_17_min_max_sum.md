@@ -36,4 +36,4 @@ max_o   |Input 		  |data_length_g|max output result
 mean_o  |Input 		|accu_length_g|vector sum, accumulator output
 
 
-[Index](../psi_common_index.md) **|** Previous: [Misc > find min manx](../ch11_misc/ch11_16_find_min_max.md)
+[Index](../psi_common_index.md) **|** 
