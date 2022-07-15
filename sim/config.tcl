@@ -23,6 +23,7 @@ add_sources $LibPath {
 	psi_common/hdl/psi_common_array_pkg.vhd \
 	psi_common/hdl/psi_common_math_pkg.vhd \
 	psi_common/hdl/psi_common_logic_pkg.vhd \
+	psi_common/hdl/psi_common_prbs_pkg.vhd \
 	psi_tb/hdl/psi_tb_txt_util.vhd \
 	psi_tb/hdl/psi_tb_compare_pkg.vhd \
 	psi_tb/hdl/psi_tb_activity_pkg.vhd \
@@ -85,6 +86,7 @@ add_sources "../hdl" {
   psi_common_spi_master_cfg.vhd \
   psi_common_find_min_max.vhd \
   psi_common_min_max_sum.vhd \
+  psi_common_prbs.vhd \
 } -tag src
 
 # testbenches
@@ -152,6 +154,7 @@ add_sources "../testbench" {
   psi_common_spi_master_cfg_tb/psi_common_spi_master_cfg_tb.vhd \
   psi_common_find_min_max_tb/psi_common_find_min_max_tb.vhd \
   psi_common_min_max_sum_tb/psi_common_min_max_sum_tb.vhd \
+  psi_common_prbs_tb/psi_common_prbs_tb.vhd \
 } -tag tb
 
 #TB Runs
@@ -445,4 +448,12 @@ tb_run_add_arguments \
   "-gDirection_g=RIGHT -gSelectBitsPerStage_g=2 -gSignExtend_g=false" \
   "-gDirection_g=RIGHT -gSelectBitsPerStage_g=2 -gSignExtend_g=true" \
   "-gDirection_g=LEFT -gSelectBitsPerStage_g=2 -gSignExtend_g=true"
+add_tb_run
+
+create_tb_run "psi_common_prbs_tb"
+tb_run_add_arguments \
+	"-gwidth_g=8 -gseed_g=x\"00000015\"" \
+	"-gwidth_g=8 -gseed_g=x\"00000006\"" \
+	"-gwidth_g=12 -gseed_g=x\"00000F01\"" \
+  "-gwidth_g=12 -gseed_g=x\"00000031\""
 add_tb_run
