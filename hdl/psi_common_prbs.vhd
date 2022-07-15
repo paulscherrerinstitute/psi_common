@@ -62,10 +62,13 @@ begin
 		if(rising_edge(clk_i)) then
 			if(rst_i = rst_pol_g) then
 				q_s <= seed_i;
-			elsif(strb_i = '1') then		
-				q_s <= q_s((width_g-2) downto 0) & d0_s;
-			end if;
-			strb_o <= strb_i;
+				strb_o <= '0';
+			else
+				if(strb_i = '1') then		
+					q_s <= q_s((width_g-2) downto 0) & d0_s;
+				end if;
+				strb_o <= strb_i;
+			end if;	
 		end if;
 	end process;
 
