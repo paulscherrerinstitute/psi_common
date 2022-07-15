@@ -12,20 +12,20 @@ use IEEE.MATH_REAL.all;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.ALL;
 use work.psi_common_math_pkg.all;
+use work.psi_tb_compare_pkg.all;
 
 entity psi_common_prbs_tb is
-  generic(width_g : natural range 2 to 32         := 25;
-          seed_g  : std_logic_vector(31 downto 0) := to_uslv(1,32)
+  generic(width_g : natural range 2 to 32         := 10;
+          seed_g  : std_logic_vector(31 downto 0) := to_uslv(2**31-1, 32)
          );
 end psi_common_prbs_tb;
-
 
 architecture behav of psi_common_prbs_tb is
 
   -- Constants
-  constant N     : natural               := width_g;                               -- Data width
-  constant X     : natural range 2 to 16 := 4;                                     -- 2^X slower than the current clock
-  constant CYCLE : integer               := choose(width_g < 20, (2**N) - 1,1024); -- Expected cycle
+  constant N     : natural               := width_g;                                -- Data width
+  constant X     : natural range 2 to 16 := 4;                                      -- 2^X slower than the current clock
+  constant CYCLE : integer               := choose(width_g < 20, (2**N) - 1, 1024); -- Expected cycle
 
   -- Type
   type mem_t is array (0 to CYCLE - 1) of std_logic_vector((N - 1) downto 0);
@@ -52,8 +52,11 @@ architecture behav of psi_common_prbs_tb is
   signal mem    : mem_t;
   signal count  : integer   := 0;
   
+  -- helper for 9 bits lfsr
+  signal data_test : std_logic_vector(9 downto 0);
+
 begin
-  
+
   istrb <= pulse when en = '1' else delay(X - 1);
   sync  <= delay(X - 1);
 
@@ -103,9 +106,9 @@ begin
     rst  <= '0' after 17 ns;
     wait until rising_edge(clk);
     seed <= seed_g((N - 1) downto 0);
-    wait for 20 ns;
-    wait until rising_edge(clk);
-    seed <= to_uslv(from_uslv(seed) + 5, seed'length);
+    --wait for 20 ns;
+    --wait until rising_edge(clk);
+    --seed <= to_uslv(from_uslv(seed) + 5, seed'length);
     wait;
   end process;
 
@@ -124,8 +127,10 @@ begin
       end if;
 
       if (flag = '1') then
-        if width_g < 20 then
+        if width_g < 20 and width_g /= 10 then
           assert data = mem(count) report "###ERROR### Mismatch on data!" severity error;
+        elsif width_g = 10 then
+          StdlvCompareStdlv(data_test, data,"Mismatch data for PRBS-9");
         end if;
       else
         mem(count) <= data;
@@ -143,7 +148,16 @@ begin
              strb_i => istrb,
              seed_i => seed,
              strb_o => ostrb,
-             data_o => data
-            );
-
+             data_o => data);
+             
+  -----------------------------------------------------------
+  -- TAG : check with doulos 10 bit lfsr version & seed FF
+  -----------------------------------------------------------
+  u_test : entity work.maximal_length_lfsr
+    port map(
+      clock    => clk,
+      reset    => rst,
+      str      => istrb,
+      data_out => data_test);
+      
 end behav;

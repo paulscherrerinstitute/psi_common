@@ -153,6 +153,7 @@ add_sources "../testbench" {
   psi_common_spi_master_cfg_tb/psi_common_spi_master_cfg_tb.vhd \
   psi_common_find_min_max_tb/psi_common_find_min_max_tb.vhd \
   psi_common_min_max_sum_tb/psi_common_min_max_sum_tb.vhd \
+  psi_common_prbs_tb/maximal_length_lfsr.vhd \
   psi_common_prbs_tb/psi_common_prbs_tb.vhd \
 } -tag tb
 
