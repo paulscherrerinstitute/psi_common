@@ -23,7 +23,6 @@ add_sources $LibPath {
 	psi_common/hdl/psi_common_array_pkg.vhd \
 	psi_common/hdl/psi_common_math_pkg.vhd \
 	psi_common/hdl/psi_common_logic_pkg.vhd \
-	psi_common/hdl/psi_common_prbs_pkg.vhd \
 	psi_tb/hdl/psi_tb_txt_util.vhd \
 	psi_tb/hdl/psi_tb_compare_pkg.vhd \
 	psi_tb/hdl/psi_tb_activity_pkg.vhd \
