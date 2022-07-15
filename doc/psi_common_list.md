@@ -98,7 +98,7 @@ Parallel to serial  				| [psi_common_par_ser.vhd](../hdl/psi_common_par_ser.vhd
 Serial to parallel  				| [psi_common_ser_par.vhd](../hdl/psi_common_ser_par.vhd)   | [link](ch11_misc/ch11_15_ser_par.md)
 Find Min Max  							| [psi_common_find_min_max.vhd](../hdl/psi_common_find_min_max.vhd)   | [link](ch11_misc/ch11_16_find_min_max.md)
 Min Max Sum  						   	| [psi_common_find_min_max.vhd](../hdl/psi_common_min_max_sum.vhd)   | [link](ch11_misc/ch11_17_min_max_sum.md)
-PRBS  						  		  	| [psi_common_find_min_max.vhd](../hdl/psi_common_prbs.vhd)   | [link](ch11_misc/ch11_18_prbs.md)    
+PRBS  						  		  	| [psi_common_prbs.vhd](../hdl/psi_common_prbs.vhd)   | [link](ch11_misc/ch11_18_prbs.md)    
 ***
 
 ### Packages
