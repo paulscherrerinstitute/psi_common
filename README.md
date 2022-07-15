@@ -8,6 +8,7 @@ Benoît Stef [benoit.stef@psi.ch]
 * Benoît Stef [benoit.stef@psi.ch]
 * Daniele Felici [daniele.felici@psi.ch]
 * Patric Bucher [patric.bucher@psi.ch]
+* Rafael Basso [rafael.basso@psi.ch]
 
 ## License
 This library is published under [PSI HDL Library License](License.txt), which is [LGPL](LGPL2_1.txt) plus some additional exceptions to clarify the LGPL terms in the context of firmware development.
