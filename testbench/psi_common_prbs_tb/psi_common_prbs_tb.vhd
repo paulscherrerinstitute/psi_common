@@ -16,7 +16,7 @@ use work.psi_tb_compare_pkg.all;
 
 entity psi_common_prbs_tb is
   generic(width_g : natural range 2 to 32         := 10;
-          seed_g  : std_logic_vector(31 downto 0) := to_uslv(2**31-1, 32)
+          seed_g  : std_logic_vector(31 downto 0) := to_uslv(2**3-1, 32)
          );
 end psi_common_prbs_tb;
 
@@ -127,7 +127,7 @@ begin
       end if;
 
       if (flag = '1') then
-        if width_g < 20 and width_g /= 10 then
+        if width_g < 20 then
           assert data = mem(count) report "###ERROR### Mismatch on data!" severity error;
         elsif width_g = 10 then
           StdlvCompareStdlv(data_test, data,"Mismatch data for PRBS-9");
@@ -157,6 +157,7 @@ begin
     port map(
       clock    => clk,
       reset    => rst,
+      seed     => seed(9 downto 0),
       str      => istrb,
       data_out => data_test);
       

@@ -2,12 +2,13 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 
 entity maximal_length_lfsr is
-port (
-  clock    : in std_logic;
-  reset    : in std_logic;
-  str : in std_logic;
-  data_out : out std_logic_vector(9 downto 0)
-);
+  port(
+    clock    : in  std_logic;
+    reset    : in  std_logic;
+    seed     : in  std_logic_vector(9 downto 0);
+    str      : in  std_logic;
+    data_out : out std_logic_vector(9 downto 0)
+  );
 end maximal_length_lfsr;
 
 architecture modular of maximal_length_lfsr is
@@ -16,7 +17,7 @@ architecture modular of maximal_length_lfsr is
 
 begin
 
-  process (clock)
+  process(clock)
     variable lfsr_tap : std_logic;
   begin
     if RISING_EDGE(clock) then
