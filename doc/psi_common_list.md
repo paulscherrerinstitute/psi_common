@@ -72,10 +72,10 @@ SPI master configurable width  | [psi_common_spi_master_cfg.vhd](../hdl/psi_comm
 I2C master  							| [psi_common_i2c_master.vhd](../hdl/psi_common_i2c_master.vhd)   						| [link](ch10_interfaces/ch10_2_i2c_master.md)
 AXI master Simple   			| [psi_common_axi_master_simple.vhd](../hdl/psi_common_axi_master_simple.vhd) | [link](ch10_interfaces/ch10_3_axi_master_simple.md)
 AXI master Full  	  			| [psi_common_axi_master_full.vhd](../hdl/psi_common_axi_master_full.vhd) 		| [link](ch10_interfaces/ch10_4_axi_master_full.md)
-AXI master IP (32 bits)	  | [psi_common_axi_slave_ipif.vhd](../hdl/psi_common_axi_slave_ipif.vhd)   		| [link](ch10_interfaces/ch10_5_axi_slave_ipif.md)
-AXI master IP (64 bits)	  | [psi_common_axi_slave_ipif64.vhd](../hdl/psi_common_axi_slave_ipif64.vhd)   	 | N.A
+AXI slave IP (32 bits)	  | [psi_common_axi_slave_ipif.vhd](../hdl/psi_common_axi_slave_ipif.vhd)   		| [link](ch10_interfaces/ch10_5_axi_slave_ipif.md)
+AXI slave IP (64 bits)	  | [psi_common_axi_slave_ipif64.vhd](../hdl/psi_common_axi_slave_ipif64.vhd)   	 | N.A
 AXI multi pipeline stage  | [psi_common_axi_multi_pl_stage.vhd](../hdl/psi_common_axi_multi_pl_stage.vhd)  | N.A
-AXI Lite IP								| [psi_common_axilite_slave_ipif.vhd](../hdl/psi_common_axilite_slave_ipif.vhd)|[link](ch10_interfaces/ch10_6_axilite_slave_ipif.md)
+AXI slave Lite IP					| [psi_common_axilite_slave_ipif.vhd](../hdl/psi_common_axilite_slave_ipif.vhd)|[link](ch10_interfaces/ch10_6_axilite_slave_ipif.md)
 ***
 
 ### miscellaneous components
