@@ -1,5 +1,6 @@
 ------------------------------------------------------------------------------
 --  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
+--  Copyright (c) 2023 by Oliver Bründler
 --  All rights reserved.
 --  Authors: Oliver Bruendler
 ------------------------------------------------------------------------------
@@ -77,7 +78,7 @@ begin
       v := r;
 
       -- *** Simplification Variables ***
-      IsStuck_v := (r.DataMainVld = '1' and OutRdy = '0');
+      IsStuck_v := (r.DataMainVld = '1' and OutRdy = '0' and (InVld = '1' or r.DataShadVld = '1'));
 
       -- *** Handle output transactions ***
       if r.DataMainVld = '1' and OutRdy = '1' then
