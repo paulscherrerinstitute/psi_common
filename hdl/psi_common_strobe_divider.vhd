@@ -52,7 +52,7 @@ begin
       else
         str_dff_s <= InVld;
         Outvld    <= '0';
-        if str_dff_s <= '0' and InVld = '1' then
+        if str_dff_s = '0' and InVld = '1' then
           if (counter_s = unsigned(InRatio) - 1) or (unsigned(InRatio) = 0) then -- No division for illegal InRatio = 0 condition
             counter_s <= 0;
             OutVld    <= '1';
