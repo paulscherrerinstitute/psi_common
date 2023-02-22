@@ -1,3 +1,13 @@
+----------------------------------------------------------------------------------
+-- Original VHDL source code Copyright 1995-2021 DOULOS
+----------------------------------------------------------------------------------
+-- Copyright (c) 2023 by Paul Scherrer Institute, Switzerland
+-- All rights reserved.
+-- Authors: Rafael Basso, Radoslaw Rybaniec
+
+-- Added seed input
+----------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.std_logic_1164.all;
 
@@ -22,7 +32,7 @@ begin
   begin
     if RISING_EDGE(clock) then
       if reset = '1' then
-        lfsr_reg <= (others => '1');
+        lfsr_reg <= seed;
       else
         if str = '1' then
           lfsr_tap := lfsr_reg(6) xor lfsr_reg(9);

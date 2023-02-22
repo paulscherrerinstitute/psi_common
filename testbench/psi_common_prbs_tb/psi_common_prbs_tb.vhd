@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------
 -- Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
 -- All rights reserved.
--- Authors: Rafael Basso
+-- Authors: Rafael Basso, Radoslaw Rybaniec
 ----------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------
@@ -114,27 +114,20 @@ begin
 
   -- Assertion process : It stores the first CYCLE generated data and then compares it
   -- with the next CYCLE generated data. The same data is expected.
-  assrt_p : process(data)
+  assrt_p : process(clk)
   begin
     if (rst = '0') then
-      if (count < CYCLE - 1) then
-        count <= count + 1;
-      elsif (flag = '0') then
-        flag  <= '1';
-        count <= 0;
-      else
-        done <= '1';
-      end if;
-
-      if (flag = '1') then
-        if width_g < 20 then
-          assert data = mem(count) report "###ERROR### Mismatch on data!" severity error;
-        elsif width_g = 10 then
+      if rising_edge(clk) then
+        if ostrb = '1' then
           StdlvCompareStdlv(data_test, data,"Mismatch data for PRBS-9");
+          count <= count + 1;
         end if;
-      else
-        mem(count) <= data;
+        if count = 1000 then
+          done <= '1';
+        end if;
       end if;
+    else  -- reset
+      count <= 0;
     end if;
   end process;
 
@@ -153,12 +146,18 @@ begin
   -----------------------------------------------------------
   -- TAG : check with doulos 10 bit lfsr version & seed FF
   -----------------------------------------------------------
-  u_test : entity work.maximal_length_lfsr
+  assert N = 10 report "Testbench supports only width_g = 10 bits" severity failure;
+  
+  GEN_LFSR: if N = 10 generate
+    u_test : entity work.maximal_length_lfsr
     port map(
       clock    => clk,
       reset    => rst,
-      seed     => seed(9 downto 0),
+      seed     => seed(N-1 downto 0),
       str      => istrb,
-      data_out => data_test);
       
+      
+      data_out => data_test);
+  end generate GEN_LFSR;
+       
 end behav;
