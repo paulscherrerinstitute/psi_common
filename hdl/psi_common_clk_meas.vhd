@@ -22,22 +22,22 @@ use ieee.numeric_std.all;
 -------------------------------------------------------------------------------
 entity psi_common_clk_meas is
   generic(
-    MasterFrequency_g  : positive := 125000000; -- $$ constant=125e6 $$
-    MaxMeasFrequency_g : positive := 250000000 -- $$ constant=250e6 $$
+    master_frequency_g  : positive := 125000000; -- $$ constant=125e6 $$
+    max_meas_frequency_g : positive := 250000000 -- $$ constant=250e6 $$
   );
   port(
     ----------------------------------------
     -- Control Signals
     ----------------------------------------
-    ClkMaster    : in  std_logic;       -- $$ type=clk; freq=125e6 $$
-    Rst          : in  std_logic;       -- $$ type=rst; clk=ClkMaster $$
+    clk_master_i    : in  std_logic;       -- $$ type=clk; freq=125e6 $$
+    rst_i          : in  std_logic;       -- $$ type=rst; clk=ClkMaster $$
 
     ----------------------------------------
     -- Test
     ----------------------------------------
-    FrequencyHz  : out std_logic_vector(31 downto 0); -- Synchronous to ClkMaster
-    FrequencyVld : out std_logic;       -- Pulse when frequency is valid
-    ClkTest      : in  std_logic        -- $$ type=clk; freq=101.35e6 $$
+    frequency_hz_o  : out std_logic_vector(31 downto 0); -- Synchronous to ClkMaster
+    vld_o : out std_logic;       -- Pulse when frequency is valid
+    clk_test_i      : in  std_logic        -- $$ type=clk; freq=101.35e6 $$
   );
 end;
 
@@ -53,7 +53,7 @@ architecture rtl of psi_common_clk_meas is
   ----------------------------------------
   -- Signals Master Clock
   ----------------------------------------
-  signal Cntr1Hz_M          : integer range 0 to MasterFrequency_g - 1;
+  signal Cntr1Hz_M          : integer range 0 to master_frequency_g - 1;
   signal Toggle1Hz_M        : std_logic;
   signal ResultToggleSync_M : std_logic_vector(2 downto 0);
   signal AwaitResult_M      : std_logic;
@@ -62,8 +62,8 @@ architecture rtl of psi_common_clk_meas is
   -- Signals Test Clock
   ----------------------------------------	
   signal Toggle1HzSync_T : std_logic_vector(2 downto 0);
-  signal CntrTest_T      : integer range 0 to MaxMeasFrequency_g;
-  signal Result_T        : integer range 0 to MaxMeasFrequency_g;
+  signal CntrTest_T      : integer range 0 to max_meas_frequency_g;
+  signal Result_T        : integer range 0 to max_meas_frequency_g;
   signal ResultToggle_T  : std_logic;
 
 begin
@@ -71,28 +71,28 @@ begin
   ---------------------------------------------------------------------------
   -- Reset Generation and Result Latching(Master Clock)
   ---------------------------------------------------------------------------
-  p_rstGen : process(ClkMaster)
+  p_rstGen : process(clk_master_i)
   begin
-    if rising_edge(ClkMaster) then
-      if Rst = '1' then
-        Cntr1Hz_M          <= MasterFrequency_g - 1;
+    if rising_edge(clk_master_i) then
+      if rst_i = '1' then
+        Cntr1Hz_M          <= master_frequency_g - 1;
         Toggle1Hz_M        <= '0';
         AwaitResult_M      <= '0';
-        FrequencyHz        <= (others => '0');
+        frequency_hz_o        <= (others => '0');
         ResultToggleSync_M <= (others => '0');
-        FrequencyVld       <= '0';
+        vld_o       <= '0';
       else
         -- Default Value
-        FrequencyVld <= '0';
+        vld_o <= '0';
 
         -- Request new result
         if Cntr1Hz_M = 0 then
-          Cntr1Hz_M     <= MasterFrequency_g - 1;
+          Cntr1Hz_M     <= master_frequency_g - 1;
           Toggle1Hz_M   <= not Toggle1Hz_M;
           AwaitResult_M <= '1';
           if AwaitResult_M = '1' then
-            FrequencyHz  <= (others => '0');
-            FrequencyVld <= '1';
+            frequency_hz_o  <= (others => '0');
+            vld_o <= '1';
           end if;
         else
           Cntr1Hz_M <= Cntr1Hz_M - 1;
@@ -101,9 +101,9 @@ begin
         -- Latch new result
         ResultToggleSync_M <= ResultToggleSync_M(1 downto 0) & ResultToggle_T;
         if ResultToggleSync_M(2) /= ResultToggleSync_M(1) then
-          FrequencyHz   <= std_logic_vector(to_unsigned(Result_T, 32));
+          frequency_hz_o   <= std_logic_vector(to_unsigned(Result_T, 32));
           AwaitResult_M <= '0';
-          FrequencyVld  <= '1';
+          vld_o  <= '1';
         end if;
       end if;
     end if;
@@ -112,10 +112,10 @@ begin
   ---------------------------------------------------------------------------
   -- Edge Counter (Test Clock)
   ---------------------------------------------------------------------------
-  p_meas : process(ClkTest)
+  p_meas : process(clk_test_i)
   begin
-    if rising_edge(ClkTest) then
-      if Rst = '1' then
+    if rising_edge(clk_test_i) then
+      if rst_i = '1' then
         Toggle1HzSync_T <= (others => '0');
         ResultToggle_T  <= '0';
         Result_T        <= 0;
@@ -128,7 +128,7 @@ begin
           Result_T       <= CntrTest_T;
           ResultToggle_T <= not ResultToggle_T;
         -- Otherwise count (prevent overflows!)
-        elsif CntrTest_T /= MaxMeasFrequency_g then
+        elsif CntrTest_T /= max_meas_frequency_g then
           CntrTest_T <= CntrTest_T + 1;
         end if;
       end if;

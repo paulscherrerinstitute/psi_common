@@ -25,21 +25,21 @@ use ieee.math_real.all;
 -- $$ processes=stim,check $$
 entity psi_common_sync_cc_xn2n is
   generic(
-    Width_g : integer := 8
+    width_g : integer := 8
   );
   port(
     -- Input
-    InClk   : in  std_logic;            -- $$ type=clk; freq=200e6 $$
-    InRst   : in  std_logic;            -- $$ type=rst; clk=InClk $$
-    InVld   : in  std_logic;
-    InRdy   : out std_logic;
-    InData  : in  std_logic_vector(Width_g - 1 downto 0);
+    clk_i   : in  std_logic;            -- $$ type=clk; freq=200e6 $$
+    rst_i   : in  std_logic;            -- $$ type=rst; clk=InClk $$
+    vld_i   : in  std_logic;
+    rdy_o   : out std_logic;
+    dat_i  : in  std_logic_vector(width_g - 1 downto 0);
     -- Output
-    OutClk  : in  std_logic;            -- $$ type=clk; freq=100e6 $$
-    OutRst  : in  std_logic := '0';     -- $$ type=rst; clk=OutClk $$
-    OutVld  : out std_logic;
-    OutRdy  : in  std_logic := '1';
-    OutData : out std_logic_vector(Width_g - 1 downto 0)
+    clk_o  : in  std_logic;            -- $$ type=clk; freq=100e6 $$
+    rst_o  : in  std_logic := '0';     -- $$ type=rst; clk=OutClk $$
+    vld_o  : out std_logic;
+    rdy_i  : in  std_logic := '1';
+    dat_o : out std_logic_vector(width_g - 1 downto 0)
   );
 end entity;
 
@@ -50,8 +50,8 @@ architecture rtl of psi_common_sync_cc_xn2n is
 
   -- Input Side
   signal InCnt         : unsigned(1 downto 0);
-  signal InDataReg     : std_logic_vector(Width_g - 1 downto 0);
-  signal InDataRegLast : std_logic_vector(Width_g - 1 downto 0);
+  signal InDataReg     : std_logic_vector(width_g - 1 downto 0);
+  signal InDataRegLast : std_logic_vector(width_g - 1 downto 0);
 
   -- Output Side
   signal OutCnt   : unsigned(1 downto 0);
@@ -59,40 +59,40 @@ architecture rtl of psi_common_sync_cc_xn2n is
 
 begin
 
-  InRdy <= '1' when InCnt - OutCnt /= 2 else '0';
+  rdy_o <= '1' when InCnt - OutCnt /= 2 else '0';
 
-  p_input : process(InClk)
+  p_input : process(clk_i)
   begin
-    if rising_edge(InClk) then
-      if (InRst = '1') or (OutRst = '1') then
+    if rising_edge(clk_i) then
+      if (rst_i = '1') or (rst_o = '1') then
         InCnt <= (others => '0');
       else
-        if InVld = '1' and InCnt - OutCnt /= 2 then
+        if vld_i = '1' and InCnt - OutCnt /= 2 then
           InCnt         <= InCnt + 1;
-          InDataReg     <= InData;
+          InDataReg     <= dat_i;
           InDataRegLast <= InDataReg;
         end if;
       end if;
     end if;
   end process;
 
-  p_output : process(OutClk)
+  p_output : process(clk_o)
   begin
-    if rising_edge(OutClk) then
-      if (InRst = '1') or (OutRst = '1') then
+    if rising_edge(clk_o) then
+      if (rst_i = '1') or (rst_o = '1') then
         OutCnt   <= (others => '0');
         OutVld_I <= '0';
       else
         -- New sample was acknowledged
-        if OutVld_I = '1' and OutRdy = '1' then
+        if OutVld_I = '1' and rdy_i = '1' then
           OutVld_I <= '0';
         end if;
         -- Forward new sample to output if ready
-        if InCnt /= OutCnt and (OutVld_I = '0' or OutRdy = '1') then
+        if InCnt /= OutCnt and (OutVld_I = '0' or rdy_i = '1') then
           if InCnt - OutCnt = 1 then
-            OutData <= InDataReg;
+            dat_o <= InDataReg;
           else
-            OutData <= InDataRegLast;
+            dat_o <= InDataRegLast;
           end if;
           OutVld_I <= '1';
           OutCnt   <= OutCnt + 1;
@@ -101,7 +101,7 @@ begin
     end if;
   end process;
 
-  OutVld <= OutVld_I;
+  vld_o <= OutVld_I;
 
 end;
 

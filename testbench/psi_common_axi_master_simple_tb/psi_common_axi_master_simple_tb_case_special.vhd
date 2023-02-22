@@ -28,35 +28,35 @@ use work.psi_tb_activity_pkg.all;
 package psi_common_axi_master_simple_tb_case_special is
 
   procedure user_cmd(
-    signal CmdWr_Addr   : inout std_logic_vector;
-    signal CmdWr_Size   : inout std_logic_vector;
-    signal CmdWr_LowLat : inout std_logic;
-    signal CmdWr_Vld    : inout std_logic;
-    signal CmdWr_Rdy    : in std_logic;
-    signal CmdRd_Addr   : inout std_logic_vector;
-    signal CmdRd_Size   : inout std_logic_vector;
-    signal CmdRd_LowLat : inout std_logic;
-    signal CmdRd_Vld    : inout std_logic;
-    signal CmdRd_Rdy    : in std_logic;
+    signal cmd_wr_addr_i   : inout std_logic_vector;
+    signal cmd_wr_size_i   : inout std_logic_vector;
+    signal cmd_wr_low_lat_i : inout std_logic;
+    signal cmd_wr_vld_i    : inout std_logic;
+    signal cmd_wr_rdy_o    : in std_logic;
+    signal cmd_rd_addr_i   : inout std_logic_vector;
+    signal cmd_rd_size_o   : inout std_logic_vector;
+    signal cmd_rd_low_lat_i : inout std_logic;
+    signal cmd_rd_vld_i    : inout std_logic;
+    signal cmd_rd_rdy_o    : in std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t);
 
   procedure user_data(
-    signal WrDat_Data   : inout std_logic_vector;
-    signal WrDat_Be     : inout std_logic_vector;
-    signal WrDat_Vld    : inout std_logic;
-    signal WrDat_Rdy    : in std_logic;
-    signal RdDat_Data   : in std_logic_vector;
-    signal RdDat_Vld    : in std_logic;
-    signal RdDat_Rdy    : inout std_logic;
+    signal wr_dat_i   : inout std_logic_vector;
+    signal wr_data_be     : inout std_logic_vector;
+    signal wr_vld_i    : inout std_logic;
+    signal wr_rdy_o    : in std_logic;
+    signal rd_dat_o   : in std_logic_vector;
+    signal rd_vld_o    : in std_logic;
+    signal rd_rdy_i    : inout std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t);
 
   procedure user_resp(
-    signal Wr_Done      : in std_logic;
-    signal Wr_Error     : in std_logic;
-    signal Rd_Done      : in std_logic;
-    signal Rd_Error     : in std_logic;
+    signal wr_done_o      : in std_logic;
+    signal wr_error_o     : in std_logic;
+    signal rd_done_o      : in std_logic;
+    signal rd_error_o     : in std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t);
 
@@ -76,16 +76,16 @@ end package;
 ------------------------------------------------------------
 package body psi_common_axi_master_simple_tb_case_special is
   procedure user_cmd(
-    signal CmdWr_Addr   : inout std_logic_vector;
-    signal CmdWr_Size   : inout std_logic_vector;
-    signal CmdWr_LowLat : inout std_logic;
-    signal CmdWr_Vld    : inout std_logic;
-    signal CmdWr_Rdy    : in std_logic;
-    signal CmdRd_Addr   : inout std_logic_vector;
-    signal CmdRd_Size   : inout std_logic_vector;
-    signal CmdRd_LowLat : inout std_logic;
-    signal CmdRd_Vld    : inout std_logic;
-    signal CmdRd_Rdy    : in std_logic;
+    signal cmd_wr_addr_i   : inout std_logic_vector;
+    signal cmd_wr_size_i   : inout std_logic_vector;
+    signal cmd_wr_low_lat_i : inout std_logic;
+    signal cmd_wr_vld_i    : inout std_logic;
+    signal cmd_wr_rdy_o    : in std_logic;
+    signal cmd_rd_addr_i   : inout std_logic_vector;
+    signal cmd_rd_size_o   : inout std_logic_vector;
+    signal cmd_rd_low_lat_i : inout std_logic;
+    signal cmd_rd_vld_i    : inout std_logic;
+    signal cmd_rd_rdy_o    : in std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t) is
   begin
@@ -94,23 +94,23 @@ package body psi_common_axi_master_simple_tb_case_special is
   end procedure;
 
   procedure user_data(
-    signal WrDat_Data   : inout std_logic_vector;
-    signal WrDat_Be     : inout std_logic_vector;
-    signal WrDat_Vld    : inout std_logic;
-    signal WrDat_Rdy    : in std_logic;
-    signal RdDat_Data   : in std_logic_vector;
-    signal RdDat_Vld    : in std_logic;
-    signal RdDat_Rdy    : inout std_logic;
+    signal wr_dat_i   : inout std_logic_vector;
+    signal wr_data_be     : inout std_logic_vector;
+    signal wr_vld_i    : inout std_logic;
+    signal wr_rdy_o    : in std_logic;
+    signal rd_dat_o   : in std_logic_vector;
+    signal rd_vld_o    : in std_logic;
+    signal rd_rdy_i    : inout std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t) is
   begin
   end procedure;
 
   procedure user_resp(
-    signal Wr_Done      : in std_logic;
-    signal Wr_Error     : in std_logic;
-    signal Rd_Done      : in std_logic;
-    signal Rd_Error     : in std_logic;
+    signal wr_done_o      : in std_logic;
+    signal wr_error_o     : in std_logic;
+    signal rd_done_o      : in std_logic;
+    signal rd_error_o     : in std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t) is
   begin

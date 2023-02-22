@@ -29,35 +29,35 @@ use work.psi_tb_axi_pkg.all;
 package psi_common_axi_master_simple_tb_case_internals is
 
   procedure user_cmd(
-    signal CmdWr_Addr   : inout std_logic_vector;
-    signal CmdWr_Size   : inout std_logic_vector;
-    signal CmdWr_LowLat : inout std_logic;
-    signal CmdWr_Vld    : inout std_logic;
-    signal CmdWr_Rdy    : in std_logic;
-    signal CmdRd_Addr   : inout std_logic_vector;
-    signal CmdRd_Size   : inout std_logic_vector;
-    signal CmdRd_LowLat : inout std_logic;
-    signal CmdRd_Vld    : inout std_logic;
-    signal CmdRd_Rdy    : in std_logic;
+    signal cmd_wr_addr_i   : inout std_logic_vector;
+    signal cmd_wr_size_i   : inout std_logic_vector;
+    signal cmd_wr_low_lat_i : inout std_logic;
+    signal cmd_wr_vld_i    : inout std_logic;
+    signal cmd_wr_rdy_o    : in std_logic;
+    signal cmd_rd_addr_i   : inout std_logic_vector;
+    signal cmd_rd_size_o   : inout std_logic_vector;
+    signal cmd_rd_low_lat_i : inout std_logic;
+    signal cmd_rd_vld_i    : inout std_logic;
+    signal cmd_rd_rdy_o    : in std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t);
 
   procedure user_data(
-    signal WrDat_Data   : inout std_logic_vector;
-    signal WrDat_Be     : inout std_logic_vector;
-    signal WrDat_Vld    : inout std_logic;
-    signal WrDat_Rdy    : in std_logic;
-    signal RdDat_Data   : in std_logic_vector;
-    signal RdDat_Vld    : in std_logic;
-    signal RdDat_Rdy    : inout std_logic;
+    signal wr_dat_i   : inout std_logic_vector;
+    signal wr_data_be     : inout std_logic_vector;
+    signal wr_vld_i    : inout std_logic;
+    signal wr_rdy_o    : in std_logic;
+    signal rd_dat_o   : in std_logic_vector;
+    signal rd_vld_o    : in std_logic;
+    signal rd_rdy_i    : inout std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t);
 
   procedure user_resp(
-    signal Wr_Done      : in std_logic;
-    signal Wr_Error     : in std_logic;
-    signal Rd_Done      : in std_logic;
-    signal Rd_Error     : in std_logic;
+    signal wr_done_o      : in std_logic;
+    signal wr_error_o     : in std_logic;
+    signal rd_done_o      : in std_logic;
+    signal rd_error_o     : in std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t);
 
@@ -88,16 +88,16 @@ package body psi_common_axi_master_simple_tb_case_internals is
   end procedure;
 
   procedure user_cmd(
-    signal CmdWr_Addr   : inout std_logic_vector;
-    signal CmdWr_Size   : inout std_logic_vector;
-    signal CmdWr_LowLat : inout std_logic;
-    signal CmdWr_Vld    : inout std_logic;
-    signal CmdWr_Rdy    : in std_logic;
-    signal CmdRd_Addr   : inout std_logic_vector;
-    signal CmdRd_Size   : inout std_logic_vector;
-    signal CmdRd_LowLat : inout std_logic;
-    signal CmdRd_Vld    : inout std_logic;
-    signal CmdRd_Rdy    : in std_logic;
+    signal cmd_wr_addr_i   : inout std_logic_vector;
+    signal cmd_wr_size_i   : inout std_logic_vector;
+    signal cmd_wr_low_lat_i : inout std_logic;
+    signal cmd_wr_vld_i    : inout std_logic;
+    signal cmd_wr_rdy_o    : in std_logic;
+    signal cmd_rd_addr_i   : inout std_logic_vector;
+    signal cmd_rd_size_o   : inout std_logic_vector;
+    signal cmd_rd_low_lat_i : inout std_logic;
+    signal cmd_rd_vld_i    : inout std_logic;
+    signal cmd_rd_rdy_o    : in std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t) is
   begin
@@ -107,7 +107,7 @@ package body psi_common_axi_master_simple_tb_case_internals is
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Burst Write - Keep track of already anounced transfers ***		
       -- Are beats already announced (AW-channel command already sent) not taken
       -- into account for the high-latency mode?
@@ -116,8 +116,8 @@ package body psi_common_axi_master_simple_tb_case_internals is
       while DataBeats_v < 7 loop
         wait until rising_edge(Clk);
       end loop;
-      ApplyCommand(16#00020000#, 4, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
-      ApplyCommand(16#00021000#, 4, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+      ApplyCommand(16#00020000#, 4, false, cmd_wr_addr_i, cmd_wr_size_i, cmd_wr_low_lat_i, cmd_wr_vld_i, cmd_wr_rdy_o, Clk);
+      ApplyCommand(16#00021000#, 4, false, cmd_wr_addr_i, cmd_wr_size_i, cmd_wr_low_lat_i, cmd_wr_vld_i, cmd_wr_rdy_o, Clk);
       wait for DelayBetweenTests;
     end if;
 
@@ -125,50 +125,50 @@ package body psi_common_axi_master_simple_tb_case_internals is
   end procedure;
 
   procedure user_data(
-    signal WrDat_Data   : inout std_logic_vector;
-    signal WrDat_Be     : inout std_logic_vector;
-    signal WrDat_Vld    : inout std_logic;
-    signal WrDat_Rdy    : in std_logic;
-    signal RdDat_Data   : in std_logic_vector;
-    signal RdDat_Vld    : in std_logic;
-    signal RdDat_Rdy    : inout std_logic;
+    signal wr_dat_i   : inout std_logic_vector;
+    signal wr_data_be     : inout std_logic_vector;
+    signal wr_vld_i    : inout std_logic;
+    signal wr_rdy_o    : in std_logic;
+    signal rd_dat_o   : in std_logic_vector;
+    signal rd_vld_o    : in std_logic;
+    signal rd_rdy_i    : inout std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t) is
   begin
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Burst Write - Keep track of already anounced transfers ***
       DataBeats_v := 0;
       WaitCase(0, Clk);
-      ApplyWrDataMulti(16#1000#, 1, 4, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk);
-      ApplyWrDataMulti(16#2000#, 1, 3, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk); -- First 3 beats of second transfer
+      ApplyWrDataMulti(16#1000#, 1, 4, "11", "11", wr_dat_i, wr_data_be, wr_vld_i, wr_rdy_o, Clk);
+      ApplyWrDataMulti(16#2000#, 1, 3, "11", "11", wr_dat_i, wr_data_be, wr_vld_i, wr_rdy_o, Clk); -- First 3 beats of second transfer
       DataBeats_v := 7;
       wait for 5 us;
       wait until rising_edge(Clk);
-      ApplyWrDataMulti(16#2003#, 1, 1, "11", "11", WrDat_Data, WrDat_Be, WrDat_Vld, WrDat_Rdy, Clk); -- Last beat of second transfer
+      ApplyWrDataMulti(16#2003#, 1, 1, "11", "11", wr_dat_i, wr_data_be, wr_vld_i, wr_rdy_o, Clk); -- Last beat of second transfer
       DataBeats_v := 8;
     end if;
 
   end procedure;
 
   procedure user_resp(
-    signal Wr_Done      : in std_logic;
-    signal Wr_Error     : in std_logic;
-    signal Rd_Done      : in std_logic;
-    signal Rd_Error     : in std_logic;
+    signal wr_done_o      : in std_logic;
+    signal wr_error_o     : in std_logic;
+    signal rd_done_o      : in std_logic;
+    signal rd_error_o     : in std_logic;
     signal Clk          : in std_logic;
     constant Generics_c : Generics_t) is
   begin
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Burst Write - Keep track of already anounced transfers ***
       WaitCase(0, Clk);
-      WaitForCompletion(true, 15 us, Wr_Done, Wr_Error, Clk);
-      WaitForCompletion(true, 15 us, Wr_Done, Wr_Error, Clk);
+      WaitForCompletion(true, 15 us, wr_done_o, wr_error_o, Clk);
+      WaitForCompletion(true, 15 us, wr_done_o, wr_error_o, Clk);
     end if;
 
   end procedure;
@@ -182,7 +182,7 @@ package body psi_common_axi_master_simple_tb_case_internals is
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Burst Write - Keep track of already anounced transfers ***
       WaitCase(0, Clk);
       -- First burst is expected immediately

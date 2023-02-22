@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --  Copyright (c) 2021 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
---  Authors: Beno�t Stef
+--  Authors: BenoÃÂ®t Stef
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -117,9 +117,9 @@ begin
              rst_i  => rst_i,
              str_i  => str_i,
              raz_i  => raz_s,
-             data_i => dat_i,
+             dat_i => dat_i,
              str_o  => min_str_s,
-             data_o => min_dat_s);
+             dat_o => min_dat_s);
 
   --*** TAG Max ***
   inst_max : entity work.psi_common_find_min_max
@@ -131,8 +131,8 @@ begin
              rst_i  => rst_i,
              str_i  => str_i,
              raz_i  => raz_s,
-             data_i => dat_i,
+             dat_i => dat_i,
              str_o  => open,
-             data_o => max_dat_s);
+             dat_o => max_dat_s);
 
 end architecture;

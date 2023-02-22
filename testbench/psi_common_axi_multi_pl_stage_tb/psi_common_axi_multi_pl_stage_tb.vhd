@@ -33,9 +33,9 @@ architecture sim of psi_common_axi_multi_pl_stage_tb is
 	-- *** Fixed Generics ***
 	
 	-- *** Not Assigned Generics (default values) ***
-	constant AddrWidth_g : positive := 16 ;
-	constant DataWidth_g : positive := 32 ;
-	constant Stages_g : positive := 3;
+	constant addr_width_g : positive := 16 ;
+	constant data_width_g : positive := 32 ;
+	constant stages_g : positive := 3;
 	
 	-- *** TB Control ***
 	signal TbRunning : boolean := True;
@@ -46,8 +46,8 @@ architecture sim of psi_common_axi_multi_pl_stage_tb is
 	constant TbProcNr_slave_c : integer := 1;
 	
 	-- *** DUT Signals ***
-	signal Clk : std_logic := '1';
-	signal Rst : std_logic := '1';
+	signal clk_i : std_logic := '1';
+	signal rst_i : std_logic := '1';
 	
 	-------------------------------------------------------------------------
 	-- AXI Definition
@@ -80,13 +80,13 @@ begin
 	------------------------------------------------------------
 	i_dut : entity work.psi_common_axi_multi_pl_stage
 		generic map (
-			AddrWidth_g => AddrWidth_g,
-			DataWidth_g => DataWidth_g,
-			Stages_g => Stages_g
+			addr_width_g => addr_width_g,
+			data_width_g => data_width_g,
+			stages_g => stages_g
 		)
 		port map (
-			Clk => Clk,
-			Rst => Rst,
+			clk_i => clk_i,
+			rst_i => rst_i,
 			InAwAddr => axi_ms_m.awaddr,
 			InAwValid => axi_ms_m.awvalid,
 			InAwReady => axi_sm_m.awready,
@@ -156,7 +156,7 @@ begin
 	------------------------------------------------------------
 	p_tb_control : process
 	begin
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		wait until ProcessDone = AllProcessesDone_c;
 		TbRunning <= false;
 		wait;
@@ -170,7 +170,7 @@ begin
 	begin
 		while TbRunning loop
 			wait for 0.5*(1 sec)/Frequency_c;
-			Clk <= not Clk;
+			clk_i <= not clk_i;
 		end loop;
 		wait;
 	end process;
@@ -183,9 +183,9 @@ begin
 	begin
 		wait for 1 us;
 		-- Wait for two clk edges to ensure reset is active for at least one edge
-		wait until rising_edge(Clk);
-		wait until rising_edge(Clk);
-		Rst <= '0';
+		wait until rising_edge(clk_i);
+		wait until rising_edge(clk_i);
+		rst_i <= '0';
 		wait;
 	end process;
 	
@@ -197,11 +197,11 @@ begin
 	p_master : process
 	begin
 		-- start of process !DO NOT EDIT
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		
 		-- User Code
-		axi_single_write(16#1234#, 16#37654321#, axi_ms_m, axi_sm_m, Clk);
-		axi_single_expect(16#12AB#, 16#3456CDEF#, axi_ms_m, axi_sm_m, Clk);
+		axi_single_write(16#1234#, 16#37654321#, axi_ms_m, axi_sm_m, clk_i);
+		axi_single_expect(16#12AB#, 16#3456CDEF#, axi_ms_m, axi_sm_m, clk_i);
 		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_master_c) <= '1';
@@ -212,15 +212,15 @@ begin
 	p_slave : process
 	begin
 		-- start of process !DO NOT EDIT
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		
 		-- User Code
-		axi_expect_aw(16#1234#, AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms_s, axi_sm_s, Clk);
-		axi_expect_wd_single(X"37654321", "1111", axi_ms_s, axi_sm_s, Clk);
-		axi_apply_bresp(xRESP_OKAY_c, axi_ms_s, axi_sm_s, Clk);
+		axi_expect_aw(16#1234#, AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms_s, axi_sm_s, clk_i);
+		axi_expect_wd_single(X"37654321", "1111", axi_ms_s, axi_sm_s, clk_i);
+		axi_apply_bresp(xRESP_OKAY_c, axi_ms_s, axi_sm_s, clk_i);
 
-		axi_expect_ar(16#12AB#, AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms_s, axi_sm_s, Clk);
-		axi_apply_rresp_single(X"3456CDEF", xRESP_OKAY_c, axi_ms_s, axi_sm_s, Clk);	
+		axi_expect_ar(16#12AB#, AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms_s, axi_sm_s, clk_i);
+		axi_apply_rresp_single(X"3456CDEF", xRESP_OKAY_c, axi_ms_s, axi_sm_s, clk_i);	
 		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_slave_c) <= '1';

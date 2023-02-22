@@ -28,12 +28,12 @@ entity psi_common_tdm_mux is
 	        num_channel_g : natural   := 8; 								-- number of channel
 	        data_length_g : natural   := 16); 								-- data vector width
 	port(InClk     	: in  std_logic;     									-- clk in
-	     InRst     	: in  std_logic;     									-- sync reset
-	     InChSel  	: in  std_logic_vector(log2ceil(num_channel_g) - 1 downto 0); -- mux select
-	     InTdmVld 	: in  std_logic;     									-- tdm strobe
-	     InTdmDat 	: in  std_logic_vector(data_length_g - 1 downto 0); 	-- tdm data
-	     OutTdmVld 	: out std_logic;     									-- strobe output
-	     OutTdmDat 	: out std_logic_vector(data_length_g - 1 downto 0)); 	-- selected data out
+	     rst_i     	: in  std_logic;     									-- sync reset
+	     ch_sel_i  	: in  std_logic_vector(log2ceil(num_channel_g) - 1 downto 0); -- mux select
+	     tdm_vld_i 	: in  std_logic;     									-- tdm strobe
+	     tdm_dat_i 	: in  std_logic_vector(data_length_g - 1 downto 0); 	-- tdm data
+	     tdm_vld_o 	: out std_logic;     									-- strobe output
+	     tdm_dat_o 	: out std_logic_vector(data_length_g - 1 downto 0)); 	-- selected data out
 end entity;
 
 ------------------------------------------------------------------------------
@@ -51,14 +51,14 @@ begin
 	proc_decod : process(InClk)
 	begin
 		if rising_edge(InClk) then
-			if InRst = rst_pol_g then
+			if rst_i = rst_pol_g then
 				count_s       <= 0;
-				OutTdmVld     <= '0';
+				tdm_vld_o     <= '0';
 				tdm_str_s	  <= '0';
 			else
 
 				--variable counter increment
-				if InTdmVld = '1' then
+				if tdm_vld_i = '1' then
 					if count_s = num_channel_g - 1 then
 						count_s <= 0;
 					else
@@ -68,18 +68,18 @@ begin
 
 				-- output data after last channel was latched (i.e. if counter = 0)
 				if count_s = 0 and tdm_str_s = '1' then
-					OutTdmDat <= tdm_dat_s;
-					OutTdmVld <= tdm_str_s;
+					tdm_dat_o <= tdm_dat_s;
+					tdm_vld_o <= tdm_str_s;
 					tdm_str_s <= '0';
 				else
-					OutTdmVld <= '0';
+					tdm_vld_o <= '0';
 				end if;
 
 				--decode tdm (override reset of tdm_str_s if required)
-				if unsigned(InChSel) = count_s then
-					if InTdmVld = '1' then
-						tdm_dat_s <= InTdmDat;
-						tdm_str_s <= InTdmVld;
+				if unsigned(ch_sel_i) = count_s then
+					if tdm_vld_i = '1' then
+						tdm_dat_s <= tdm_dat_i;
+						tdm_str_s <= tdm_vld_i;
 					end if;
 				end if;
 

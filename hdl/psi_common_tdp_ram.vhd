@@ -24,23 +24,23 @@ use work.psi_common_math_pkg.all;
 ------------------------------------------------------------------------------
 entity psi_common_tdp_ram is
   generic(
-    Depth_g    : positive := 1024;
-    Width_g    : positive := 32;
-    Behavior_g : string   := "RBW"      -- "RBW" = read-before-write, "WBR" = write-before-read
+    depth_g    : positive := 1024;
+    width_g    : positive := 32;
+    behavior_g : string   := "RBW"      -- "RBW" = read-before-write, "WBR" = write-before-read
   );
   port(
     -- Port A
-    ClkA  : in  std_logic                                        := '0';
-    AddrA : in  std_logic_vector(log2ceil(Depth_g) - 1 downto 0) := (others => '0');
-    WrA   : in  std_logic                                        := '0';
-    DinA  : in  std_logic_vector(Width_g - 1 downto 0)           := (others => '0');
-    DoutA : out std_logic_vector(Width_g - 1 downto 0);
+    a_clk_i  : in  std_logic                                        := '0';
+    a_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
+    a_wr_i   : in  std_logic                                        := '0';
+    a_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
+    a_dat_o : out std_logic_vector(width_g - 1 downto 0);
     -- Port B
-    ClkB  : in  std_logic                                        := '0';
-    AddrB : in  std_logic_vector(log2ceil(Depth_g) - 1 downto 0) := (others => '0');
-    WrB   : in  std_logic                                        := '0';
-    DinB  : in  std_logic_vector(Width_g - 1 downto 0)           := (others => '0');
-    DoutB : out std_logic_vector(Width_g - 1 downto 0)
+    b_clk_i  : in  std_logic                                        := '0';
+    b_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
+    b_wr_i   : in  std_logic                                        := '0';
+    b_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
+    b_dat_o : out std_logic_vector(width_g - 1 downto 0)
   );
 end entity;
 
@@ -50,41 +50,41 @@ end entity;
 architecture rtl of psi_common_tdp_ram is
 
   -- memory array
-  type mem_t is array (Depth_g - 1 downto 0) of std_logic_vector(Width_g - 1 downto 0);
+  type mem_t is array (depth_g - 1 downto 0) of std_logic_vector(width_g - 1 downto 0);
   shared variable mem : mem_t := (others => (others => '0'));
 
 begin
 
-  assert Behavior_g = "RBW" or Behavior_g = "WBR" report "psi_common_tdp_ram: Behavior_g must be RBW or WBR" severity error;
+  assert behavior_g = "RBW" or behavior_g = "WBR" report "psi_common_tdp_ram: behavior_g must be RBW or WBR" severity error;
 
   -- Port A
-  porta_p : process(ClkA)
+  porta_p : process(a_clk_i)
   begin
-    if rising_edge(ClkA) then
-      if Behavior_g = "RBW" then
-        DoutA <= mem(to_integer(unsigned(AddrA)));
+    if rising_edge(a_clk_i) then
+      if behavior_g = "RBW" then
+        a_dat_o <= mem(to_integer(unsigned(a_addr_i)));
       end if;
-      if WrA = '1' then
-        mem(to_integer(unsigned(AddrA))) := DinA;
+      if a_wr_i = '1' then
+        mem(to_integer(unsigned(a_addr_i))) := a_dat_i;
       end if;
-      if Behavior_g = "WBR" then
-        DoutA <= mem(to_integer(unsigned(AddrA)));
+      if behavior_g = "WBR" then
+        a_dat_o <= mem(to_integer(unsigned(a_addr_i)));
       end if;
     end if;
   end process;
 
   -- Port B
-  portb_p : process(ClkB)
+  portb_p : process(b_clk_i)
   begin
-    if rising_edge(ClkB) then
-      if Behavior_g = "RBW" then
-        DoutB <= mem(to_integer(unsigned(AddrB)));
+    if rising_edge(b_clk_i) then
+      if behavior_g = "RBW" then
+        b_dat_o <= mem(to_integer(unsigned(b_addr_i)));
       end if;
-      if WrB = '1' then
-        mem(to_integer(unsigned(AddrB))) := DinB;
+      if b_wr_i = '1' then
+        mem(to_integer(unsigned(b_addr_i))) := b_dat_i;
       end if;
-      if Behavior_g = "WBR" then
-        DoutB <= mem(to_integer(unsigned(AddrB)));
+      if behavior_g = "WBR" then
+        b_dat_o <= mem(to_integer(unsigned(b_addr_i)));
       end if;
     end if;
   end process;

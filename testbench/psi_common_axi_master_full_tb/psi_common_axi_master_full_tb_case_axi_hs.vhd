@@ -30,34 +30,34 @@ package psi_common_axi_master_full_tb_case_axi_hs is
 
   procedure user_cmd(
     signal Clk          : in std_logic;
-    signal CmdWr_Addr   : inout std_logic_vector;
-    signal CmdWr_Size   : inout std_logic_vector;
-    signal CmdWr_LowLat : inout std_logic;
-    signal CmdWr_Vld    : inout std_logic;
-    signal CmdWr_Rdy    : in std_logic;
-    signal CmdRd_Addr   : inout std_logic_vector;
-    signal CmdRd_Size   : inout std_logic_vector;
-    signal CmdRd_LowLat : inout std_logic;
-    signal CmdRd_Vld    : inout std_logic;
-    signal CmdRd_Rdy    : in std_logic;
+    signal cmd_wr_addr_i   : inout std_logic_vector;
+    signal cmd_wr_size_i   : inout std_logic_vector;
+    signal cmd_wr_low_lat_i : inout std_logic;
+    signal cmd_wr_vld_i    : inout std_logic;
+    signal cmd_wr_rdy_o    : in std_logic;
+    signal cmd_rd_addr_i   : inout std_logic_vector;
+    signal cmd_rd_size_o   : inout std_logic_vector;
+    signal cmd_rd_low_lat_i : inout std_logic;
+    signal cmd_rd_vld_i    : inout std_logic;
+    signal cmd_rd_rdy_o    : in std_logic;
     constant Generics_c : Generics_t);
 
   procedure user_data(
     signal Clk          : in std_logic;
-    signal WrDat_Data   : inout std_logic_vector;
-    signal WrDat_Vld    : inout std_logic;
-    signal WrDat_Rdy    : in std_logic;
-    signal RdDat_Data   : in std_logic_vector;
-    signal RdDat_Vld    : in std_logic;
-    signal RdDat_Rdy    : inout std_logic;
+    signal wr_dat_i   : inout std_logic_vector;
+    signal wr_vld_i    : inout std_logic;
+    signal wr_rdy_o    : in std_logic;
+    signal rd_dat_o   : in std_logic_vector;
+    signal rd_vld_o    : in std_logic;
+    signal rd_rdy_i    : inout std_logic;
     constant Generics_c : Generics_t);
 
   procedure user_resp(
     signal Clk          : in std_logic;
-    signal Wr_Done      : in std_logic;
-    signal Wr_Error     : in std_logic;
-    signal Rd_Done      : in std_logic;
-    signal Rd_Error     : in std_logic;
+    signal wr_done_o      : in std_logic;
+    signal wr_error_o     : in std_logic;
+    signal rd_done_o      : in std_logic;
+    signal rd_error_o     : in std_logic;
     constant Generics_c : Generics_t);
 
   procedure axi(
@@ -96,16 +96,16 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 
   procedure user_cmd(
     signal Clk          : in std_logic;
-    signal CmdWr_Addr   : inout std_logic_vector;
-    signal CmdWr_Size   : inout std_logic_vector;
-    signal CmdWr_LowLat : inout std_logic;
-    signal CmdWr_Vld    : inout std_logic;
-    signal CmdWr_Rdy    : in std_logic;
-    signal CmdRd_Addr   : inout std_logic_vector;
-    signal CmdRd_Size   : inout std_logic_vector;
-    signal CmdRd_LowLat : inout std_logic;
-    signal CmdRd_Vld    : inout std_logic;
-    signal CmdRd_Rdy    : in std_logic;
+    signal cmd_wr_addr_i   : inout std_logic_vector;
+    signal cmd_wr_size_i   : inout std_logic_vector;
+    signal cmd_wr_low_lat_i : inout std_logic;
+    signal cmd_wr_vld_i    : inout std_logic;
+    signal cmd_wr_rdy_o    : in std_logic;
+    signal cmd_rd_addr_i   : inout std_logic_vector;
+    signal cmd_rd_size_o   : inout std_logic_vector;
+    signal cmd_rd_low_lat_i : inout std_logic;
+    signal cmd_rd_vld_i    : inout std_logic;
+    signal cmd_rd_rdy_o    : in std_logic;
     constant Generics_c : Generics_t) is
   begin
     wait for DelayBetweenTests;
@@ -115,13 +115,13 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** No Delay ***
       DbgPrint(DebugPrints, ">> Write No Delay");
       TestCase_v := 0;
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyCommand(16#02000000# + offs, size, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+          ApplyCommand(16#02000000# + offs, size, false, cmd_wr_addr_i, cmd_wr_size_i, cmd_wr_low_lat_i, cmd_wr_vld_i, cmd_wr_rdy_o, Clk);
         end loop;
       end loop;
       WaitDone(0, Clk);
@@ -132,7 +132,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       TestCase_v := 1;
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyCommand(16#02000000# + offs, size, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+          ApplyCommand(16#02000000# + offs, size, false, cmd_wr_addr_i, cmd_wr_size_i, cmd_wr_low_lat_i, cmd_wr_vld_i, cmd_wr_rdy_o, Clk);
         end loop;
       end loop;
       WaitDone(1, Clk);
@@ -143,7 +143,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       TestCase_v := 2;
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyCommand(16#02000000# + offs, size, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+          ApplyCommand(16#02000000# + offs, size, false, cmd_wr_addr_i, cmd_wr_size_i, cmd_wr_low_lat_i, cmd_wr_vld_i, cmd_wr_rdy_o, Clk);
         end loop;
       end loop;
       WaitDone(2, Clk);
@@ -154,7 +154,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       TestCase_v := 3;
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyCommand(16#02000000# + offs, size, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+          ApplyCommand(16#02000000# + offs, size, false, cmd_wr_addr_i, cmd_wr_size_i, cmd_wr_low_lat_i, cmd_wr_vld_i, cmd_wr_rdy_o, Clk);
         end loop;
       end loop;
       WaitDone(3, Clk);
@@ -164,13 +164,13 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------	
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** No Delay ***
       DbgPrint(DebugPrints, ">> Read No Delay");
       TestCase_v := 4;
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyCommand(16#02000000# + offs, size, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+          ApplyCommand(16#02000000# + offs, size, false, cmd_rd_addr_i, cmd_rd_size_o, cmd_rd_low_lat_i, cmd_rd_vld_i, cmd_rd_rdy_o, Clk);
         end loop;
       end loop;
       WaitDone(4, Clk);
@@ -181,7 +181,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       TestCase_v := 5;
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyCommand(16#02000000# + offs, size, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+          ApplyCommand(16#02000000# + offs, size, false, cmd_rd_addr_i, cmd_rd_size_o, cmd_rd_low_lat_i, cmd_rd_vld_i, cmd_rd_rdy_o, Clk);
         end loop;
       end loop;
       WaitDone(5, Clk);
@@ -192,7 +192,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       TestCase_v := 6;
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyCommand(16#02000000# + offs, size, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+          ApplyCommand(16#02000000# + offs, size, false, cmd_rd_addr_i, cmd_rd_size_o, cmd_rd_low_lat_i, cmd_rd_vld_i, cmd_rd_rdy_o, Clk);
         end loop;
       end loop;
       WaitDone(6, Clk);
@@ -203,7 +203,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       TestCase_v := 7;
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyCommand(16#02000000# + offs, size, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+          ApplyCommand(16#02000000# + offs, size, false, cmd_rd_addr_i, cmd_rd_size_o, cmd_rd_low_lat_i, cmd_rd_vld_i, cmd_rd_rdy_o, Clk);
         end loop;
       end loop;
       WaitDone(7, Clk);
@@ -213,23 +213,23 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 
   procedure user_data(
     signal Clk          : in std_logic;
-    signal WrDat_Data   : inout std_logic_vector;
-    signal WrDat_Vld    : inout std_logic;
-    signal WrDat_Rdy    : in std_logic;
-    signal RdDat_Data   : in std_logic_vector;
-    signal RdDat_Vld    : in std_logic;
-    signal RdDat_Rdy    : inout std_logic;
+    signal wr_dat_i   : inout std_logic_vector;
+    signal wr_vld_i    : inout std_logic;
+    signal wr_rdy_o    : in std_logic;
+    signal rd_dat_o   : in std_logic_vector;
+    signal rd_vld_o    : in std_logic;
+    signal rd_rdy_i    : inout std_logic;
     constant Generics_c : Generics_t) is
   begin
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** No Delay  ***
       WaitCase(0, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyWrData(16#10#, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk);
+          ApplyWrData(16#10#, size, wr_dat_i, wr_vld_i, wr_rdy_o, Clk);
         end loop;
       end loop;
 
@@ -237,7 +237,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(1, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyWrData(16#10#, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk);
+          ApplyWrData(16#10#, size, wr_dat_i, wr_vld_i, wr_rdy_o, Clk);
         end loop;
       end loop;
 
@@ -245,7 +245,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(2, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyWrData(16#10#, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk);
+          ApplyWrData(16#10#, size, wr_dat_i, wr_vld_i, wr_rdy_o, Clk);
         end loop;
       end loop;
 
@@ -253,7 +253,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(3, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          ApplyWrData(16#10#, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk);
+          ApplyWrData(16#10#, size, wr_dat_i, wr_vld_i, wr_rdy_o, Clk);
         end loop;
       end loop;
     end if;
@@ -261,12 +261,12 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------	
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** No Delay  ***
       WaitCase(4, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          CheckRdData(16#10# + offs * 16, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 0 ns, "No Delay s=" & str(size) & ", o=" & str(offs));
+          CheckRdData(16#10# + offs * 16, size, rd_dat_o, rd_vld_o, rd_rdy_i, Clk, 0 ns, "No Delay s=" & str(size) & ", o=" & str(offs));
         end loop;
       end loop;
 
@@ -274,7 +274,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(5, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          CheckRdData(16#10# + offs * 16, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 0 ns, "AR Delay only s=" & str(size) & ", o=" & str(offs));
+          CheckRdData(16#10# + offs * 16, size, rd_dat_o, rd_vld_o, rd_rdy_i, Clk, 0 ns, "AR Delay only s=" & str(size) & ", o=" & str(offs));
         end loop;
       end loop;
 
@@ -282,7 +282,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(6, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          CheckRdData(16#10# + offs * 16, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 0 ns, "R Delay only s=" & str(size) & ", o=" & str(offs));
+          CheckRdData(16#10# + offs * 16, size, rd_dat_o, rd_vld_o, rd_rdy_i, Clk, 0 ns, "R Delay only s=" & str(size) & ", o=" & str(offs));
         end loop;
       end loop;
 
@@ -290,7 +290,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(7, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          CheckRdData(16#10# + offs * 16, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk, 0 ns, "AR and R Delay s=" & str(size) & ", o=" & str(offs));
+          CheckRdData(16#10# + offs * 16, size, rd_dat_o, rd_vld_o, rd_rdy_i, Clk, 0 ns, "AR and R Delay s=" & str(size) & ", o=" & str(offs));
         end loop;
       end loop;
     end if;
@@ -298,21 +298,21 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
 
   procedure user_resp(
     signal Clk          : in std_logic;
-    signal Wr_Done      : in std_logic;
-    signal Wr_Error     : in std_logic;
-    signal Rd_Done      : in std_logic;
-    signal Rd_Error     : in std_logic;
+    signal wr_done_o      : in std_logic;
+    signal wr_error_o     : in std_logic;
+    signal rd_done_o      : in std_logic;
+    signal rd_error_o     : in std_logic;
     constant Generics_c : Generics_t) is
   begin
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** No Delay  ***	
       WaitCase(0, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          WaitForCompletion(true, DelayBetweenTests + 50 us, Wr_Done, Wr_Error, Clk);
+          WaitForCompletion(true, DelayBetweenTests + 50 us, wr_done_o, wr_error_o, Clk);
         end loop;
       end loop;
       AllDone_v := 0;
@@ -321,7 +321,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(1, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          WaitForCompletion(true, DelayBetweenTests + 50 us, Wr_Done, Wr_Error, Clk);
+          WaitForCompletion(true, DelayBetweenTests + 50 us, wr_done_o, wr_error_o, Clk);
         end loop;
       end loop;
       AllDone_v := 1;
@@ -330,7 +330,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(2, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          WaitForCompletion(true, DelayBetweenTests + 50 us, Wr_Done, Wr_Error, Clk);
+          WaitForCompletion(true, DelayBetweenTests + 50 us, wr_done_o, wr_error_o, Clk);
         end loop;
       end loop;
       AllDone_v := 2;
@@ -339,7 +339,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(3, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          WaitForCompletion(true, DelayBetweenTests + 50 us, Wr_Done, Wr_Error, Clk);
+          WaitForCompletion(true, DelayBetweenTests + 50 us, wr_done_o, wr_error_o, Clk);
         end loop;
       end loop;
       AllDone_v := 3;
@@ -348,12 +348,12 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------	
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** No Delay  ***	
       WaitCase(4, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          WaitForCompletion(true, DelayBetweenTests + 50 us, Rd_Done, Rd_Error, Clk);
+          WaitForCompletion(true, DelayBetweenTests + 50 us, rd_done_o, rd_error_o, Clk);
         end loop;
       end loop;
       AllDone_v := 4;
@@ -362,7 +362,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(5, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          WaitForCompletion(true, DelayBetweenTests + 50 us, Rd_Done, Rd_Error, Clk);
+          WaitForCompletion(true, DelayBetweenTests + 50 us, rd_done_o, rd_error_o, Clk);
         end loop;
       end loop;
       AllDone_v := 5;
@@ -371,7 +371,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(6, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          WaitForCompletion(true, DelayBetweenTests + 50 us, Rd_Done, Rd_Error, Clk);
+          WaitForCompletion(true, DelayBetweenTests + 50 us, rd_done_o, rd_error_o, Clk);
         end loop;
       end loop;
       AllDone_v := 6;
@@ -380,7 +380,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
       WaitCase(7, Clk);
       for size in 1 to 4 loop
         for offs in 0 to 3 loop
-          WaitForCompletion(true, DelayBetweenTests + 50 us, Rd_Done, Rd_Error, Clk);
+          WaitForCompletion(true, DelayBetweenTests + 50 us, rd_done_o, rd_error_o, Clk);
         end loop;
       end loop;
       AllDone_v := 7;
@@ -398,7 +398,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** No Delay ***
       WaitCase(0, Clk);
       for size in 1 to 4 loop
@@ -447,7 +447,7 @@ package body psi_common_axi_master_full_tb_case_axi_hs is
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------	
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** No Delay ***
       WaitCase(4, Clk);
       for size in 1 to 4 loop

@@ -19,28 +19,28 @@ use work.psi_common_math_pkg.all;
 ------------------------------------------------------------------------------
 package psi_common_logic_pkg is
 
-  function ZerosVector(size : in natural) return std_logic_vector;
+  function zeros_vector(size : in natural) return std_logic_vector;
 
-  function OnesVector(size : in natural) return std_logic_vector;
+  function ones_vector(size : in natural) return std_logic_vector;
 
-  function PartiallyOnesVector(size    : in natural;
+  function partially_ones_vector(size    : in natural;
                                ones_nb : in natural)
   return std_logic_vector;
 
-  function ShiftLeft(arg  : in std_logic_vector;
+  function shift_left(arg  : in std_logic_vector;
                      bits : in integer;
                      fill : in std_logic := '0')
   return std_logic_vector;
 
-  function ShiftRight(arg  : in std_logic_vector;
+  function shift_right(arg  : in std_logic_vector;
                       bits : in integer;
                       fill : in std_logic := '0')
   return std_logic_vector;
 
-  function BinaryToGray(binary : in std_logic_vector)
+  function binary_to_gray(binary : in std_logic_vector)
   return std_logic_vector;
 
-  function GrayToBinary(gray : in std_logic_vector)
+  function gray_to_binary(gray : in std_logic_vector)
   return std_logic_vector;
 
   -- Parallel Prefix Computation of the OR function
@@ -49,25 +49,25 @@ package psi_common_logic_pkg is
   -- 0101		--> 0111
   -- 0011		--> 0011
   -- 0010		--> 0011
-  function PpcOr(inp : in std_logic_vector)
+  function ppc_or(inp : in std_logic_vector)
   return std_logic_vector;
 
-  function IntToStdLogic(int : in integer)
+  function int_to_std_logic(int : in integer)
   return std_logic;
 
-  function ReduceOr(vec : in std_logic_vector)
+  function reduce_or(vec : in std_logic_vector)
   return std_logic;
 
-  function ReduceAnd(vec : in std_logic_vector)
+  function reduce_and(vec : in std_logic_vector)
   return std_logic;
 
-  function To01X(inp : in std_logic)
+  function to_01X(inp : in std_logic)
   return std_logic;
 
-  function To01X(inp : in std_logic_vector)
+  function to_01X(inp : in std_logic_vector)
   return std_logic_vector;
   
-  function InvertBitOrder(inp : in std_logic_vector)
+  function invert_bit_order(inp : in std_logic_vector)
   return std_logic_vector;
 
 end psi_common_logic_pkg;
@@ -78,21 +78,21 @@ end psi_common_logic_pkg;
 package body psi_common_logic_pkg is
 
   -- *** ZerosVector ***
-  function ZerosVector(size : in natural) return std_logic_vector is
+  function zeros_vector(size : in natural) return std_logic_vector is
     constant c : std_logic_vector(size - 1 downto 0) := (others => '0');
   begin
     return c;
   end function;
 
   -- *** OnesVector ***
-  function OnesVector(size : in natural) return std_logic_vector is
+  function ones_vector(size : in natural) return std_logic_vector is
     constant c : std_logic_vector(size - 1 downto 0) := (others => '1');
   begin
     return c;
   end function;
 
   -- *** PartiallyOnesVector ***
-  function PartiallyOnesVector(size    : in natural;
+  function partially_ones_vector(size    : in natural;
                                ones_nb : in natural)
   return std_logic_vector is
     variable v_low    : std_logic_vector(size downto 0);
@@ -108,7 +108,7 @@ package body psi_common_logic_pkg is
   end function;
 
   -- *** ShiftLeft ***
-  function ShiftLeft(arg  : in std_logic_vector;
+  function shift_left(arg  : in std_logic_vector;
                      bits : in integer;
                      fill : in std_logic := '0')
   return std_logic_vector is
@@ -116,7 +116,7 @@ package body psi_common_logic_pkg is
     variable v     : std_logic_vector(argDt'range);
   begin
     if bits < 0 then
-      return ShiftRight(argDt, -bits, fill);
+      return shift_right(argDt, -bits, fill);
     else
       v(v'left downto bits) := argDt(argDt'left - bits downto argDt'right);
       v(bits - 1 downto v'right)  := (others => fill);
@@ -125,7 +125,7 @@ package body psi_common_logic_pkg is
   end function;
 
   -- *** ShiftRight ***
-  function ShiftRight(arg  : in std_logic_vector;
+  function shift_right(arg  : in std_logic_vector;
                       bits : in integer;
                       fill : in std_logic := '0')
   return std_logic_vector is
@@ -133,7 +133,7 @@ package body psi_common_logic_pkg is
     variable v     : std_logic_vector(argDt'range);
   begin
     if bits < 0 then
-      return ShiftLeft(argDt, -bits, fill);
+      return shift_left(argDt, -bits, fill);
     else
       v(v'left - bits downto v'right)    := argDt(argDt'left downto bits);
       v(v'left downto v'left - bits + 1) := (others => fill);
@@ -142,7 +142,7 @@ package body psi_common_logic_pkg is
   end function;
 
   -- *** BinaryToGray ***
-  function BinaryToGray(binary : in std_logic_vector)
+  function binary_to_gray(binary : in std_logic_vector)
   return std_logic_vector is
     variable Gray_v : std_logic_vector(binary'range);
   begin
@@ -151,7 +151,7 @@ package body psi_common_logic_pkg is
   end function;
 
   -- *** GrayToBinary ***
-  function GrayToBinary(gray : in std_logic_vector)
+  function gray_to_binary(gray : in std_logic_vector)
   return std_logic_vector is
     variable Binary_v : std_logic_vector(gray'range);
   begin
@@ -163,7 +163,7 @@ package body psi_common_logic_pkg is
   end function;
 
   -- *** PpcOr ***
-  function PpcOr(inp : in std_logic_vector)
+  function ppc_or(inp : in std_logic_vector)
   return std_logic_vector is
     constant Stages_c    : integer := log2ceil(inp'length);
     constant Pwr2Width_c : integer := 2**Stages_c;
@@ -187,7 +187,7 @@ package body psi_common_logic_pkg is
     return StageOut_v(Stages_c)(inp'length - 1 downto 0);
   end function;
 
-  function IntToStdLogic(int : in integer)
+  function int_to_std_logic(int : in integer)
   return std_logic is
   begin
     if int = 1 then
@@ -199,7 +199,7 @@ package body psi_common_logic_pkg is
     end if;
   end function;
 
-  function ReduceOr(vec : in std_logic_vector)
+  function reduce_or(vec : in std_logic_vector)
   return std_logic is
     variable tmp : std_logic;
   begin
@@ -210,7 +210,7 @@ package body psi_common_logic_pkg is
     return tmp;
   end function;
 
-  function ReduceAnd(vec : in std_logic_vector)
+  function reduce_and(vec : in std_logic_vector)
   return std_logic is
     variable tmp : std_logic;
   begin
@@ -221,7 +221,7 @@ package body psi_common_logic_pkg is
     return tmp;
   end function;
 
-  function To01X(inp : in std_logic)
+  function to_01X(inp : in std_logic)
   return std_logic is
   begin
     case inp is
@@ -231,17 +231,17 @@ package body psi_common_logic_pkg is
     end case;
   end function;
 
-  function To01X(inp : in std_logic_vector)
+  function to_01X(inp : in std_logic_vector)
   return std_logic_vector is
     variable tmp : std_logic_vector(inp'range);
   begin
     for i in inp'low to inp'high loop
-      tmp(i) := to01X(inp(i));
+      tmp(i) := to_01X(inp(i));
     end loop;
     return tmp;
   end function;
   
-  function InvertBitOrder(inp : in std_logic_vector)
+  function invert_bit_order(inp : in std_logic_vector)
   return std_logic_vector is
     variable tmp : std_logic_vector(inp'range);
   begin

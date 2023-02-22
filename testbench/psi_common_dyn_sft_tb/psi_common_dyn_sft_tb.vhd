@@ -28,9 +28,9 @@ library work;
 ------------------------------------------------------------
 entity psi_common_dyn_sft_tb is
 	generic (
-		Direction_g : string := "LEFT" ;
-		SelectBitsPerStage_g : positive := 4 ;
-		SignExtend_g : boolean := true 
+		direction_g : string := "LEFT" ;
+		sel_bit_per_stage_g : positive := 4 ;
+		sign_extend_g : boolean := true 
 	);
 end entity;
 
@@ -39,8 +39,8 @@ end entity;
 ------------------------------------------------------------
 architecture sim of psi_common_dyn_sft_tb is
 	-- *** Fixed Generics ***
-	constant MaxShift_g : positive := 20;
-	constant Width_g : positive := 32;
+	constant max_shift_g : positive := 20;
+	constant width_g : positive := 32;
 	
 	-- *** Not Assigned Generics (default values) ***
 	
@@ -53,13 +53,13 @@ architecture sim of psi_common_dyn_sft_tb is
 	constant TbProcNr_outp_c : integer := 1;
 	
 	-- *** DUT Signals ***
-	signal Clk : std_logic := '1';
-	signal Rst : std_logic := '1';
-	signal InVld : std_logic := '0';
-	signal InShift : std_logic_vector(log2ceil(MaxShift_g+1)-1 downto 0) := (others => '0');
-	signal InData : std_logic_vector(Width_g-1 downto 0) := (others => '0');
-	signal OutVld : std_logic := '0';
-	signal OutData : std_logic_vector(Width_g-1 downto 0) := (others => '0');
+	signal clk_i : std_logic := '1';
+	signal rst_i : std_logic := '1';
+	signal vld_i : std_logic := '0';
+	signal shift_i : std_logic_vector(log2ceil(max_shift_g+1)-1 downto 0) := (others => '0');
+	signal dat_i : std_logic_vector(width_g-1 downto 0) := (others => '0');
+	signal vld_o : std_logic := '0';
+	signal dat_o : std_logic_vector(width_g-1 downto 0) := (others => '0');
   
   constant ClkPerSpl_c    : integer := 1;
   type Random_a is array (natural range <>) of std_logic_vector(31 downto 0);
@@ -72,20 +72,20 @@ begin
 	------------------------------------------------------------
 	i_dut : entity work.psi_common_dyn_sft
 		generic map (
-			Direction_g => Direction_g,
-			SelectBitsPerStage_g => SelectBitsPerStage_g,
-			SignExtend_g => SignExtend_g,
-			MaxShift_g => MaxShift_g,
-			Width_g => Width_g
+			direction_g => direction_g,
+			sel_bit_per_stage_g => sel_bit_per_stage_g,
+			sign_extend_g => sign_extend_g,
+			max_shift_g => max_shift_g,
+			width_g => width_g
 		)
 		port map (
-			Clk => Clk,
-			Rst => Rst,
-			InVld => InVld,
-			InShift => InShift,
-			InData => InData,
-			OutVld => OutVld,
-			OutData => OutData
+			clk_i => clk_i,
+			rst_i => rst_i,
+			vld_i => vld_i,
+			shift_i => shift_i,
+			dat_i => dat_i,
+			vld_o => vld_o,
+			dat_o => dat_o
 		);
 	
 	------------------------------------------------------------
@@ -93,7 +93,7 @@ begin
 	------------------------------------------------------------
 	p_tb_control : process
 	begin
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		wait until ProcessDone = AllProcessesDone_c;
 		TbRunning <= false;
 		wait;
@@ -107,7 +107,7 @@ begin
 	begin
 		while TbRunning loop
 			wait for 0.5*(1 sec)/Frequency_c;
-			Clk <= not Clk;
+			clk_i <= not clk_i;
 		end loop;
 		wait;
 	end process;
@@ -120,9 +120,9 @@ begin
 	begin
 		wait for 1 us;
 		-- Wait for two clk edges to ensure reset is active for at least one edge
-		wait until rising_edge(Clk);
-		wait until rising_edge(Clk);
-		Rst <= '0';
+		wait until rising_edge(clk_i);
+		wait until rising_edge(clk_i);
+		rst_i <= '0';
 		wait;
 	end process;
 	
@@ -134,36 +134,36 @@ begin
 	p_inp : process
 	begin
 		-- start of process !DO NOT EDIT
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		
 		-- User Code
-		wait until rising_edge(Clk);
+		wait until rising_edge(clk_i);
     
     for si in Shift_c'low to Shift_c'high loop
       -- Moving ones
-      for i in 0 to Width_g-1 loop
-        InData    <= (others => '0');
-        InData(i) <= '1';
-        InShift   <= to_uslv(Shift_c(si), InShift'length);
-        InVld     <= '1';
-        wait until rising_edge(Clk);
+      for i in 0 to width_g-1 loop
+        dat_i    <= (others => '0');
+        dat_i(i) <= '1';
+        shift_i   <= to_uslv(Shift_c(si), shift_i'length);
+        vld_i     <= '1';
+        wait until rising_edge(clk_i);
         if ClkPerSpl_c > 1 then
-          InVld     <= '0';
-          InShift   <= (others => '0');
-          WaitClockCycles(ClkPerSpl_c-1, Clk);
+          vld_i     <= '0';
+          shift_i   <= (others => '0');
+          WaitClockCycles(ClkPerSpl_c-1, clk_i);
         end if;
       end loop;
       
       -- Random numbers
       for i in Random_c'low to Random_c'high loop
-        InData    <= Random_c(i);
-        InVld     <= '1';
-        InShift   <= to_uslv(Shift_c(si), InShift'length);
-        wait until rising_edge(Clk);
+        dat_i    <= Random_c(i);
+        vld_i     <= '1';
+        shift_i   <= to_uslv(Shift_c(si), shift_i'length);
+        wait until rising_edge(clk_i);
         if ClkPerSpl_c > 1 then
-          InVld     <= '0';
-          InShift   <= (others => '0');
-          WaitClockCycles(ClkPerSpl_c-1, Clk);
+          vld_i     <= '0';
+          shift_i   <= (others => '0');
+          WaitClockCycles(ClkPerSpl_c-1, clk_i);
         end if;  
       end loop;
     end loop;
@@ -179,34 +179,34 @@ begin
     variable Shift_v : integer;
 	begin
 		-- start of process !DO NOT EDIT
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		
     for si in Shift_c'low to Shift_c'high loop
       Shift_v := Shift_c(si);
       -- Moving ones
-      for i in 0 to Width_g-1 loop
+      for i in 0 to width_g-1 loop
         InData_v    := (others => '0');
         InData_v(i) := '1';
-        wait until rising_edge(Clk) and OutVld = '1';
-        if Direction_g = "LEFT" then
-          StdlvCompareStdlv(ShiftLeft(InData_v, Shift_v, '0'), OutData, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
-        elsif SignExtend_g then
-          StdlvCompareStdlv(ShiftRight(InData_v, Shift_v, InData_v(InData_v'high)), OutData, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
+        wait until rising_edge(clk_i) and vld_o = '1';
+        if direction_g = "LEFT" then
+          StdlvCompareStdlv(shift_left(InData_v, Shift_v, '0'), dat_o, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
+        elsif sign_extend_g then
+          StdlvCompareStdlv(shift_right(InData_v, Shift_v, InData_v(InData_v'high)), dat_o, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
         else 
-          StdlvCompareStdlv(ShiftRight(InData_v, Shift_v, '0'), OutData, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
+          StdlvCompareStdlv(shift_right(InData_v, Shift_v, '0'), dat_o, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
         end if;
       end loop;
       
       -- Random numbers
       for i in Random_c'low to Random_c'high loop
         InData_v    := Random_c(i);
-        wait until rising_edge(Clk) and OutVld = '1';
-        if Direction_g = "LEFT" then
-          StdlvCompareStdlv(ShiftLeft(InData_v, Shift_v, '0'), OutData, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
-        elsif SignExtend_g then
-          StdlvCompareStdlv(ShiftRight(InData_v, Shift_v, InData_v(InData_v'high)), OutData, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
+        wait until rising_edge(clk_i) and vld_o = '1';
+        if direction_g = "LEFT" then
+          StdlvCompareStdlv(shift_left(InData_v, Shift_v, '0'), dat_o, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
+        elsif sign_extend_g then
+          StdlvCompareStdlv(shift_right(InData_v, Shift_v, InData_v(InData_v'high)), dat_o, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
         else 
-          StdlvCompareStdlv(ShiftRight(InData_v, Shift_v, '0'), OutData, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
+          StdlvCompareStdlv(shift_right(InData_v, Shift_v, '0'), dat_o, "Wrong Data: SFT=" & to_string(Shift_v) & " IN=" & to_string(InData_v));
         end if;
       end loop;
     end loop;

@@ -23,21 +23,21 @@ use ieee.numeric_std.all;
 ------------------------------------------------------------------------------
 entity psi_common_simple_cc is
   generic(
-    DataWidth_g : positive := 16
+    data_width_g : positive := 16
   );
   port(
     -- Clock Domain A
-    ClkA    : in  std_logic;
-    RstInA  : in  std_logic;
-    RstOutA : out std_logic;
-    DataA   : in  std_logic_vector(DataWidth_g - 1 downto 0);
-    VldA    : in  std_logic;
+    a_clk_i    : in  std_logic;
+    a_rst_i  : in  std_logic;
+    a_rst_o : out std_logic;
+    a_dat_i   : in  std_logic_vector(data_width_g - 1 downto 0);
+    a_vld_i    : in  std_logic;
     -- Clock Domain B
-    ClkB    : in  std_logic;
-    RstInB  : in  std_logic;
-    RstOutB : out std_logic;
-    DataB   : out std_logic_vector(DataWidth_g - 1 downto 0);
-    VldB    : out std_logic
+    b_clk_i    : in  std_logic;
+    b_rst_i  : in  std_logic;
+    b_rst_o : out std_logic;
+    b_dat_o   : out std_logic_vector(data_width_g - 1 downto 0);
+    b_vld_o    : out std_logic
   );
 end entity;
 
@@ -47,7 +47,7 @@ end entity;
 architecture rtl of psi_common_simple_cc is
   -- Domain A signals
   signal RstAI      : std_logic;
-  signal DataLatchA : std_logic_vector(DataWidth_g - 1 downto 0);
+  signal DataLatchA : std_logic_vector(data_width_g - 1 downto 0);
   -- Domain B signals
   signal RstBI      : std_logic;
   signal VldBI      : std_logic;
@@ -56,46 +56,46 @@ begin
 
   i_pulse_cc : entity work.psi_common_pulse_cc
     generic map(
-      NumPulses_g => 1
+      num_pulses_g => 1
     )
     port map(
-      ClkA    => ClkA,
-      RstInA  => RstInA,
-      RstOutA => RstAI,
-      PulseA(0)                                                                                                                                                                          => VldA,
-      ClkB    => ClkB,
-      RstInB  => RstInB,
-      RstOutB => RstBI,
-      PulseB(0)                                                                                                                                                                                                                                                                   => VldBI
+      a_clk_i    => a_clk_i,
+      a_rst_i  => a_rst_i,
+      a_rst_o => RstAI,
+      a_dat_i(0)                                                                                                                                                                          => a_vld_i,
+      b_clk_i    => b_clk_i,
+      b_rst_i  => b_rst_i,
+      b_rst_o => RstBI,
+      b_dat_o(0)                                                                                                                                                                                                                                                                   => VldBI
     );
-  RstOutA <= RstAI;
-  RstOutB <= RstBI;
+  a_rst_o <= RstAI;
+  b_rst_o <= RstBI;
 
   -- Data transmit side (A)
-  DataA_p : process(ClkA)
+  DataA_p : process(a_clk_i)
   begin
-    if rising_edge(ClkA) then
+    if rising_edge(a_clk_i) then
       if RstAI = '1' then
         DataLatchA <= (others => '0');
       else
-        if VldA = '1' then
-          DataLatchA <= DataA;
+        if a_vld_i = '1' then
+          DataLatchA <= a_dat_i;
         end if;
       end if;
     end if;
   end process;
 
   -- Data receive side (B)
-  DataB_p : process(ClkB)
+  DataB_p : process(b_clk_i)
   begin
-    if rising_edge(ClkB) then
+    if rising_edge(b_clk_i) then
       if RstBI = '1' then
-        DataB <= (others => '0');
-        VldB  <= '0';
+        b_dat_o <= (others => '0');
+        b_vld_o  <= '0';
       else
-        VldB <= VldBI;
+        b_vld_o <= VldBI;
         if VldBI = '1' then
-          DataB <= DataLatchA;
+          b_dat_o <= DataLatchA;
         end if;
       end if;
     end if;

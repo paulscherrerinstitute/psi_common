@@ -34,8 +34,8 @@ end entity;
 ------------------------------------------------------------
 architecture sim of psi_common_wconv_xn2n_tb is
   -- *** Fixed Generics ***
-  constant InWidth_g  : natural := 16;
-  constant OutWidth_g : natural := 4;
+  constant in_width_g  : natural := 16;
+  constant out_width_g : natural := 4;
 
   -- *** Not Assigned Generics (default values) ***
 
@@ -48,37 +48,37 @@ architecture sim of psi_common_wconv_xn2n_tb is
   constant TbProcNr_check_c   : integer                  := 1;
 
   -- *** DUT Signals ***
-  signal Clk     : std_logic                                             := '0';
-  signal Rst     : std_logic                                             := '1';
-  signal InVld   : std_logic                                             := '0';
-  signal InRdy   : std_logic                                             := '0';
-  signal InData  : std_logic_vector(InWidth_g - 1 downto 0)              := (others => '0');
-  signal InLast  : std_logic                                             := '0';
-  signal InWe    : std_logic_vector(InWidth_g / OutWidth_g - 1 downto 0) := (others => '1');
-  signal OutVld  : std_logic                                             := '0';
-  signal OutRdy  : std_logic                                             := '0';
-  signal OutData : std_logic_vector(OutWidth_g - 1 downto 0)             := (others => '0');
-  signal OutLast : std_logic                                             := '0';
+  signal clk_i     : std_logic                                             := '0';
+  signal rst_i     : std_logic                                             := '1';
+  signal vld_i   : std_logic                                             := '0';
+  signal rdy_o   : std_logic                                             := '0';
+  signal dat_i  : std_logic_vector(in_width_g - 1 downto 0)              := (others => '0');
+  signal last_i  : std_logic                                             := '0';
+  signal we_i    : std_logic_vector(in_width_g / out_width_g - 1 downto 0) := (others => '1');
+  signal vld_o  : std_logic                                             := '0';
+  signal rdy_i  : std_logic                                             := '0';
+  signal dat_o : std_logic_vector(out_width_g - 1 downto 0)             := (others => '0');
+  signal last_o : std_logic                                             := '0';
 
   -- user stuff --
   signal done     : boolean := False;
   signal testcase : integer := -1;
 
   procedure ApplyInput(StartValue    : in integer;
-                       signal InData : out std_logic_vector;
-                       signal InLast : out std_logic;
-                       signal InWe   : out std_logic_vector(InWe'range);
+                       signal dat_i : out std_logic_vector;
+                       signal last_i : out std_logic;
+                       signal we_i   : out std_logic_vector(we_i'range);
                        IsLast        : in boolean := false;
                        LastByte      : in integer := 0) is
   begin
     for i in 0 to 3 loop
-      InData(3 + i * 4 downto i * 4) <= std_logic_vector(to_unsigned(i + StartValue, 4));
+      dat_i(3 + i * 4 downto i * 4) <= std_logic_vector(to_unsigned(i + StartValue, 4));
     end loop;
-    InLast <= '0';
-    InWe   <= (others => '1');
+    last_i <= '0';
+    we_i   <= (others => '1');
     if IsLast then
-      InLast                              <= '1';
-      InWe(InWe'high downto LastByte + 1) <= (others => '0');
+      last_i                              <= '1';
+      we_i(we_i'high downto LastByte + 1) <= (others => '0');
     end if;
   end procedure;
 
@@ -86,11 +86,11 @@ architecture sim of psi_common_wconv_xn2n_tb is
                         offset     : in integer;
                         isLast     : in boolean := false) is
   begin
-    StdlvCompareInt(StartValue + offset, OutData, "received wrong output", false);
+    StdlvCompareInt(StartValue + offset, dat_o, "received wrong output", false);
     if isLast then
-      StdlCompare(1, OutLast, "did not receive Last");
+      StdlCompare(1, last_o, "did not receive Last");
     else
-      StdlCompare(0, OutLast, "Received unexpected Last");
+      StdlCompare(0, last_o, "Received unexpected Last");
     end if;
   end procedure;
 
@@ -100,21 +100,21 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_wconv_xn2n
     generic map(
-      InWidth_g  => InWidth_g,
-      OutWidth_g => OutWidth_g
+      in_width_g  => in_width_g,
+      out_width_g => out_width_g
     )
     port map(
-      Clk     => Clk,
-      Rst     => Rst,
-      InVld   => InVld,
-      InRdy   => InRdy,
-      InData  => InData,
-      InLast  => InLast,
-      InWe    => InWe,
-      OutVld  => OutVld,
-      OutRdy  => OutRdy,
-      OutData => OutData,
-      OutLast => OutLast
+      clk_i     => clk_i,
+      rst_i     => rst_i,
+      vld_i   => vld_i,
+      rdy_o   => rdy_o,
+      dat_i  => dat_i,
+      last_i  => last_i,
+      we_i    => we_i,
+      vld_o  => vld_o,
+      rdy_i  => rdy_i,
+      dat_o => dat_o,
+      last_o => last_o
     );
 
   ------------------------------------------------------------
@@ -122,7 +122,7 @@ begin
   ------------------------------------------------------------
   p_tb_control : process
   begin
-    wait until Rst = '0';
+    wait until rst_i = '0';
     wait until ProcessDone = AllProcessesDone_c;
     TbRunning <= false;
     wait;
@@ -136,7 +136,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      Clk <= not Clk;
+      clk_i <= not clk_i;
     end loop;
     wait;
   end process;
@@ -148,9 +148,9 @@ begin
   begin
     wait for 1 us;
     -- Wait for two clk edges to ensure reset is active for at least one edge
-    wait until rising_edge(Clk);
-    wait until rising_edge(Clk);
-    Rst <= '0';
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    rst_i <= '0';
     wait;
   end process;
 
@@ -162,23 +162,23 @@ begin
     variable LastWordNr_v : integer;
   begin
     -- start of process !DO NOT EDIT
-    wait until Rst = '0';
+    wait until rst_i = '0';
 
     -- Test Single Serialization
     print(">> Single Serialization");
     testcase <= 0;
-    wait until rising_edge(Clk);
+    wait until rising_edge(clk_i);
     for del in 0 to 3 loop
-      InVld <= '1';
-      ApplyInput(del * 2, InData, InLast, InWe);
-      wait until rising_edge(Clk);
-      InVld <= '0';
+      vld_i <= '1';
+      ApplyInput(del * 2, dat_i, last_i, we_i);
+      wait until rising_edge(clk_i);
+      vld_i <= '0';
       wait for 1 ns;
-      StdlCompare(0, InRdy, "InRdy did not go low");
+      StdlCompare(0, rdy_o, "rdy_o did not go low");
       for j in 0 to 10 loop
-        wait until rising_edge(Clk);
+        wait until rising_edge(clk_i);
       end loop;
-      wait until rising_edge(Clk);
+      wait until rising_edge(clk_i);
     end loop;
     if done /= true then
       wait until done = true;
@@ -187,15 +187,15 @@ begin
     -- Test Streaming Serialization
     print(">> Streaming Serialization");
     testcase <= 1;
-    wait until rising_edge(Clk);
-    InVld    <= '1';
+    wait until rising_edge(clk_i);
+    vld_i    <= '1';
     for del in 0 to 3 loop
       for data in 0 to 2 loop
-        ApplyInput(del + data, InData, InLast, InWe);
-        wait until rising_edge(Clk) and InRdy = '1';
+        ApplyInput(del + data, dat_i, last_i, we_i);
+        wait until rising_edge(clk_i) and rdy_o = '1';
       end loop;
     end loop;
-    InVld    <= '0';
+    vld_i    <= '0';
     if done /= true then
       wait until done = true;
     end if;
@@ -203,20 +203,20 @@ begin
     -- Test Last Handling
     print(">> Last Handling");
     testcase <= 2;
-    wait until rising_edge(Clk);
+    wait until rising_edge(clk_i);
     for del in 0 to 3 loop
       for bytes in 1 to 12 loop
-        InVld        <= '1';
+        vld_i        <= '1';
         LastWordNr_v := (bytes - 1) / 4;
         for data in 0 to LastWordNr_v loop
           if data = LastWordNr_v then
-            ApplyInput(del + data * 4, InData, InLast, InWe, true, bytes - data * 4 - 1);
+            ApplyInput(del + data * 4, dat_i, last_i, we_i, true, bytes - data * 4 - 1);
           else
-            ApplyInput(del + data * 4, InData, InLast, InWe, false);
+            ApplyInput(del + data * 4, dat_i, last_i, we_i, false);
           end if;
-          wait until rising_edge(Clk) and InRdy = '1';
+          wait until rising_edge(clk_i) and rdy_o = '1';
         end loop;
-        InVld        <= '0';
+        vld_i        <= '0';
       end loop;
     end loop;
     if done /= true then
@@ -226,24 +226,24 @@ begin
     -- Test Alignment
     print(">> Alignment");
     testcase <= 3;
-    wait until rising_edge(Clk);
+    wait until rising_edge(clk_i);
     for del in 0 to 3 loop
       for skipBytes in 0 to 3 loop
         for bytes in 4 to 8 loop
-          InVld        <= '1';
+          vld_i        <= '1';
           LastWordNr_v := (bytes - 1) / 4;
           for data in 0 to LastWordNr_v loop
             if data = LastWordNr_v then
-              ApplyInput(del + data * 4, InData, InLast, InWe, true, bytes - data * 4 - 1);
+              ApplyInput(del + data * 4, dat_i, last_i, we_i, true, bytes - data * 4 - 1);
             else
-              ApplyInput(del + data * 4, InData, InLast, InWe, false);
+              ApplyInput(del + data * 4, dat_i, last_i, we_i, false);
             end if;
             if data = 0 then
-              InWe(skipBytes - 1 downto 0) <= (others => '0');
+              we_i(skipBytes - 1 downto 0) <= (others => '0');
             end if;
-            wait until rising_edge(Clk) and InRdy = '1';
+            wait until rising_edge(clk_i) and rdy_o = '1';
           end loop;
-          InVld        <= '0';
+          vld_i        <= '0';
         end loop;
       end loop;
     end loop;
@@ -261,19 +261,19 @@ begin
     variable LastByteNr_v : integer;
   begin
     -- start of process !DO NOT EDIT
-    wait until Rst = '0';
+    wait until rst_i = '0';
 
     -- Test Single Serialization
     wait until testcase = 0;
     done <= False;
     for del in 0 to 3 loop
       for i in 0 to 3 loop
-        OutRdy <= '1';
-        wait until rising_edge(Clk) and OutVld = '1';
+        rdy_i <= '1';
+        wait until rising_edge(clk_i) and vld_o = '1';
         CheckOutput(2 * del, i);
         for j in 0 to del - 1 loop
-          OutRdy <= '0';
-          wait until rising_edge(Clk);
+          rdy_i <= '0';
+          wait until rising_edge(clk_i);
         end loop;
       end loop;
     end loop;
@@ -285,12 +285,12 @@ begin
     for del in 0 to 3 loop
       for data in 0 to 2 loop
         for i in 0 to 3 loop
-          OutRdy <= '1';
-          wait until rising_edge(Clk) and OutVld = '1';
+          rdy_i <= '1';
+          wait until rising_edge(clk_i) and vld_o = '1';
           CheckOutput(del + data, i);
           for j in 0 to del - 1 loop
-            OutRdy <= '0';
-            wait until rising_edge(Clk);
+            rdy_i <= '0';
+            wait until rising_edge(clk_i);
           end loop;
         end loop;
       end loop;
@@ -304,12 +304,12 @@ begin
       for bytes in 1 to 12 loop
         LastByteNr_v := bytes - 1;
         for data in 0 to LastByteNr_v loop
-          OutRdy <= '1';
-          wait until rising_edge(Clk) and OutVld = '1';
+          rdy_i <= '1';
+          wait until rising_edge(clk_i) and vld_o = '1';
           CheckOutput(del + data, 0, data = LastByteNr_v);
           for j in 0 to del - 1 loop
-            OutRdy <= '0';
-            wait until rising_edge(Clk);
+            rdy_i <= '0';
+            wait until rising_edge(clk_i);
           end loop;
         end loop;
       end loop;
@@ -324,12 +324,12 @@ begin
         for bytes in 4 to 8 loop
           LastByteNr_v := bytes - 1;
           for data in skipBytes to LastByteNr_v loop
-            OutRdy <= '1';
-            wait until rising_edge(Clk) and OutVld = '1';
+            rdy_i <= '1';
+            wait until rising_edge(clk_i) and vld_o = '1';
             CheckOutput(del + data, 0, data = LastByteNr_v);
             for j in 0 to del - 1 loop
-              OutRdy <= '0';
-              wait until rising_edge(Clk);
+              rdy_i <= '0';
+              wait until rising_edge(clk_i);
             end loop;
           end loop;
         end loop;

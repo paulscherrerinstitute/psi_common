@@ -75,9 +75,9 @@ begin
              rst_i     => rst_sti,
              str_i     => '1',
              raz_i     => raz_sti,
-             data_i    => data_sti,
+             dat_i    => data_sti,
              str_o     => str_obs,
-             data_o    => data_obs,
+             dat_o    => data_obs,
              run_dat_o => run_dat_obs,
              run_str_o => run_str_obs
             );

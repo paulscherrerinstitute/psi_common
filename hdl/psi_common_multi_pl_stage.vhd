@@ -26,23 +26,23 @@ use ieee.math_real.all;
 -- $$ processes=stim,check $$
 entity psi_common_multi_pl_stage is
   generic(
-    Width_g  : positive := 8;
-    UseRdy_g : boolean  := true;
-    Stages_g : natural  := 1
+    width_g  : positive := 8;
+    use_rdy_g : boolean  := true;
+    stages_g : natural  := 1
   );
   port(
     -- Control Signals
-    Clk     : in  std_logic;            -- $$ type=clk; freq=100e6 $$
-    Rst     : in  std_logic;            -- $$ type=rst; clk=Clk $$
+    clk_i     : in  std_logic;            -- $$ type=clk; freq=100e6 $$
+    rst_i     : in  std_logic;            -- $$ type=rst; clk=Clk $$
 
     -- Input
-    InVld   : in  std_logic;
-    InRdy   : out std_logic;
-    InData  : in  std_logic_vector(Width_g - 1 downto 0);
+    vld_i   : in  std_logic;
+    rdy_in_i   : out std_logic;
+    dat_i  : in  std_logic_vector(width_g - 1 downto 0);
     -- Output
-    OutVld  : out std_logic;
-    OutRdy  : in  std_logic := '1';
-    OutData : out std_logic_vector(Width_g - 1 downto 0)
+    vld_o  : out std_logic;
+    rdy_out_i  : in  std_logic := '1';
+    dat_o : out std_logic_vector(width_g - 1 downto 0)
   );
 end entity;
 
@@ -51,45 +51,45 @@ end entity;
 ------------------------------------------------------------------------------
 architecture rtl of psi_common_multi_pl_stage is
 
-  type Data_t is array (natural range <>) of std_logic_vector(Width_g - 1 downto 0);
-  signal Data : Data_t(0 to Stages_g);
-  signal Vld  : std_logic_vector(0 to Stages_g);
-  signal Rdy  : std_logic_vector(0 to Stages_g);
+  type Data_t is array (natural range <>) of std_logic_vector(width_g - 1 downto 0);
+  signal Data : Data_t(0 to stages_g);
+  signal Vld  : std_logic_vector(0 to stages_g);
+  signal Rdy  : std_logic_vector(0 to stages_g);
 
 begin
 
-  g_nonzero : if Stages_g > 0 generate
-    Vld(0)  <= InVld;
-    InRdy   <= Rdy(0);
-    Data(0) <= InData;
+  g_nonzero : if stages_g > 0 generate
+    Vld(0)  <= vld_i;
+    rdy_in_i   <= Rdy(0);
+    Data(0) <= dat_i;
 
-    g_stages : for i in 0 to Stages_g - 1 generate
+    g_stages : for i in 0 to stages_g - 1 generate
       i_stg : entity work.psi_common_pl_stage
         generic map(
-          Width_g  => Width_g,
-          UseRdy_g => UseRdy_g
+          width_g  => width_g,
+          use_rdy_g => use_rdy_g
         )
         port map(
-          Clk     => Clk,
-          Rst     => Rst,
-          InVld   => Vld(i),
-          InRdy   => Rdy(i),
-          InData  => Data(i),
-          OutVld  => Vld(i + 1),
-          OutRdy  => Rdy(i + 1),
-          OutData => Data(i + 1)
+          clk_i     => clk_i,
+          rst_i     => rst_i,
+          vld_i   => Vld(i),
+          rdy_o   => Rdy(i),
+          dat_i  => Data(i),
+          vld_o  => Vld(i + 1),
+          rdy_i  => Rdy(i + 1),
+          dat_o => Data(i + 1)
         );
     end generate;
 
-    OutVld        <= Vld(Stages_g);
-    Rdy(Stages_g) <= OutRdy;
-    OutData       <= Data(Stages_g);
+    vld_o        <= Vld(stages_g);
+    Rdy(stages_g) <= rdy_out_i;
+    dat_o       <= Data(stages_g);
   end generate;
 
-  g_zero : if Stages_g = 0 generate
-    OutVld  <= InVld;
-    OutData <= InData;
-    InRdy   <= OutRdy;
+  g_zero : if stages_g = 0 generate
+    vld_o  <= vld_i;
+    dat_o <= dat_i;
+    rdy_in_i   <= rdy_out_i;
   end generate;
 
 end;

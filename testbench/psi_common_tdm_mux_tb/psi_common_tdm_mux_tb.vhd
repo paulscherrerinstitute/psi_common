@@ -192,12 +192,12 @@ begin
                 num_channel_g => num_channel_g,
                 data_length_g => data_length_g)
     port map(InClk     => InClk_sti,
-             InRst     => InRst_sti,
-             InChSel   => InChSel_sti,
-             InTdmVld  => InTdmVld_sti,
-             InTdmDat  => InTdmDat_sti,
-             OutTdmVld => OutTdmVld_obs,
-             OutTdmDat => OutTdmDat_obs);
+             rst_i     => InRst_sti,
+             ch_sel_i   => InChSel_sti,
+             tdm_vld_i  => InTdmVld_sti,
+             tdm_dat_i  => InTdmDat_sti,
+             tdm_vld_o => OutTdmVld_obs,
+             tdm_dat_o => OutTdmDat_obs);
 
   -- *** check reading ***
   proc_check : process(InClk_sti)

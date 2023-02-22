@@ -176,12 +176,12 @@ add_tb_run
 
 create_tb_run "psi_common_spi_master_cfg_tb"
 tb_run_add_arguments \
-	"-gSpiCPOL_g=0 -gSpiCPHA_g=0 -gLsbFirst_g=false -gMaxTransWidth_g=8" \
-	"-gSpiCPOL_g=0 -gSpiCPHA_g=1 -gLsbFirst_g=false -gMaxTransWidth_g=16" \
-	"-gSpiCPOL_g=1 -gSpiCPHA_g=0 -gLsbFirst_g=false -gMaxTransWidth_g=24" \
-	"-gSpiCPOL_g=1 -gSpiCPHA_g=1 -gLsbFirst_g=false -gMaxTransWidth_g=8" \
-	"-gSpiCPOL_g=0 -gSpiCPHA_g=0 -gLsbFirst_g=true -gMaxTransWidth_g=8" \
-	"-gSpiCPOL_g=0 -gSpiCPHA_g=1 -gLsbFirst_g=true -gMaxTransWidth_g=8"
+	"-gspi_cpol_g=0 -gspi_cpha_g=0 -glsb_first_g=false -gmax_trans_width_g=8" \
+	"-gspi_cpol_g=0 -gspi_cpha_g=1 -glsb_first_g=false -gmax_trans_width_g=16" \
+	"-gspi_cpol_g=1 -gspi_cpha_g=0 -glsb_first_g=false -gmax_trans_width_g=24" \
+	"-gspi_cpol_g=1 -gspi_cpha_g=1 -glsb_first_g=false -gmax_trans_width_g=8" \
+	"-gspi_cpol_g=0 -gspi_cpha_g=0 -glsb_first_g=true -gmax_trans_width_g=8" \
+	"-gspi_cpol_g=0 -gspi_cpha_g=1 -glsb_first_g=true -gmax_trans_width_g=8"
 add_tb_run
 
 create_tb_run "psi_common_pulse_generator_ctrl_static_tb"
@@ -206,51 +206,51 @@ add_tb_run
 
 create_tb_run "psi_common_delay_cfg_tb"
 tb_run_add_arguments \
-	"-gMaxDelay_g=50" \
-	"-gMaxDelay_g=100"
+	"-gmax_delay_g=50" \
+	"-gmax_delay_g=100"
 add_tb_run
 
 create_tb_run "psi_common_pulse_shaper_cfg_tb"
 tb_run_add_arguments \
-	"-gHoldOffEna_g=false -gMaxDuration_g=24" \
-	"-gHoldOffEna_g=true -gMaxDuration_g=16"
+	"-ghold_off_ena_g=false -gmax_duration_g=24" \
+	"-ghold_off_ena_g=true -gmax_duration_g=16"
 add_tb_run
 
 create_tb_run "psi_common_simple_cc_tb"
 tb_run_add_arguments \
-	"-gClockRatioN_g=3 -gClockRatioD_g=1" \
-	"-gClockRatioN_g=101 -gClockRatioD_g=100" \
-	"-gClockRatioN_g=99 -gClockRatioD_g=100" \
-	"-gClockRatioN_g=3 -gClockRatioD_g=10"
+	"-gclock_ratio_n_g=3 -gclock_ratio_d_g=1" \
+	"-gclock_ratio_n_g=101 -gclock_ratio_d_g=100" \
+	"-gclock_ratio_n_g=99 -gclock_ratio_d_g=100" \
+	"-gclock_ratio_n_g=3 -gclock_ratio_d_g=10"
 add_tb_run
 
 create_tb_run "psi_common_status_cc_tb"
 tb_run_add_arguments \
-	"-gClockRatioN_g=3 -gClockRatioD_g=1" \
-	"-gClockRatioN_g=101 -gClockRatioD_g=100" \
-	"-gClockRatioN_g=99 -gClockRatioD_g=100" \
-	"-gClockRatioN_g=3 -gClockRatioD_g=10"
+	"-gclock_ratio_n_g=3 -gclock_ratio_d_g=1" \
+	"-gclock_ratio_n_g=101 -gclock_ratio_d_g=100" \
+	"-gclock_ratio_n_g=99 -gclock_ratio_d_g=100" \
+	"-gclock_ratio_n_g=3 -gclock_ratio_d_g=10"
 add_tb_run
 
 create_tb_run "psi_common_sync_fifo_tb"
 tb_run_add_arguments \
-	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32 -gRdyRstState_g=1" \
-	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32 -gRdyRstState_g=0" \
-	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=RBW" \
-	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=WBR"
+	"-galm_full_on_g=true -galm_empty_on_g=true -gdepth_g=32 -grdy_rst_state_g=1" \
+	"-galm_full_on_g=true -galm_empty_on_g=true -gdepth_g=32 -grdy_rst_state_g=0" \
+	"-galm_full_on_g=false -galm_empty_on_g=false -gdepth_g=128 -gram_behavior_g=RBW" \
+	"-galm_full_on_g=false -galm_empty_on_g=false -gdepth_g=128 -gram_behavior_g=WBR"
 add_tb_run
 
 create_tb_run "psi_common_async_fifo_tb"
 tb_run_add_arguments \
-	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32 -gRamBehavior_g=RBW -gRdyRstState_g=1" \
-	"-gAlmFullOn_g=true -gAlmEmptyOn_g=true -gDepth_g=32 -gRamBehavior_g=RBW -gRdyRstState_g=0" \
-	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=RBW" \
-	"-gAlmFullOn_g=false -gAlmEmptyOn_g=false -gDepth_g=128 -gRamBehavior_g=WBR"
+	"-gafull_on_g=true -gaempty_on_g=true -gdepth_g=32 -gram_behavior_g=RBW -grdy_rst_state_g=1" \
+	"-gafull_on_g=true -gaempty_on_g=true -gdepth_g=32 -gram_behavior_g=RBW -grdy_rst_state_g=0" \
+	"-gafull_on_g=false -gaempty_on_g=false -gdepth_g=128 -gram_behavior_g=RBW" \
+	"-gafull_on_g=false -gaempty_on_g=false -gdepth_g=128 -gram_behavior_g=WBR"
 add_tb_run
 
 create_tb_run "psi_common_tickgenerator_tb"
 tb_run_add_arguments \
-	"-gg_CLK_IN_MHZ=125 -gg_TICK_WIDTH=3"
+	"-gclk_in_mhz_g=125 -gtick_width_g=3"
 add_tb_run
 
 create_tb_run "psi_common_logic_pkg_tb"
@@ -264,19 +264,19 @@ add_tb_run
 
 create_tb_run "psi_common_strobe_divider_tb"
 tb_run_add_arguments \
-	"-gRatio_g=6" \
-	"-gRatio_g=13" \
-	"-gRatio_g=1" \
-	"-gRatio_g=0"
+	"-gratio_g=6" \
+	"-gratio_g=13" \
+	"-gratio_g=1" \
+	"-gratio_g=0"
 add_tb_run
 
 create_tb_run "psi_common_delay_tb"
 tb_run_add_arguments \
-	"-gResource_g=BRAM" \
-	"-gResource_g=SRL" \
-	"-gResource_g=AUTO" \
-	"-gResource_g=BRAM -gDelay_g=3 -gRamBehavior_g=RBW" \
-	"-gResource_g=BRAM -gDelay_g=3 -gRamBehavior_g=WBR"
+	"-gresource_g=BRAM" \
+	"-gresource_g=SRL" \
+	"-gresource_g=AUTO" \
+	"-gresource_g=BRAM -gdelay_g=3 -gram_behavior_g=RBW" \
+	"-gresource_g=BRAM -gdelay_g=3 -gram_behavior_g=WBR"
 add_tb_run
 
 create_tb_run "psi_common_wconv_n2xn_tb"
@@ -287,26 +287,26 @@ add_tb_run
 
 create_tb_run "psi_common_sync_cc_n2xn_tb"
 tb_run_add_arguments \
-	"-gRatio_g=2" \
-	"-gRatio_g=4"
+	"-gratio_g=2" \
+	"-gratio_g=4"
 add_tb_run
 
 create_tb_run "psi_common_sync_cc_xn2n_tb"
 tb_run_add_arguments \
-	"-gRatio_g=2" \
-	"-gRatio_g=4"
+	"-gratio_g=2" \
+	"-gratio_g=4"
 add_tb_run
 
 create_tb_run "psi_common_pl_stage_tb"
 tb_run_add_arguments \
-	"-gHandleRdy_g=true" \
-	"-gHandleRdy_g=false"
+	"-ghandle_rdy_g=true" \
+	"-ghandle_rdy_g=false"
 add_tb_run
 
 create_tb_run "psi_common_multi_pl_stage_tb"
 tb_run_add_arguments \
-	"-gHandleRdy_g=true" \
-	"-gHandleRdy_g=false"
+	"-ghandle_rdy_g=true" \
+	"-ghandle_rdy_g=false"
 add_tb_run
 
 create_tb_run "psi_common_par_tdm_tb"
@@ -332,8 +332,8 @@ add_tb_run
 
 create_tb_run "psi_common_pulse_shaper_tb"
 tb_run_add_arguments \
-	"-gHoldIn_g=true" \
-	"-gHoldIn_g=false"
+	"-ghold_in_g=true" \
+	"-ghold_in_g=false"
 add_tb_run
 
 create_tb_run "psi_common_clk_meas_tb"
@@ -341,12 +341,12 @@ add_tb_run
 
 create_tb_run "psi_common_spi_master_tb"
 tb_run_add_arguments \
-	"-gSpiCPOL_g=0 -gSpiCPHA_g=0 -gLsbFirst_g=false" \
-	"-gSpiCPOL_g=0 -gSpiCPHA_g=1 -gLsbFirst_g=false" \
-	"-gSpiCPOL_g=1 -gSpiCPHA_g=0 -gLsbFirst_g=false" \
-	"-gSpiCPOL_g=1 -gSpiCPHA_g=1 -gLsbFirst_g=false" \
-	"-gSpiCPOL_g=0 -gSpiCPHA_g=0 -gLsbFirst_g=true" \
-	"-gSpiCPOL_g=0 -gSpiCPHA_g=1 -gLsbFirst_g=true"
+	"-gspi_cpol_g=0 -gspi_cpha_g=0 -glsb_first_g=false" \
+	"-gspi_cpol_g=0 -gspi_cpha_g=1 -glsb_first_g=false" \
+	"-gspi_cpol_g=1 -gspi_cpha_g=0 -glsb_first_g=false" \
+	"-gspi_cpol_g=1 -gspi_cpha_g=1 -glsb_first_g=false" \
+	"-gspi_cpol_g=0 -gspi_cpha_g=0 -glsb_first_g=true" \
+	"-gspi_cpol_g=0 -gspi_cpha_g=1 -glsb_first_g=true"
 add_tb_run
 
 create_tb_run "psi_common_ping_pong_tb"
@@ -361,42 +361,42 @@ create_tb_run "psi_common_axi_master_simple_tb"
 #Vivado does not support unconstrained records as required by this TB
 tb_run_skip Vivado
 tb_run_add_arguments \
-	"-gImplWrite_g=true -gImplRead_g=true" \
-	"-gImplWrite_g=true -gImplRead_g=false" \
-	"-gImplWrite_g=false -gImplRead_g=true"
+	"-gimpl_write_g=true -gimpl_read_g=true" \
+	"-gimpl_write_g=true -gimpl_read_g=false" \
+	"-gimpl_write_g=false -gimpl_read_g=true"
 add_tb_run
 
 create_tb_run "psi_common_axi_master_full_tb"
 #Vivado does not support unconstrained records as required by this TB
 tb_run_skip Vivado
 tb_run_add_arguments \
-	"-gDataWidth_g=16 -gImplRead_g=true -gImplWrite_g=true" \
-	"-gDataWidth_g=32 -gImplRead_g=true -gImplWrite_g=true" \
-   "-gDataWidth_g=16 -gImplRead_g=false -gImplWrite_g=true" \
-   "-gDataWidth_g=16 -gImplRead_g=true -gImplWrite_g=false"
+	"-gdata_width_g=16 -gimpl_read_g=true -gimpl_write_g=true" \
+	"-gdata_width_g=32 -gimpl_read_g=true -gimpl_write_g=true" \
+   "-gdata_width_g=16 -gimpl_read_g=false -gimpl_write_g=true" \
+   "-gdata_width_g=16 -gimpl_read_g=true -gimpl_write_g=false"
 add_tb_run
 
 create_tb_run "psi_common_axi_slave_ipif_tb"
 #Vivado does not support unconstrained records as required by this TB
 tb_run_skip Vivado
 tb_run_add_arguments \
-	"-gNumReg_g=4 -gUseMem_g=true -gAxiThrottling_g=0" \
-	"-gNumReg_g=4 -gUseMem_g=true -gAxiThrottling_g=3" \
-	"-gNumReg_g=4 -gUseMem_g=false -gAxiThrottling_g=0"
+	"-gnum_reg_g=4 -guse_mem_g=true -gaxi_throttling_g=0" \
+	"-gnum_reg_g=4 -guse_mem_g=true -gaxi_throttling_g=3" \
+	"-gnum_reg_g=4 -guse_mem_g=false -gaxi_throttling_g=0"
 add_tb_run
 
 create_tb_run "psi_common_axi_slave_ipif64_tb"
 #Vivado does not support unconstrained records as required by this TB
 tb_run_skip Vivado
 tb_run_add_arguments \
-	"-gUseMem_g=true -gAxiThrottling_g=3"
+	"-guse_mem_g=true -gaxi_throttling_g=3"
 add_tb_run
 
 create_tb_run "psi_common_axi_slave_ipif64_sram_tb"
 #Vivado does not support unconstrained records as required by this TB
 tb_run_skip Vivado
 tb_run_add_arguments \
-	"-gUseMem_g=true -gAxiThrottling_g=3"
+	"-guse_mem_g=true -gaxi_throttling_g=3"
 add_tb_run
 
 create_tb_run "psi_common_tdp_ram_be_tb"
@@ -408,8 +408,8 @@ create_tb_run "psi_common_i2c_master_tb"
 #a GHDL bug prevents this TB to run in Version 0.36. The bug is reported. Maybe test again in future.
 tb_run_skip "Vivado GHDL"
 tb_run_add_arguments \
-	"-gInternalTriState_g=true" \
-	"-gInternalTriState_g=false"
+	"-ginternal_tri_state_g=true" \
+	"-ginternal_tri_state_g=false"
 add_tb_run
 
 create_tb_run "psi_common_trigger_analog_tb"
@@ -434,8 +434,8 @@ create_tb_run "psi_common_axilite_slave_ipif_tb"
 #Vivado does not support unconstrained records as required by this TB
 tb_run_skip Vivado
 tb_run_add_arguments \
-	"-gNumReg_g=4 -gUseMem_g=true" \
-	"-gNumReg_g=4 -gUseMem_g=false"
+	"-gnum_reg_g=4 -guse_mem_g=true" \
+	"-gnum_reg_g=4 -guse_mem_g=false"
 add_tb_run
 
 create_tb_run "psi_common_debouncer_tb"
@@ -443,11 +443,11 @@ add_tb_run
 
 create_tb_run "psi_common_dyn_sft_tb"
 tb_run_add_arguments \
-	"-gDirection_g=LEFT -gSelectBitsPerStage_g=2 -gSignExtend_g=false" \
-  "-gDirection_g=LEFT -gSelectBitsPerStage_g=3 -gSignExtend_g=false" \
-  "-gDirection_g=RIGHT -gSelectBitsPerStage_g=2 -gSignExtend_g=false" \
-  "-gDirection_g=RIGHT -gSelectBitsPerStage_g=2 -gSignExtend_g=true" \
-  "-gDirection_g=LEFT -gSelectBitsPerStage_g=2 -gSignExtend_g=true"
+	"-gdirection_g=LEFT -gsel_bit_per_stage_g=2 -gsign_extend_g=false" \
+  "-gdirection_g=LEFT -gsel_bit_per_stage_g=3 -gsign_extend_g=false" \
+  "-gdirection_g=RIGHT -gsel_bit_per_stage_g=2 -gsign_extend_g=false" \
+  "-gdirection_g=RIGHT -gsel_bit_per_stage_g=2 -gsign_extend_g=true" \
+  "-gdirection_g=LEFT -gsel_bit_per_stage_g=2 -gsign_extend_g=true"
 add_tb_run
 
 create_tb_run "psi_common_prbs_tb"

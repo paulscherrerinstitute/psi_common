@@ -185,19 +185,19 @@ begin
 
 	--*** TAG PING PONG Buffer ***
 	inst_dpram_pp : entity work.psi_common_tdp_ram
-		generic map(Depth_g    => ram_depth_c,
-		            Width_g    => dat_length_g,
-		            Behavior_g => ram_behavior_g)
-		port map(ClkA  => clk_i,
-		         AddrA => dpram_add_s,
-		         WrA   => dpram_wren_s,
-		         DinA  => dpram_data_write_s,
-		         DoutA => open,
+		generic map(depth_g    => ram_depth_c,
+		            width_g    => dat_length_g,
+		            behavior_g => ram_behavior_g)
+		port map(a_clk_i  => clk_i,
+		         a_addr_i => dpram_add_s,
+		         a_wr_i   => dpram_wren_s,
+		         a_dat_i  => dpram_data_write_s,
+		         a_dat_o => open,
 		         --
-		         ClkB  => mem_clk_i,
-		         AddrB => dpram_read_add_s,
-		         WrB   => '0',
-		         DinB  => (others => '0'),
-		         DoutB => mem_dat_o);
+		         b_clk_i  => mem_clk_i,
+		         b_addr_i => dpram_read_add_s,
+		         b_wr_i   => '0',
+		         b_dat_i  => (others => '0'),
+		         b_dat_o => mem_dat_o);
 
 end architecture;

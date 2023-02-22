@@ -28,10 +28,10 @@ entity psi_common_strobe_generator is
     rst_pol_g     : std_logic := '1'    -- reset polarity
   );
   port(
-    InClk  : in  std_logic;             --clk in		$$ type=clk; freq=253.0e6 $$
-    InRst  : in  std_logic;             --rst sync		$$ type=rst; clk=clk_i $$
-    InSync : in  std_logic := '0';      --synchronization input (srobe generation is synchronized to pulses on this optional input)
-    OutVld : out std_logic              --output strobe
+    clk_i  : in  std_logic;             --clk in		$$ type=clk; freq=253.0e6 $$
+    rst_i  : in  std_logic;             --rst sync		$$ type=rst; clk=clk_i $$
+    sync_i : in  std_logic := '0';      --synchronization input (srobe generation is synchronized to pulses on this optional input)
+    vld_o : out std_logic              --output strobe
   );
 end entity;
 
@@ -46,22 +46,22 @@ architecture rtl of psi_common_strobe_generator is
 
 begin
 
-  p_strobe : process(InClk)
+  p_strobe : process(clk_i)
   begin
-    if rising_edge(InClk) then
-      if InRst = rst_pol_g then
+    if rising_edge(clk_i) then
+      if rst_i = rst_pol_g then
         count    <= 0;
-        OutVld   <= '0';
+        vld_o   <= '0';
         syncLast <= '0';
       else
-        if (count = ratio_c - 1) or ((InSync = '1') and (syncLast = '0')) then
-          OutVld <= '1';
+        if (count = ratio_c - 1) or ((sync_i = '1') and (syncLast = '0')) then
+          vld_o <= '1';
           count  <= 0;
         else
-          OutVld <= '0';
+          vld_o <= '0';
           count  <= count + 1;
         end if;
-        syncLast <= InSync;
+        syncLast <= sync_i;
       end if;
     end if;
   end process;

@@ -30,21 +30,21 @@ use work.psi_common_logic_pkg.all;
 -- $$ processes=inp,outp $$
 entity psi_common_par_tdm_cfg is
   generic(
-    ChannelCount_g : natural := 8;      -- $$ constant=3 $$
-    ChannelWidth_g : natural := 16      -- $$ constant=8 $$
+    channel_count_g : natural := 8;      -- $$ constant=3 $$
+    channel_width_g : natural := 16      -- $$ constant=8 $$
   );
   port(
     -- Control Signals
-    Clk             : in  std_logic;    -- $$ type=clk; freq=100e6 $$
-    Rst             : in  std_logic;    -- $$ type=rst; clk=Clk $$
-    EnabledChannels : in  integer range 0 to ChannelCount_g := ChannelCount_g; -- Number of enabled output channels (starting from index 0)
+    clk_i             : in  std_logic;    -- $$ type=clk; freq=100e6 $$
+    rst_i             : in  std_logic;    -- $$ type=rst; clk=Clk $$
+    enabled_channels_i : in  integer range 0 to channel_count_g := channel_count_g; -- Number of enabled output channels (starting from index 0)
 
     -- Data Ports
-    Parallel        : in  std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0);
-    ParallelVld     : in  std_logic;
-    Tdm             : out std_logic_vector(ChannelWidth_g - 1 downto 0);
-    TdmLast         : out std_logic;
-    TdmVld          : out std_logic
+    dat_i        : in  std_logic_vector(channel_count_g * channel_width_g - 1 downto 0);
+    vld_i     : in  std_logic;
+    dat_o             : out std_logic_vector(channel_width_g - 1 downto 0);
+    last_o         : out std_logic;
+    vld_o          : out std_logic
   );
 end entity;
 
@@ -56,8 +56,8 @@ architecture rtl of psi_common_par_tdm_cfg is
 
   -- Two Process Method
   type two_process_r is record
-    ShiftReg : std_logic_vector(Parallel'range);
-    ChCnt    : integer range 0 to ChannelCount_g;
+    ShiftReg : std_logic_vector(dat_i'range);
+    ChCnt    : integer range 0 to channel_count_g;
   end record;
   signal r, r_next : two_process_r;
 begin
@@ -65,34 +65,34 @@ begin
   --------------------------------------------------------------------------
   -- Combinatorial Process
   --------------------------------------------------------------------------
-  p_comb : process(r, Parallel, ParallelVld, EnabledChannels)
+  p_comb : process(r, dat_i, vld_i, enabled_channels_i)
     variable v : two_process_r;
   begin
     -- hold variables stable
     v := r;
 
     -- *** Implementation ***
-    if ParallelVld = '1' then
-      v.ShiftReg := Parallel;
-      v.ChCnt    := EnabledChannels;
+    if vld_i = '1' then
+      v.ShiftReg := dat_i;
+      v.ChCnt    := enabled_channels_i;
     else
-      v.ShiftReg := shiftRight(r.ShiftReg, ChannelWidth_g);
+      v.ShiftReg := shift_right(r.ShiftReg, channel_width_g);
       if r.ChCnt /= 0 then
         v.ChCnt := r.ChCnt - 1;
       end if;
     end if;
 
     -- *** Outputs ***
-    Tdm     <= r.ShiftReg(ChannelWidth_g - 1 downto 0);
+    dat_o     <= r.ShiftReg(channel_width_g - 1 downto 0);
     if r.ChCnt /= 0 then 
-      TdmVld  <= '1'; 
+      vld_o  <= '1'; 
     else 
-      TdmVld  <= '0'; 
+      vld_o  <= '0'; 
     end if;
     if r.ChCnt = 1 then 
-      TdmLast <= '1'; 
+      last_o <= '1'; 
     else 
-      TdmLast <= '0'; 
+      last_o <= '0'; 
     end if;
 
     -- Apply to record
@@ -103,11 +103,11 @@ begin
   --------------------------------------------------------------------------
   -- Sequential Process
   --------------------------------------------------------------------------	
-  p_seq : process(Clk)
+  p_seq : process(clk_i)
   begin
-    if rising_edge(Clk) then
+    if rising_edge(clk_i) then
       r <= r_next;
-      if Rst = '1' then
+      if rst_i = '1' then
         r.ChCnt <= 0;
       end if;
     end if;

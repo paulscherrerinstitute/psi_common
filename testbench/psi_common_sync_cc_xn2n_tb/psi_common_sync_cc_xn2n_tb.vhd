@@ -26,7 +26,7 @@ use work.psi_tb_txt_util.all;
 ------------------------------------------------------------
 entity psi_common_sync_cc_xn2n_tb is
   generic(
-    Ratio_g : integer := 2
+    ratio_g : integer := 2
   );
 end entity;
 
@@ -37,7 +37,7 @@ architecture sim of psi_common_sync_cc_xn2n_tb is
   -- *** Fixed Generics ***
 
   -- *** Not Assigned Generics (default values) ***
-  constant Width_g : integer := 8;
+  constant width_g : integer := 8;
 
   -- *** TB Control ***
   signal TbRunning            : boolean                  := True;
@@ -48,16 +48,16 @@ architecture sim of psi_common_sync_cc_xn2n_tb is
   constant TbProcNr_check_c   : integer                  := 1;
 
   -- *** DUT Signals ***
-  signal InClk   : std_logic                              := '1';
-  signal InRst   : std_logic                              := '1';
-  signal InVld   : std_logic                              := '0';
-  signal InRdy   : std_logic                              := '0';
-  signal InData  : std_logic_vector(Width_g - 1 downto 0) := (others => '0');
-  signal OutClk  : std_logic                              := '1';
-  signal OutRst  : std_logic                              := '1';
-  signal OutVld  : std_logic                              := '0';
-  signal OutRdy  : std_logic                              := '0';
-  signal OutData : std_logic_vector(Width_g - 1 downto 0) := (others => '0');
+  signal clk_i   : std_logic                              := '1';
+  signal rst_i   : std_logic                              := '1';
+  signal vld_i   : std_logic                              := '0';
+  signal rdy_o   : std_logic                              := '0';
+  signal dat_i  : std_logic_vector(width_g - 1 downto 0) := (others => '0');
+  signal clk_o  : std_logic                              := '1';
+  signal rst_o  : std_logic                              := '1';
+  signal vld_o  : std_logic                              := '0';
+  signal rdy_i  : std_logic                              := '0';
+  signal dat_o : std_logic_vector(width_g - 1 downto 0) := (others => '0');
 
   -- Handwritten
   constant ClkFreqOut : real    := real(100e6);
@@ -70,16 +70,16 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_sync_cc_xn2n
     port map(
-      InClk   => InClk,
-      InRst   => InRst,
-      InVld   => InVld,
-      InRdy   => InRdy,
-      InData  => InData,
-      OutClk  => OutClk,
-      OutRst  => OutRst,
-      OutVld  => OutVld,
-      OutRdy  => OutRdy,
-      OutData => OutData
+      clk_i   => clk_i,
+      rst_i   => rst_i,
+      vld_i   => vld_i,
+      rdy_o   => rdy_o,
+      dat_i  => dat_i,
+      clk_o  => clk_o,
+      rst_o  => rst_o,
+      vld_o  => vld_o,
+      rdy_i  => rdy_i,
+      dat_o => dat_o
     );
 
   ------------------------------------------------------------
@@ -87,7 +87,7 @@ begin
   ------------------------------------------------------------
   p_tb_control : process
   begin
-    wait until InRst = '0' and OutRst = '0';
+    wait until rst_i = '0' and rst_o = '0';
     wait until ProcessDone = AllProcessesDone_c;
     TbRunning <= false;
     wait;
@@ -97,11 +97,11 @@ begin
   -- Clocks !DO NOT EDIT!
   ------------------------------------------------------------
   p_clock_InClk : process
-    constant Frequency_c : real := ClkFreqOut * real(Ratio_g);
+    constant Frequency_c : real := ClkFreqOut * real(ratio_g);
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      InClk <= not InClk;
+      clk_i <= not clk_i;
     end loop;
     wait;
   end process;
@@ -111,7 +111,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      OutClk <= not OutClk;
+      clk_o <= not clk_o;
     end loop;
     wait;
   end process;
@@ -123,9 +123,9 @@ begin
   begin
     wait for 1 us;
     -- Wait for two clk edges to ensure reset is active for at least one edge
-    wait until rising_edge(InClk);
-    wait until rising_edge(InClk);
-    InRst <= '0';
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    rst_i <= '0';
     wait;
   end process;
 
@@ -133,9 +133,9 @@ begin
   begin
     wait for 1 us;
     -- Wait for two clk edges to ensure reset is active for at least one edge
-    wait until rising_edge(OutClk);
-    wait until rising_edge(OutClk);
-    OutRst <= '0';
+    wait until rising_edge(clk_o);
+    wait until rising_edge(clk_o);
+    rst_o <= '0';
     wait;
   end process;
 
@@ -146,27 +146,27 @@ begin
   p_stim : process
   begin
     -- start of process !DO NOT EDIT
-    wait until InRst = '0' and OutRst = '0';
+    wait until rst_i = '0' and rst_o = '0';
 
     -- Normal Operation		
     print(">> Normal Operation");
     testcase <= 0;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     for del in 4 downto 1 loop
       for val in 1 to 8 loop
-        InData <= std_logic_vector(to_unsigned(val, Width_g));
-        InVld  <= '1';
-        wait until rising_edge(InClk);
-        InVld  <= '0';
+        dat_i <= std_logic_vector(to_unsigned(val, width_g));
+        vld_i  <= '1';
+        wait until rising_edge(clk_i);
+        vld_i  <= '0';
         wait for 1 ns;
-        for j in 0 to del * Ratio_g - 2 loop
-          wait until rising_edge(InClk);
+        for j in 0 to del * ratio_g - 2 loop
+          wait until rising_edge(clk_i);
         end loop;
       end loop;
-      wait until rising_edge(InClk);
-      wait until rising_edge(InClk);
-      wait until rising_edge(InClk);
-      wait until rising_edge(InClk);
+      wait until rising_edge(clk_i);
+      wait until rising_edge(clk_i);
+      wait until rising_edge(clk_i);
+      wait until rising_edge(clk_i);
     end loop;
     if done /= true then
       wait until done = true;
@@ -175,21 +175,21 @@ begin
     -- Test Back Pressure		
     print(">> Back Pressure");
     testcase <= 1;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     for inDel in 20 downto 0 loop
       for outDel in 0 to 4 loop
         for val in 1 to 8 loop
-          InVld  <= '1';
-          InData <= std_logic_vector(to_unsigned(val, Width_g));
-          wait until rising_edge(InClk) and InRdy = '1';
+          vld_i  <= '1';
+          dat_i <= std_logic_vector(to_unsigned(val, width_g));
+          wait until rising_edge(clk_i) and rdy_o = '1';
           for j in 0 to inDel - 1 loop
-            InVld <= '0';
-            wait until rising_edge(InClk);
+            vld_i <= '0';
+            wait until rising_edge(clk_i);
           end loop;
         end loop;
-        InVld <= '0';
+        vld_i <= '0';
         wait for 1 us;
-        wait until rising_edge(InClk);
+        wait until rising_edge(clk_i);
       end loop;
     end loop;
     if done /= true then
@@ -199,16 +199,16 @@ begin
     -- Valid does not wait for Ready	
     print(">> Valid does not wait for Ready");
     testcase <= 2;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     for outDel in 0 to 10 loop
       for val in 1 to 4 loop
-        InVld  <= '1';
-        InData <= std_logic_vector(to_unsigned(val, Width_g));
-        wait until rising_edge(InClk) and InRdy = '1';
+        vld_i  <= '1';
+        dat_i <= std_logic_vector(to_unsigned(val, width_g));
+        wait until rising_edge(clk_i) and rdy_o = '1';
       end loop;
-      InVld <= '0';
+      vld_i <= '0';
       wait for 1 us;
-      wait until rising_edge(InClk);
+      wait until rising_edge(clk_i);
     end loop;
     if done /= true then
       wait until done = true;
@@ -223,16 +223,16 @@ begin
   p_check : process
   begin
     -- start of process !DO NOT EDIT
-    wait until InRst = '0' and OutRst = '0';
+    wait until rst_i = '0' and rst_o = '0';
 
     -- Test Normal Operation
     wait until testcase = 0;
     done   <= False;
-    OutRdy <= '1';
+    rdy_i <= '1';
     for del in 4 downto 1 loop
       for val in 1 to 8 loop
-        wait until rising_edge(OutClk) and OutVld = '1';
-        StdlvCompareInt(val, OutData, "Wrong Data");
+        wait until rising_edge(clk_o) and vld_o = '1';
+        StdlvCompareInt(val, dat_o, "Wrong Data");
       end loop;
     end loop;
     done   <= True;
@@ -243,12 +243,12 @@ begin
     for inDel in 20 downto 0 loop
       for outDel in 0 to 4 loop
         for val in 1 to 8 loop
-          OutRdy <= '1';
-          wait until rising_edge(OutClk) and OutVld = '1';
-          StdlvCompareInt(val, OutData, "Wrong Data");
+          rdy_i <= '1';
+          wait until rising_edge(clk_o) and vld_o = '1';
+          StdlvCompareInt(val, dat_o, "Wrong Data");
           for j in 0 to outDel - 1 loop
-            OutRdy <= '0';
-            wait until rising_edge(OutClk);
+            rdy_i <= '0';
+            wait until rising_edge(clk_o);
           end loop;
         end loop;
       end loop;
@@ -258,23 +258,23 @@ begin
     -- Valid does not wait for Ready
     wait until testcase = 2;
     done   <= False;
-    OutRdy <= '0';
-    wait until rising_edge(OutClk);
+    rdy_i <= '0';
+    wait until rising_edge(clk_o);
     for outDel in 0 to 10 loop
       for val in 1 to 4 loop
-        if OutVld /= '1' then
-          wait until OutVld = '1';
+        if vld_o /= '1' then
+          wait until vld_o = '1';
         end if;
         for i in 0 to outDel - 1 loop
-          wait until rising_edge(OutClk);
-          assert OutVld = '1' report "###ERROR###: OutVld went low" severity error;
+          wait until rising_edge(clk_o);
+          assert vld_o = '1' report "###ERROR###: vld_o went low" severity error;
         end loop;
         wait for 1 ns;
-        OutRdy <= '1';
-        StdlvCompareInt(val, OutData, "Wrong Data");
-        wait until rising_edge(OutClk);
+        rdy_i <= '1';
+        StdlvCompareInt(val, dat_o, "Wrong Data");
+        wait until rising_edge(clk_o);
         wait for 1 ns;
-        OutRdy <= '0';
+        rdy_i <= '0';
       end loop;
     end loop;
     done   <= True;

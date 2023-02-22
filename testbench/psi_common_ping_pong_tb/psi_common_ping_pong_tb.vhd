@@ -151,14 +151,14 @@ begin
 	--*** PAR2TDM ***
 	tdm_gene : if tdm_g generate
 		par2tdm_inst : entity work.psi_common_par_tdm
-			generic map(ChannelCount_g => ch_nb_g,
-			            ChannelWidth_g => dat_length_g)
-			port map(Clk         => proc_clk_sti,
-			         Rst         => proc_rst_sti,
-			         Parallel    => proc_dat_par_sti,
-			         ParallelVld => proc_str_par_sti,
-			         Tdm         => proc_dat_tdm_sti,
-			         TdmVld      => proc_str_tdm_sti);
+			generic map(channel_count_g => ch_nb_g,
+			            channel_width_g => dat_length_g)
+			port map(clk_i         => proc_clk_sti,
+			         rst_i         => proc_rst_sti,
+			         dat_i    => proc_dat_par_sti,
+			         vld_i => proc_str_par_sti,
+			         dat_o         => proc_dat_tdm_sti,
+			         vld_o      => proc_str_tdm_sti);
 	end generate;
 
 	proc_dat_sti <= proc_dat_tdm_sti when tdm_g else proc_dat_par_sti;

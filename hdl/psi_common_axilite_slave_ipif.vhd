@@ -24,11 +24,11 @@ library work;
 entity psi_common_axilite_slave_ipif is
     generic (
         -- IP Interface Config
-        NumReg_g                    : integer   := 32;                              -- $$ export=true $$
-        ResetVal_g                  : t_aslv32  := (0 => (others => '0'));          -- $$ constant=(X"0001ABCD", X"00021234") $$
-        UseMem_g                    : boolean   := true;                            -- $$ export=true $$
+        num_reg_g                    : integer   := 32;                              -- $$ export=true $$
+        rst_val_g                  : t_aslv32  := (0 => (others => '0'));          -- $$ constant=(X"0001ABCD", X"00021234") $$
+        use_mem_g                    : boolean   := true;                            -- $$ export=true $$
         -- AXI Config
-        AxiAddrWidth_g              : integer := 8
+        axi_addr_width_g              : integer := 8
     );
     port
     (
@@ -39,7 +39,7 @@ entity psi_common_axilite_slave_ipif is
         s_axilite_aclk                  : in    std_logic;                                          -- $$ type=clk; freq=100e6 $$
         s_axilite_aresetn               : in    std_logic;                                          -- $$ type=rst; clk=s_axi_aclk; lowactive=true $$
         -- Read address channel         
-        s_axilite_araddr                : in    std_logic_vector(AxiAddrWidth_g-1 downto 0);        -- $$ proc=axi $$   
+        s_axilite_araddr                : in    std_logic_vector(axi_addr_width_g-1 downto 0);        -- $$ proc=axi $$   
         s_axilite_arvalid               : in    std_logic;                                          -- $$ proc=axi $$
         s_axilite_arready               : out   std_logic;                                          -- $$ proc=axi $$
         -- Read data channel
@@ -48,7 +48,7 @@ entity psi_common_axilite_slave_ipif is
         s_axilite_rvalid                : out   std_logic;                                          -- $$ proc=axi $$
         s_axilite_rready                : in    std_logic;                                          -- $$ proc=axi $$
         -- Write address channel
-        s_axilite_awaddr                : in    std_logic_vector(AxiAddrWidth_g-1 downto 0);        -- $$ proc=axi $$
+        s_axilite_awaddr                : in    std_logic_vector(axi_addr_width_g-1 downto 0);        -- $$ proc=axi $$
         s_axilite_awvalid               : in    std_logic;                                          -- $$ proc=axi $$
         s_axilite_awready               : out   std_logic;                                          -- $$ proc=axi $$
         -- Write data channel
@@ -63,14 +63,14 @@ entity psi_common_axilite_slave_ipif is
         --------------------------------------------------------------------------
         -- Register Interface
         --------------------------------------------------------------------------
-        o_reg_rd                        : out   std_logic_vector(NumReg_g-1 downto   0);                                        -- $$ proc=ip $$
-        i_reg_rdata                     : in    t_aslv32(0 to NumReg_g-1)                   := (others => (others => '0'));     -- $$ proc=ip $$
-        o_reg_wr                        : out   std_logic_vector(NumReg_g-1 downto   0);                                        -- $$ proc=ip $$
-        o_reg_wdata                     : out   t_aslv32(0 to NumReg_g-1);                                                      -- $$ proc=ip $$
+        o_reg_rd                        : out   std_logic_vector(num_reg_g-1 downto   0);                                        -- $$ proc=ip $$
+        i_reg_rdata                     : in    t_aslv32(0 to num_reg_g-1)                   := (others => (others => '0'));     -- $$ proc=ip $$
+        o_reg_wr                        : out   std_logic_vector(num_reg_g-1 downto   0);                                        -- $$ proc=ip $$
+        o_reg_wdata                     : out   t_aslv32(0 to num_reg_g-1);                                                      -- $$ proc=ip $$
         --------------------------------------------------------------------------
         -- Memory Interface
         --------------------------------------------------------------------------
-        o_mem_addr                      : out   std_logic_vector(AxiAddrWidth_g - 1 downto  0);                                 -- $$ proc=ip $$
+        o_mem_addr                      : out   std_logic_vector(axi_addr_width_g - 1 downto  0);                                 -- $$ proc=ip $$
         o_mem_wr                        : out   std_logic_vector( 3 downto   0);                                                -- $$ proc=ip $$
         o_mem_wdata                     : out   std_logic_vector(31 downto   0);                                                -- $$ proc=ip $$
         i_mem_rdata                     : in    std_logic_vector(31 downto   0)             := (others => '0')                  -- $$ proc=ip $$
@@ -81,11 +81,11 @@ architecture behavioral of psi_common_axilite_slave_ipif is
 begin
     i_interface : entity work.psi_common_axi_slave_ipif
         generic map (
-            NumReg_g                    => NumReg_g,
-            ResetVal_g                  => ResetVal_g,
-            UseMem_g                    => UseMem_g,
-            AxiIdWidth_g                => 1,
-            AxiAddrWidth_g              => AxiAddrWidth_g
+            num_reg_g                    => num_reg_g,
+            rst_val_g                  => rst_val_g,
+            use_mem_g                    => use_mem_g,
+            axi_id_width_g                => 1,
+            axi_addr_width_g              => axi_addr_width_g
         )
         port map
         (

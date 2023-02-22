@@ -26,19 +26,19 @@ use ieee.numeric_std.all;
 ------------------------------------------------------------------------------
 entity psi_common_status_cc is
   generic(
-    DataWidth_g : positive := 16
+    data_width_g : positive := 16
   );
   port(
     -- Clock Domain A
-    ClkA    : in  std_logic;
-    RstInA  : in  std_logic;
-    RstOutA : out std_logic;
-    DataA   : in  std_logic_vector(DataWidth_g - 1 downto 0);
+    a_clk_i    : in  std_logic;
+    a_rst_i  : in  std_logic;
+    a_rst_o : out std_logic;
+    a_dat_i   : in  std_logic_vector(data_width_g - 1 downto 0);
     -- Clock Domain B
-    ClkB    : in  std_logic;
-    RstInB  : in  std_logic;
-    RstOutB : out std_logic;
-    DataB   : out std_logic_vector(DataWidth_g - 1 downto 0)
+    b_clk_i    : in  std_logic;
+    b_rst_i  : in  std_logic;
+    b_rst_o : out std_logic;
+    b_dat_o   : out std_logic_vector(data_width_g - 1 downto 0)
   );
 end entity;
 
@@ -73,9 +73,9 @@ architecture rtl of psi_common_status_cc is
 begin
 
   -- Valid pulse generation
-  i_vldgen : process(ClkA)
+  i_vldgen : process(a_clk_i)
   begin
-    if rising_edge(ClkA) then
+    if rising_edge(a_clk_i) then
       if RstIntA = '1' then
         RstIntBSync   <= (others => '1');
         Started       <= '0';
@@ -101,9 +101,9 @@ begin
   end process;
 
   -- Reception detection
-  i_recdet : process(ClkB)
+  i_recdet : process(b_clk_i)
   begin
-    if rising_edge(ClkB) then
+    if rising_edge(b_clk_i) then
       if RstIntB = '1' then
         RecToggle <= '0';
       else
@@ -117,22 +117,22 @@ begin
   -- instantiation of simple CC
   i_scc : entity work.psi_common_simple_cc
     generic map(
-      DataWidth_g => DataWidth_g
+      data_width_g => data_width_g
     )
     port map(
-      ClkA    => ClkA,
-      RstInA  => RstInA,
-      RstOutA => RstIntA,
-      DataA   => DataA,
-      VldA    => VldA,
-      ClkB    => ClkB,
-      RstInB  => RstInB,
-      RstOutB => RstIntB,
-      DataB   => DataB,
-      VldB    => VldB
+      a_clk_i    => a_clk_i,
+      a_rst_i  => a_rst_i,
+      a_rst_o => RstIntA,
+      a_dat_i   => a_dat_i,
+      a_vld_i    => VldA,
+      b_clk_i    => b_clk_i,
+      b_rst_i  => b_rst_i,
+      b_rst_o => RstIntB,
+      b_dat_o   => b_dat_o,
+      b_vld_o    => VldB
     );
-  RstOutA <= RstIntA;
-  RstOutB <= RstIntB;
+  a_rst_o <= RstIntA;
+  b_rst_o <= RstIntB;
 
 end;
 

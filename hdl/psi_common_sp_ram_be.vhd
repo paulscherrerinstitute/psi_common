@@ -25,18 +25,18 @@ use work.psi_common_math_pkg.all;
 ------------------------------------------------------------------------------
 entity psi_common_sp_ram_be is
   generic(
-    Depth_g    : positive := 1024;
-    Width_g    : positive := 32;
-    Behavior_g : string   := "RBW"      -- "RBW" = read-before-write, "WBR" = write-before-read
+    depth_g    : positive := 1024;
+    width_g    : positive := 32;
+    ram_behavior_g : string   := "RBW"      -- "RBW" = read-before-write, "WBR" = write-before-read
   );
   port(
     -- Port A
-    Clk  : in  std_logic                                        := '0';
-    Addr : in  std_logic_vector(log2ceil(Depth_g) - 1 downto 0) := (others => '0');
-    Be   : in  std_logic_vector(Width_g / 8 - 1 downto 0)       := (others => '1');
-    Wr   : in  std_logic                                        := '0';
-    Din  : in  std_logic_vector(Width_g - 1 downto 0)           := (others => '0');
-    Dout : out std_logic_vector(Width_g - 1 downto 0)
+    clk_i  : in  std_logic                                        := '0';
+    addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
+    be_i   : in  std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '1');
+    wr_i   : in  std_logic                                        := '0';
+    dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
+    dat_o : out std_logic_vector(width_g - 1 downto 0)
   );
 end entity;
 
@@ -46,32 +46,32 @@ end entity;
 architecture rtl of psi_common_sp_ram_be is
 
   -- Constants
-  constant BeCount_c : integer := Width_g / 8;
+  constant BeCount_c : integer := width_g / 8;
 
   -- memory array
-  type mem_t is array (Depth_g - 1 downto 0) of std_logic_vector(Width_g - 1 downto 0);
+  type mem_t is array (depth_g - 1 downto 0) of std_logic_vector(width_g - 1 downto 0);
   shared variable mem : mem_t := (others => (others => '0'));
 
 begin
 
-  assert Behavior_g = "RBW" or Behavior_g = "WBR" report "psi_common_sp_ram_be: Behavior_g must be RBW or WBR" severity error;
-  assert Width_g mod 8 = 0 report "psi_common_sp_ram_be: Width_g must be a multiple of 8, otherwise byte-enables do not make sense" severity error;
+  assert ram_behavior_g = "RBW" or ram_behavior_g = "WBR" report "psi_common_sp_ram_be: ram_behavior_g must be_i RBW or WBR" severity error;
+  assert width_g mod 8 = 0 report "psi_common_sp_ram_be: width_g must be_i a multiple of 8, otherwise byte-enables do not make sense" severity error;
 
-  porta_p : process(Clk)
+  porta_p : process(clk_i)
   begin
-    if rising_edge(Clk) then
-      if Behavior_g = "RBW" then
-        Dout <= mem(to_integer(unsigned(Addr)));
+    if rising_edge(clk_i) then
+      if ram_behavior_g = "RBW" then
+        dat_o <= mem(to_integer(unsigned(addr_i)));
       end if;
-      if Wr = '1' then
+      if wr_i = '1' then
         for byte in 0 to BeCount_c - 1 loop
-          if Be(byte) = '1' then
-            mem(to_integer(unsigned(Addr)))(byte * 8 + 7 downto byte * 8) := Din(byte * 8 + 7 downto byte * 8);
+          if be_i(byte) = '1' then
+            mem(to_integer(unsigned(addr_i)))(byte * 8 + 7 downto byte * 8) := dat_i(byte * 8 + 7 downto byte * 8);
           end if;
         end loop;
       end if;
-      if Behavior_g = "WBR" then
-        Dout <= mem(to_integer(unsigned(Addr)));
+      if ram_behavior_g = "WBR" then
+        dat_o <= mem(to_integer(unsigned(addr_i)));
       end if;
     end if;
   end process;

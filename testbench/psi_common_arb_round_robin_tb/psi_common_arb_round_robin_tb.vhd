@@ -32,7 +32,7 @@ end entity;
 ------------------------------------------------------------
 architecture sim of psi_common_arb_round_robin_tb is
   -- *** Fixed Generics ***
-  constant Size_g : natural := 5;
+  constant size_g : natural := 5;
 
   -- *** Not Assigned Generics (default values) ***
   constant OutputRegister_g : boolean := true;
@@ -45,12 +45,12 @@ architecture sim of psi_common_arb_round_robin_tb is
   constant TbProcNr_stimuli_c : integer                  := 0;
 
   -- *** DUT Signals ***
-  signal Clk       : std_logic                             := '1';
-  signal Rst       : std_logic                             := '1';
-  signal Grant_Rdy : std_logic                             := '0';
-  signal Grant_Vld : std_logic                             := '0';
-  signal Request   : std_logic_vector(Size_g - 1 downto 0) := (others => '0');
-  signal Grant     : std_logic_vector(Size_g - 1 downto 0) := (others => '0');
+  signal clk_i       : std_logic                             := '1';
+  signal rst_i       : std_logic                             := '1';
+  signal grant_rdy_o : std_logic                             := '0';
+  signal grant_vld_o : std_logic                             := '0';
+  signal request_i   : std_logic_vector(size_g - 1 downto 0) := (others => '0');
+  signal grant_o     : std_logic_vector(size_g - 1 downto 0) := (others => '0');
 
 begin
   ------------------------------------------------------------
@@ -58,15 +58,15 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_arb_round_robin
     generic map(
-      Size_g => Size_g
+      size_g => size_g
     )
     port map(
-      Clk       => Clk,
-      Rst       => Rst,
-      Request   => Request,
-      Grant     => Grant,
-      Grant_Rdy => Grant_Rdy,
-      Grant_Vld => Grant_Vld
+      clk_i       => clk_i,
+      rst_i       => rst_i,
+      request_i   => request_i,
+      grant_o     => grant_o,
+      grant_rdy_o => grant_rdy_o,
+      grant_vld_o => grant_vld_o
     );
 
   ------------------------------------------------------------
@@ -74,7 +74,7 @@ begin
   ------------------------------------------------------------
   p_tb_control : process
   begin
-    wait until Rst = '0';
+    wait until rst_i = '0';
     wait until ProcessDone = AllProcessesDone_c;
     TbRunning <= false;
     wait;
@@ -88,7 +88,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      Clk <= not Clk;
+      clk_i <= not clk_i;
     end loop;
     wait;
   end process;
@@ -99,208 +99,208 @@ begin
   -- *** stimuli ***
   p_stimuli : process
   begin
-    Rst <= '1';
-    wait until rising_edge(Clk);
-    wait until rising_edge(Clk);
-    Rst <= '0';
+    rst_i <= '1';
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    rst_i <= '0';
 
     -- Always Rdy
-    Grant_Rdy <= '1';
+    grant_rdy_o <= '1';
 
     -- Single Bit
-    wait until rising_edge(Clk);
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("00000", Grant, "Wrong value after reset");
-    StdlCompare(0, Grant_Vld, "Valid high unexpectedly");
-    wait until rising_edge(Clk);
-    Request <= "01000";
+    StdlvCompareStdlv("00000", grant_o, "Wrong value after reset");
+    StdlCompare(0, grant_vld_o, "Valid high unexpectedly");
+    wait until rising_edge(clk_i);
+    request_i <= "01000";
     wait for 1 ns;
-    StdlvCompareStdlv("01000", Grant, "Grant 1 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("01000", grant_o, "grant_o 1 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("01000", Grant, "Grant 2 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Request <= "00000";
+    StdlvCompareStdlv("01000", grant_o, "grant_o 2 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    request_i <= "00000";
     wait for 1 ns;
-    StdlvCompareStdlv("00000", Grant, "Grant not de-asserted");
-    StdlCompare(0, Grant_Vld, "Valid high unexpectedly");
+    StdlvCompareStdlv("00000", grant_o, "grant_o not de-asserted");
+    StdlCompare(0, grant_vld_o, "Valid high unexpectedly");
 
     -- Multi Bit
-    wait until rising_edge(Clk);
-    Request <= "10000";
+    wait until rising_edge(clk_i);
+    request_i <= "10000";
     wait for 1 ns;
-    StdlvCompareStdlv("10000", Grant, "Grant 3 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Request <= "10111";
+    StdlvCompareStdlv("10000", grant_o, "grant_o 3 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    request_i <= "10111";
     wait for 1 ns;
-    StdlvCompareStdlv("00100", Grant, "Grant 4 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
+    StdlvCompareStdlv("00100", grant_o, "grant_o 4 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
 
-    wait until rising_edge(Clk);
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("00010", Grant, "Grant 5 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("00010", grant_o, "grant_o 5 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("00001", Grant, "Grant 6 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("00001", grant_o, "grant_o 6 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("10000", Grant, "Grant 7 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("10000", grant_o, "grant_o 7 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("00100", Grant, "Grant 8 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Request <= "00001";
+    StdlvCompareStdlv("00100", grant_o, "grant_o 8 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    request_i <= "00001";
     wait for 1 ns;
-    StdlvCompareStdlv("00001", Grant, "Grant 9 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Request <= "11001";
+    StdlvCompareStdlv("00001", grant_o, "grant_o 9 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    request_i <= "11001";
     wait for 1 ns;
-    StdlvCompareStdlv("10000", Grant, "Grant 10 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("10000", grant_o, "grant_o 10 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("01000", Grant, "Grant 11 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("01000", grant_o, "grant_o 11 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    Request <= "00000";
-    wait until rising_edge(Clk);
-    wait until rising_edge(Clk);
-    wait until rising_edge(Clk);
+    request_i <= "00000";
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
 
     -- Rdy Low
     -- Revert mask to correct state (all unmasked)
-    Grant_Rdy <= '1';
-    wait until rising_edge(Clk);
-    Request   <= "00001";
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '0';
+    grant_rdy_o <= '1';
+    wait until rising_edge(clk_i);
+    request_i   <= "00001";
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '0';
     -- Start test
-    Request   <= "10011";
+    request_i   <= "10011";
     wait for 1 ns;
-    StdlvCompareStdlv("10000", Grant, "Grant 12 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("10000", grant_o, "grant_o 12 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    Grant_Rdy <= '1';
-    StdlvCompareStdlv("10000", Grant, "Grant 12 not kept");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '0';
+    grant_rdy_o <= '1';
+    StdlvCompareStdlv("10000", grant_o, "grant_o 12 not kept");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '0';
     wait for 1 ns;
-    StdlvCompareStdlv("00010", Grant, "Grant 13 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '1';
+    StdlvCompareStdlv("00010", grant_o, "grant_o 13 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '1';
     wait for 1 ns;
-    StdlvCompareStdlv("00010", Grant, "Grant 13 not kept");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '0';
+    StdlvCompareStdlv("00010", grant_o, "grant_o 13 not kept");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '0';
     wait for 1 ns;
-    StdlvCompareStdlv("00001", Grant, "Grant 14 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '1';
+    StdlvCompareStdlv("00001", grant_o, "grant_o 14 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '1';
     wait for 1 ns;
-    Request   <= "10001";
-    StdlvCompareStdlv("00001", Grant, "Grant 14 not kept");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '0';
+    request_i   <= "10001";
+    StdlvCompareStdlv("00001", grant_o, "grant_o 14 not kept");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '0';
     wait for 1 ns;
-    StdlvCompareStdlv("10000", Grant, "Grant 15 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '1';
+    StdlvCompareStdlv("10000", grant_o, "grant_o 15 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '1';
     wait for 1 ns;
-    StdlvCompareStdlv("10000", Grant, "Grant 15 not kept");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '0';
+    StdlvCompareStdlv("10000", grant_o, "grant_o 15 not kept");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '0';
     wait for 1 ns;
-    StdlvCompareStdlv("00001", Grant, "Grant 16 Wrong");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '1';
+    StdlvCompareStdlv("00001", grant_o, "grant_o 16 Wrong");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '1';
     wait for 1 ns;
-    StdlvCompareStdlv("00001", Grant, "Grant 16 not kept");
-    StdlCompare(1, Grant_Vld, "Valid low unexpectedly");
-    Grant_Rdy <= '0';
-    Request   <= "00000";
+    StdlvCompareStdlv("00001", grant_o, "grant_o 16 not kept");
+    StdlCompare(1, grant_vld_o, "Valid low unexpectedly");
+    grant_rdy_o <= '0';
+    request_i   <= "00000";
     wait for 1 us;
 
     -- Example from documentation
-    Rst       <= '1';
-    wait until rising_edge(Clk);
-    Rst       <= '0';
-    wait until rising_edge(Clk);
-    wait until rising_edge(Clk);
-    Request   <= "10110";
+    rst_i       <= '1';
+    wait until rising_edge(clk_i);
+    rst_i       <= '0';
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    request_i   <= "10110";
     wait for 1 ns;
-    StdlvCompareStdlv("10000", Grant, "Grant Wrong, Doc 0");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("10000", grant_o, "grant_o Wrong, Doc 0");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("10000", Grant, "Grant Wrong, Doc 1");
-    StdlCompare(1, Grant_Vld, "Valid Wrong, Doc 1");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '1';
+    StdlvCompareStdlv("10000", grant_o, "grant_o Wrong, Doc 1");
+    StdlCompare(1, grant_vld_o, "Valid Wrong, Doc 1");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '1';
     wait for 1 ns;
-    StdlvCompareStdlv("10000", Grant, "Grant Wrong, Doc 2");
-    StdlCompare(1, Grant_Vld, "Valid Wrong, Doc 2");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("10000", grant_o, "grant_o Wrong, Doc 2");
+    StdlCompare(1, grant_vld_o, "Valid Wrong, Doc 2");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("00100", Grant, "Grant Wrong, Doc 3");
-    StdlCompare(1, Grant_Vld, "Valid Wrong, Doc 3");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("00100", grant_o, "grant_o Wrong, Doc 3");
+    StdlCompare(1, grant_vld_o, "Valid Wrong, Doc 3");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("00010", Grant, "Grant Wrong, Doc 4");
-    StdlCompare(1, Grant_Vld, "Valid Wrong, Doc 4");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("00010", grant_o, "grant_o Wrong, Doc 4");
+    StdlCompare(1, grant_vld_o, "Valid Wrong, Doc 4");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("10000", Grant, "Grant Wrong, Doc 5");
-    StdlCompare(1, Grant_Vld, "Valid Wrong, Doc 5");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '0';
+    StdlvCompareStdlv("10000", grant_o, "grant_o Wrong, Doc 5");
+    StdlCompare(1, grant_vld_o, "Valid Wrong, Doc 5");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '0';
     wait for 1 ns;
-    StdlvCompareStdlv("00100", Grant, "Grant Wrong, Doc 6");
-    StdlCompare(1, Grant_Vld, "Valid Wrong, Doc 6");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("00100", grant_o, "grant_o Wrong, Doc 6");
+    StdlCompare(1, grant_vld_o, "Valid Wrong, Doc 6");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("00100", Grant, "Grant Wrong, Doc 7");
-    StdlCompare(1, Grant_Vld, "Valid Wrong, Doc 7");
-    wait until rising_edge(Clk);
-    Request   <= "01100";
+    StdlvCompareStdlv("00100", grant_o, "grant_o Wrong, Doc 7");
+    StdlCompare(1, grant_vld_o, "Valid Wrong, Doc 7");
+    wait until rising_edge(clk_i);
+    request_i   <= "01100";
     wait for 1 ns;
-    StdlvCompareStdlv("01000", Grant, "Grant Wrong, Doc 8");
-    StdlCompare(1, Grant_Vld, "Valid Wrong, Doc 8");
-    wait until rising_edge(Clk);
+    StdlvCompareStdlv("01000", grant_o, "grant_o Wrong, Doc 8");
+    StdlCompare(1, grant_vld_o, "Valid Wrong, Doc 8");
+    wait until rising_edge(clk_i);
     wait for 1 ns;
-    StdlvCompareStdlv("01000", Grant, "Grant Wrong, Doc 9");
-    StdlCompare(1, Grant_Vld, "Valid Wrong, Doc 9");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '1';
+    StdlvCompareStdlv("01000", grant_o, "grant_o Wrong, Doc 9");
+    StdlCompare(1, grant_vld_o, "Valid Wrong, Doc 9");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '1';
     wait for 1 ns;
-    StdlvCompareStdlv("01000", Grant, "Grant Wrong, Doc 10");
-    StdlCompare(1, Grant_Vld, "Valid Wrong, Doc 10");
-    wait until rising_edge(Clk);
-    Grant_Rdy <= '0';
+    StdlvCompareStdlv("01000", grant_o, "grant_o Wrong, Doc 10");
+    StdlCompare(1, grant_vld_o, "Valid Wrong, Doc 10");
+    wait until rising_edge(clk_i);
+    grant_rdy_o <= '0';
     wait for 1 ns;
-    StdlvCompareStdlv("00100", Grant, "Grant Wrong, Doc 11");
-    StdlCompare(1, Grant_Vld, "Valid Wrong, Doc 11");
-    wait until rising_edge(Clk);
-    Request   <= "00000";
+    StdlvCompareStdlv("00100", grant_o, "grant_o Wrong, Doc 11");
+    StdlCompare(1, grant_vld_o, "Valid Wrong, Doc 11");
+    wait until rising_edge(clk_i);
+    request_i   <= "00000";
     wait for 1 ns;
-    StdlvCompareStdlv("00000", Grant, "Grant Wrong, Doc 12");
-    StdlCompare(0, Grant_Vld, "Valid Wrong, Doc 12");
+    StdlvCompareStdlv("00000", grant_o, "grant_o Wrong, Doc 12");
+    StdlCompare(0, grant_vld_o, "Valid Wrong, Doc 12");
     wait for 1 us;
 
     -- end of process !DO NOT EDIT!

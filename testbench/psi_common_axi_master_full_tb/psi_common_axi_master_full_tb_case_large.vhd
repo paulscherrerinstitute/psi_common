@@ -30,34 +30,34 @@ package psi_common_axi_master_full_tb_case_large is
 
   procedure user_cmd(
     signal Clk          : in std_logic;
-    signal CmdWr_Addr   : inout std_logic_vector;
-    signal CmdWr_Size   : inout std_logic_vector;
-    signal CmdWr_LowLat : inout std_logic;
-    signal CmdWr_Vld    : inout std_logic;
-    signal CmdWr_Rdy    : in std_logic;
-    signal CmdRd_Addr   : inout std_logic_vector;
-    signal CmdRd_Size   : inout std_logic_vector;
-    signal CmdRd_LowLat : inout std_logic;
-    signal CmdRd_Vld    : inout std_logic;
-    signal CmdRd_Rdy    : in std_logic;
+    signal cmd_wr_addr_i   : inout std_logic_vector;
+    signal cmd_wr_size_i   : inout std_logic_vector;
+    signal cmd_wr_low_lat_i : inout std_logic;
+    signal cmd_wr_vld_i    : inout std_logic;
+    signal cmd_wr_rdy_o    : in std_logic;
+    signal cmd_rd_addr_i   : inout std_logic_vector;
+    signal cmd_rd_size_o   : inout std_logic_vector;
+    signal cmd_rd_low_lat_i : inout std_logic;
+    signal cmd_rd_vld_i    : inout std_logic;
+    signal cmd_rd_rdy_o    : in std_logic;
     constant Generics_c : Generics_t);
 
   procedure user_data(
     signal Clk          : in std_logic;
-    signal WrDat_Data   : inout std_logic_vector;
-    signal WrDat_Vld    : inout std_logic;
-    signal WrDat_Rdy    : in std_logic;
-    signal RdDat_Data   : in std_logic_vector;
-    signal RdDat_Vld    : in std_logic;
-    signal RdDat_Rdy    : inout std_logic;
+    signal wr_dat_i   : inout std_logic_vector;
+    signal wr_vld_i    : inout std_logic;
+    signal wr_rdy_o    : in std_logic;
+    signal rd_dat_o   : in std_logic_vector;
+    signal rd_vld_o    : in std_logic;
+    signal rd_rdy_i    : inout std_logic;
     constant Generics_c : Generics_t);
 
   procedure user_resp(
     signal Clk          : in std_logic;
-    signal Wr_Done      : in std_logic;
-    signal Wr_Error     : in std_logic;
-    signal Rd_Done      : in std_logic;
-    signal Rd_Error     : in std_logic;
+    signal wr_done_o      : in std_logic;
+    signal wr_error_o     : in std_logic;
+    signal rd_done_o      : in std_logic;
+    signal rd_error_o     : in std_logic;
     constant Generics_c : Generics_t);
 
   procedure axi(
@@ -96,16 +96,16 @@ package body psi_common_axi_master_full_tb_case_large is
 
   procedure user_cmd(
     signal Clk          : in std_logic;
-    signal CmdWr_Addr   : inout std_logic_vector;
-    signal CmdWr_Size   : inout std_logic_vector;
-    signal CmdWr_LowLat : inout std_logic;
-    signal CmdWr_Vld    : inout std_logic;
-    signal CmdWr_Rdy    : in std_logic;
-    signal CmdRd_Addr   : inout std_logic_vector;
-    signal CmdRd_Size   : inout std_logic_vector;
-    signal CmdRd_LowLat : inout std_logic;
-    signal CmdRd_Vld    : inout std_logic;
-    signal CmdRd_Rdy    : in std_logic;
+    signal cmd_wr_addr_i   : inout std_logic_vector;
+    signal cmd_wr_size_i   : inout std_logic_vector;
+    signal cmd_wr_low_lat_i : inout std_logic;
+    signal cmd_wr_vld_i    : inout std_logic;
+    signal cmd_wr_rdy_o    : in std_logic;
+    signal cmd_rd_addr_i   : inout std_logic_vector;
+    signal cmd_rd_size_o   : inout std_logic_vector;
+    signal cmd_rd_low_lat_i : inout std_logic;
+    signal cmd_rd_vld_i    : inout std_logic;
+    signal cmd_rd_rdy_o    : in std_logic;
     constant Generics_c : Generics_t) is
   begin
     wait for DelayBetweenTests;
@@ -116,11 +116,11 @@ package body psi_common_axi_master_full_tb_case_large is
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Write 1022 bytes to 0x02000001 ***
       DbgPrint(DebugPrints, ">> Write 1022 bytes to 0x02000001");
       TestCase_v := 0;
-      ApplyCommand(16#02000001#, 1022, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+      ApplyCommand(16#02000001#, 1022, false, cmd_wr_addr_i, cmd_wr_size_i, cmd_wr_low_lat_i, cmd_wr_vld_i, cmd_wr_rdy_o, Clk);
       WaitDone(0, Clk);
       wait for DelayBetweenTests;
     end if;
@@ -128,18 +128,18 @@ package body psi_common_axi_master_full_tb_case_large is
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------	
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** Read 1022 bytes from 0x02000001 (high latency) ***
       DbgPrint(DebugPrints, ">> Read 1022 bytes from 0x02000001 (high latency)");
       TestCase_v := 1;
-      ApplyCommand(16#02000001#, 1022, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+      ApplyCommand(16#02000001#, 1022, false, cmd_rd_addr_i, cmd_rd_size_o, cmd_rd_low_lat_i, cmd_rd_vld_i, cmd_rd_rdy_o, Clk);
       WaitDone(1, Clk);
       wait for DelayBetweenTests;
 
       -- *** Read 1022 bytes from 0x02000001 (low latency) ***
       DbgPrint(DebugPrints, ">> Read 1022 bytes from 0x02000001 (low latency)");
       TestCase_v := 2;
-      ApplyCommand(16#02000001#, 1022, true, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+      ApplyCommand(16#02000001#, 1022, true, cmd_rd_addr_i, cmd_rd_size_o, cmd_rd_low_lat_i, cmd_rd_vld_i, cmd_rd_rdy_o, Clk);
       WaitDone(2, Clk);
       wait for DelayBetweenTests;
     end if;
@@ -147,67 +147,67 @@ package body psi_common_axi_master_full_tb_case_large is
 
   procedure user_data(
     signal Clk          : in std_logic;
-    signal WrDat_Data   : inout std_logic_vector;
-    signal WrDat_Vld    : inout std_logic;
-    signal WrDat_Rdy    : in std_logic;
-    signal RdDat_Data   : in std_logic_vector;
-    signal RdDat_Vld    : in std_logic;
-    signal RdDat_Rdy    : inout std_logic;
+    signal wr_dat_i   : inout std_logic_vector;
+    signal wr_vld_i    : inout std_logic;
+    signal wr_rdy_o    : in std_logic;
+    signal rd_dat_o   : in std_logic_vector;
+    signal rd_vld_o    : in std_logic;
+    signal rd_rdy_i    : inout std_logic;
     constant Generics_c : Generics_t) is
   begin
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Write 1022 bytes to 0x02000001 ***
       WaitCase(0, Clk);
-      ApplyWrData(16#10#, 1022, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk);
+      ApplyWrData(16#10#, 1022, wr_dat_i, wr_vld_i, wr_rdy_o, Clk);
     end if;
 
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------	
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** Read 1022 bytes from 0x02000001 (high latency) ***
       WaitCase(1, Clk);
-      CheckRdData(16#10#, 1022, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);
+      CheckRdData(16#10#, 1022, rd_dat_o, rd_vld_o, rd_rdy_i, Clk);
 
       -- *** Read 1022 bytes from 0x02000001 (low latency) ***
       WaitCase(2, Clk);
-      CheckRdData(16#10#, 1022, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);
+      CheckRdData(16#10#, 1022, rd_dat_o, rd_vld_o, rd_rdy_i, Clk);
     end if;
   end procedure;
 
   procedure user_resp(
     signal Clk          : in std_logic;
-    signal Wr_Done      : in std_logic;
-    signal Wr_Error     : in std_logic;
-    signal Rd_Done      : in std_logic;
-    signal Rd_Error     : in std_logic;
+    signal wr_done_o      : in std_logic;
+    signal wr_error_o     : in std_logic;
+    signal rd_done_o      : in std_logic;
+    signal rd_error_o     : in std_logic;
     constant Generics_c : Generics_t) is
   begin
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Write 1022 bytes to 0x02000001 ***
       WaitCase(0, Clk);
-      WaitForCompletion(true, 100 us, Wr_Done, Wr_Error, Clk);
+      WaitForCompletion(true, 100 us, wr_done_o, wr_error_o, Clk);
       AllDone_v := 0;
     end if;
 
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------	
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** Read 1022 bytes from 0x02000001 (high latency) ***
       WaitCase(1, Clk);
-      WaitForCompletion(true, 100 us, Rd_Done, Rd_Error, Clk);
+      WaitForCompletion(true, 100 us, rd_done_o, rd_error_o, Clk);
       AllDone_v := 1;
 
       -- *** Read 1022 bytes from 0x02000001 (low latency) ***
       WaitCase(2, Clk);
-      WaitForCompletion(true, 100 us, Rd_Done, Rd_Error, Clk);
+      WaitForCompletion(true, 100 us, rd_done_o, rd_error_o, Clk);
       AllDone_v := 2;
     end if;
   end procedure;
@@ -221,7 +221,7 @@ package body psi_common_axi_master_full_tb_case_large is
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Write 1022 bytes to 0x02000001 ***			
       WaitCase(0, Clk);
       CheckAxiWrite(16#02000001#, 16#10#, 63, xRESP_OKAY_c, axi_ms, axi_sm, Clk);
@@ -245,7 +245,7 @@ package body psi_common_axi_master_full_tb_case_large is
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------	
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** Read 1022 bytes from 0x02000001 (high latency) ***
       WaitCase(1, Clk);
       DoAxiRead(16#02000001#, 16#10#, 63, xRESP_OKAY_c, axi_ms, axi_sm, Clk);

@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --  Copyright (c) 2021 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
---  Authors: Beno�t Stef
+--  Authors: BenoÃÂ®t Stef
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -27,9 +27,9 @@ entity psi_common_find_min_max is
           rst_i     : in  std_logic;                               --sync reset
           str_i     : in  std_logic;                               --strobe in
           raz_i     : in  std_logic;                               --reset  output
-          data_i    : in  std_logic_vector(length_g - 1 downto 0); --data input
+          dat_i    : in  std_logic_vector(length_g - 1 downto 0); --data input
           str_o     : out std_logic;                               --strobe output
-          data_o    : out std_logic_vector(length_g - 1 downto 0); --data output
+          dat_o    : out std_logic_vector(length_g - 1 downto 0); --data output
           run_dat_o : out std_logic_vector(length_g - 1 downto 0);    --data output running
           run_str_o : out std_logic
       );
@@ -47,13 +47,13 @@ begin
       if rst_i = rst_pol_g then
         raz_dff_s <= '0';
         data_s    <= (others => '0');
-        data_o    <= (others => '0');
+        dat_o    <= (others => '0');
       else
         str_s<= str_i;
         raz_dff_s <= raz_i;
 
         if raz_i = '1' and raz_dff_s = '0' then
-          data_o <= data_s;
+          dat_o <= data_s;
           str_o  <= '1';
         else
           str_o <= '0';
@@ -61,24 +61,24 @@ begin
 
         --*** reset value edge detect ***
         if raz_i = '1' and raz_dff_s = '0' then
-          data_s <= data_i;
+          data_s <= dat_i;
         else
           if str_i = '1' then
             if mode_g = "MIN" and signed_g then
-              if signed(data_i) <= signed(data_s) then
-                data_s <= data_i;
+              if signed(dat_i) <= signed(data_s) then
+                data_s <= dat_i;
               end if;
             elsif mode_g = "MIN" and signed_g = false then
-              if unsigned(data_i) <= unsigned(data_s) then
-                data_s <= data_i;
+              if unsigned(dat_i) <= unsigned(data_s) then
+                data_s <= dat_i;
               end if;
             elsif mode_g = "MAX" and signed_g then
-              if signed(data_i) >= signed(data_s) then
-                data_s <= data_i;
+              if signed(dat_i) >= signed(data_s) then
+                data_s <= dat_i;
               end if;
             else
-              if unsigned(data_i) >= unsigned(data_s) then
-                data_s <= data_i;
+              if unsigned(dat_i) >= unsigned(data_s) then
+                data_s <= dat_i;
               end if;
             end if;
           end if;

@@ -26,11 +26,11 @@ entity psi_common_strobe_divider is
     rst_pol_g : std_logic := '0'        -- reset polarity
   );
   port(
-    InClk   : in  std_logic;            -- clk in													$$ type=clk; freq=100e6; $$
-    InRst   : in  std_logic;            -- synchornous reset										$$ type=rst; clk=clk_i; lowactive=true $$
-    InVld   : in  std_logic;            -- strobe in (if not strobe an edge detection is done)
-    InRatio : in  std_logic_vector(length_g - 1 downto 0); -- parameter ratio for division
-    OutVld  : out std_logic);           -- strobe output
+    clk_i   : in  std_logic;            -- clk in													$$ type=clk; freq=100e6; $$
+    rst_i   : in  std_logic;            -- synchornous reset										$$ type=rst; clk=clk_i; lowactive=true $$
+    vld_i   : in  std_logic;            -- strobe in (if not strobe an edge detection is done)
+    ratio_i : in  std_logic_vector(length_g - 1 downto 0); -- parameter ratio for division
+    vld_o  : out std_logic);           -- strobe output
 end entity;
 
 ------------------------------------------------------------------------------
@@ -42,20 +42,20 @@ architecture rtl of psi_common_strobe_divider is
 begin
 
   -- *** Implementation ***
-  process(InClk)
+  process(clk_i)
   begin
-    if rising_edge(InClk) then
-      if InRst = rst_pol_g then
+    if rising_edge(clk_i) then
+      if rst_i = rst_pol_g then
         counter_s <= 0;
         str_dff_s <= '0';
-        OutVld    <= '0';
+        vld_o    <= '0';
       else
-        str_dff_s <= InVld;
-        Outvld    <= '0';
-        if str_dff_s = '0' and InVld = '1' then
-          if (counter_s = unsigned(InRatio) - 1) or (unsigned(InRatio) = 0) then -- No division for illegal InRatio = 0 condition
+        str_dff_s <= vld_i;
+        vld_o    <= '0';
+        if str_dff_s = '0' and vld_i = '1' then
+          if (counter_s = unsigned(ratio_i) - 1) or (unsigned(ratio_i) = 0) then -- No division for illegal InRatio = 0 condition
             counter_s <= 0;
-            OutVld    <= '1';
+            vld_o    <= '1';
           else
             counter_s <= counter_s + 1;
           end if;

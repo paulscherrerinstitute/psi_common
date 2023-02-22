@@ -21,7 +21,7 @@ use work.psi_common_math_pkg.all;
 ------------------------------------------------------------
 entity psi_common_strobe_divider_tb is
   generic(
-    Ratio_g : integer range 0 to 15 := 6
+    ratio_g : integer range 0 to 15 := 6
   );
 end entity;
 
@@ -39,7 +39,7 @@ architecture sim of psi_common_strobe_divider_tb is
   constant AllProcessesDone_c  : std_logic_vector(0 to 1) := (others => '1');
   constant TbProcNr_ctrl_c     : integer                  := 0;
   constant TbProcNr_countout_c : integer                  := 1;
-  constant AppliedRatio_g      : integer                  := choose(Ratio_g = 0, 1, Ratio_g); -- Illegal condition Ratio=0 leads to no division
+  constant AppliedRatio_g      : integer                  := choose(ratio_g = 0, 1, ratio_g); -- Illegal condition Ratio=0 leads to no division
 
   -- *** DUT Signals ***
   signal InClk_sti   : std_logic                               := '0';
@@ -61,11 +61,11 @@ begin
       length_g => length_g
     )
     port map(
-      InClk   => InClk_sti,
-      InRst   => InRst_sti,
-      InVld   => InVld_sti,
-      InRatio => InRatio_sti,
-      OutVld  => OutVld_obs
+      clk_i   => InClk_sti,
+      rst_i   => InRst_sti,
+      vld_i   => InVld_sti,
+      ratio_i => InRatio_sti,
+      vld_o  => OutVld_obs
     );
 
   ------------------------------------------------------------

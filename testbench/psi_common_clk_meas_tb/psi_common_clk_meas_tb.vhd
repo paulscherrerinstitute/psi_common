@@ -31,8 +31,8 @@ end entity;
 ------------------------------------------------------------
 architecture sim of psi_common_clk_meas_tb is
   -- *** Fixed Generics ***
-  constant MasterFrequency_g  : positive := 125_000;
-  constant MaxMeasFrequency_g : positive := 250_000;
+  constant master_frequency_g  : positive := 125_000;
+  constant max_meas_frequency_g : positive := 250_000;
 
   -- *** Not Assigned Generics (default values) ***
 
@@ -44,11 +44,11 @@ architecture sim of psi_common_clk_meas_tb is
   constant TbProcNr_Stimuli_c : integer                  := 0;
 
   -- *** DUT Signals ***
-  signal ClkMaster    : std_logic                     := '1';
-  signal Rst          : std_logic                     := '1';
-  signal FrequencyHz  : std_logic_vector(31 downto 0) := (others => '0');
-  signal FrequencyVld : std_logic                     := '0';
-  signal ClkTest      : std_logic                     := '1';
+  signal clk_master_i    : std_logic                     := '1';
+  signal rst_i          : std_logic                     := '1';
+  signal frequency_hz_o  : std_logic_vector(31 downto 0) := (others => '0');
+  signal vld_o : std_logic                     := '0';
+  signal clk_test_i      : std_logic                     := '1';
 
   -- *** Handwritten ***
   signal MeasFrequency : real := 101.35e3;
@@ -59,15 +59,15 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_clk_meas
     generic map(
-      MasterFrequency_g  => MasterFrequency_g,
-      MaxMeasFrequency_g => MaxMeasFrequency_g
+      master_frequency_g  => master_frequency_g,
+      max_meas_frequency_g => max_meas_frequency_g
     )
     port map(
-      ClkMaster    => ClkMaster,
-      Rst          => Rst,
-      FrequencyHz  => FrequencyHz,
-      FrequencyVld => FrequencyVld,
-      ClkTest      => ClkTest
+      clk_master_i    => clk_master_i,
+      rst_i          => rst_i,
+      frequency_hz_o  => frequency_hz_o,
+      vld_o => vld_o,
+      clk_test_i      => clk_test_i
     );
 
   ------------------------------------------------------------
@@ -75,7 +75,7 @@ begin
   ------------------------------------------------------------
   p_tb_control : process
   begin
-    wait until Rst = '0';
+    wait until rst_i = '0';
     wait until ProcessDone = AllProcessesDone_c;
     TbRunning <= false;
     wait;
@@ -89,7 +89,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      ClkMaster <= not ClkMaster;
+      clk_master_i <= not clk_master_i;
     end loop;
     wait;
   end process;
@@ -98,7 +98,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / MeasFrequency;
-      ClkTest <= not ClkTest;
+      clk_test_i <= not clk_test_i;
     end loop;
     wait;
   end process;
@@ -110,9 +110,9 @@ begin
   begin
     wait for 1 us;
     -- Wait for two clk edges to ensure reset is active for at least one edge
-    wait until rising_edge(ClkMaster);
-    wait until rising_edge(ClkMaster);
-    Rst <= '0';
+    wait until rising_edge(clk_master_i);
+    wait until rising_edge(clk_master_i);
+    rst_i <= '0';
     wait;
   end process;
 
@@ -123,31 +123,31 @@ begin
   p_Stimuli : process
   begin
     -- start of process !DO NOT EDIT
-    wait until Rst = '0';
+    wait until rst_i = '0';
 
     -- Frequency Measurement
     wait for 2 sec;
-    wait until rising_edge(ClkMaster);
-    StdlvCompareInt(101_350, FrequencyHz, "Wrong Frequency", false, 50);
+    wait until rising_edge(clk_master_i);
+    StdlvCompareInt(101_350, frequency_hz_o, "Wrong Frequency", false, 50);
 
     -- Maximum 
     MeasFrequency <= 400.0e3;
     wait for 2 sec;
-    wait until rising_edge(ClkMaster) and FrequencyVld = '1';
-    StdlvCompareInt(250_000, FrequencyHz, "Wrong Maximum", false, 50);
+    wait until rising_edge(clk_master_i) and vld_o = '1';
+    StdlvCompareInt(250_000, frequency_hz_o, "Wrong Maximum", false, 50);
 
     -- Minimum 
     MeasFrequency <= 0.1;
     wait for 2 sec;
-    wait until rising_edge(ClkMaster) and FrequencyVld = '1';
-    StdlvCompareInt(0, FrequencyHz, "Wrong Minimum", false, 0);
+    wait until rising_edge(clk_master_i) and vld_o = '1';
+    StdlvCompareInt(0, frequency_hz_o, "Wrong Minimum", false, 0);
 
     -- Correct Frequency at End 
     MeasFrequency <= 52.123e3;
-    wait until rising_edge(ClkTest);
+    wait until rising_edge(clk_test_i);
     wait for 2 sec;
-    wait until rising_edge(ClkMaster) and FrequencyVld = '1';
-    StdlvCompareInt(52_123, FrequencyHz, "Correct Frequency at End", false, 50);
+    wait until rising_edge(clk_master_i) and vld_o = '1';
+    StdlvCompareInt(52_123, frequency_hz_o, "Correct Frequency at End", false, 50);
 
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_Stimuli_c) <= '1';

@@ -23,14 +23,14 @@ use work.psi_common_math_pkg.all;
 entity psi_common_pulse_shaper_cfg_tb is
   generic(freq_clk_g    : integer  := 100E6; -- clock frequency in Hz
           HoldIn_g      : boolean  := false; -- Hold in enable (if pulse stays high)
-          HoldOffEna_g  : boolean  := true; -- Hold off enable - ignore new pulse for a number of defined clock cycles
-          MaxDuration_g : positive := 24; -- Hold off parameter in clock cycle
+          hold_off_ena_g  : boolean  := true; -- Hold off enable - ignore new pulse for a number of defined clock cycles
+          max_duration_g : positive := 24; -- Hold off parameter in clock cycle
           HoldOff_g     : natural  := 20); -- Hold off paramater in clock cycle
 end entity;
 
 architecture tb of psi_common_pulse_shaper_cfg_tb is
 
-  constant nbit_c     : integer                                                                     := log2ceil(MaxDuration_g);
+  constant nbit_c     : integer                                                                     := log2ceil(max_duration_g);
   constant period_c   : time                                                                        := (1 sec) / real(freq_clk_g);
   --*** Stimuli ***
   signal clk_sti      : std_logic                                                                   := '0';
@@ -40,7 +40,7 @@ architecture tb of psi_common_pulse_shaper_cfg_tb is
   signal dat_obs      : std_logic;
   --*** TB control ***
   signal tb_run_s     : boolean                                                                     := true;
-  signal hold_off_sti : std_logic_vector(choose(HoldOffEna_g, log2ceil(HoldOff_g), 1) - 1 downto 0) := (others => '0');
+  signal hold_off_sti : std_logic_vector(choose(hold_off_ena_g, log2ceil(HoldOff_g), 1) - 1 downto 0) := (others => '0');
 
 begin
 
@@ -73,10 +73,10 @@ begin
   --*** DUT***
   inst_dut : entity work.psi_common_pulse_shaper_cfg
     generic map(HoldIn_g      => HoldIn_g,
-                HoldOffEna_g  => HoldOffEna_g,
-                MaxHoldOff_g  => HoldOff_g,
-                MaxDuration_g => MaxDuration_g,
-                RstPol_g      => '1')
+                hold_off_ena_g  => hold_off_ena_g,
+                max_hold_off_g  => HoldOff_g,
+                max_duration_g => max_duration_g,
+                rst_pol_g      => '1')
     port map(clk_i   => clk_sti,
              rst_i   => rst_sti,
              width_i => width_sti,
@@ -113,7 +113,7 @@ begin
     end loop;
     wait for 200 ns;
     
-   if HoldOffEna_g then
+   if hold_off_ena_g then
       hold_off_sti <= to_uslv(HoldOff_g, hold_off_sti'length);
     else
       hold_off_sti <= (others => '0');
@@ -169,7 +169,7 @@ begin
     wait for 200 ns;
     StdlCompare(0, dat_obs, "Too early");
 
-    if HoldOffEna_g then
+    if hold_off_ena_g then
       ------------------------------------------------------------------
       -- *** Test holdoff with large deviation ***
       print("> Test holdoff with large deviation");

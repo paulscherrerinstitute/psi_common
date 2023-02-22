@@ -26,19 +26,19 @@ use ieee.numeric_std.all;
 ------------------------------------------------------------------------------
 entity psi_common_pulse_cc is
   generic(
-    NumPulses_g : positive := 1
+    num_pulses_g : positive := 1
   );
   port(
     -- Clock Domain A
-    ClkA    : in  std_logic;
-    RstInA  : in  std_logic;
-    RstOutA : out std_logic;
-    PulseA  : in  std_logic_vector(NumPulses_g - 1 downto 0);
+    a_clk_i    : in  std_logic;
+    a_rst_i  : in  std_logic;
+    a_rst_o : out std_logic;
+    a_dat_i  : in  std_logic_vector(num_pulses_g - 1 downto 0);
     -- Clock Domain B
-    ClkB    : in  std_logic;
-    RstInB  : in  std_logic;
-    RstOutB : out std_logic;
-    PulseB  : out std_logic_vector(NumPulses_g - 1 downto 0)
+    b_clk_i    : in  std_logic;
+    b_rst_i  : in  std_logic;
+    b_rst_o : out std_logic;
+    b_dat_o  : out std_logic_vector(num_pulses_g - 1 downto 0)
   );
 end entity;
 
@@ -47,7 +47,7 @@ end entity;
 ------------------------------------------------------------------------------
 architecture rtl of psi_common_pulse_cc is
 
-  type Pulse_t is array (natural range <>) of std_logic_vector(NumPulses_g - 1 downto 0);
+  type Pulse_t is array (natural range <>) of std_logic_vector(num_pulses_g - 1 downto 0);
 
   -- Domain A signals
   signal RstSyncB2A  : std_logic_vector(3 downto 0);
@@ -56,7 +56,7 @@ architecture rtl of psi_common_pulse_cc is
   signal RstSyncA2B  : std_logic_vector(3 downto 0);
   signal RstBI       : std_logic;
   -- Data transmit side
-  signal ToggleA     : std_logic_vector(NumPulses_g - 1 downto 0);
+  signal ToggleA     : std_logic_vector(num_pulses_g - 1 downto 0);
   -- Data receive side
   signal ToggleSyncB : Pulse_t(2 downto 0);
 
@@ -81,61 +81,61 @@ architecture rtl of psi_common_pulse_cc is
 begin
 
   -- Domain A reset sync
-  ARstSync_p : process(ClkA, RstInB)
+  ARstSync_p : process(a_clk_i, b_rst_i)
   begin
-    if RstInB = '1' then
+    if b_rst_i = '1' then
       RstSyncB2A <= (others => '1');
-    elsif rising_edge(ClkA) then
+    elsif rising_edge(a_clk_i) then
       RstSyncB2A <= RstSyncB2A(RstSyncB2A'left - 1 downto 0) & '0';
     end if;
   end process;
-  ARst_p : process(ClkA)
+  ARst_p : process(a_clk_i)
   begin
-    if rising_edge(ClkA) then
-      RstAI <= RstSyncB2A(RstSyncB2A'left) or RstInA;
+    if rising_edge(a_clk_i) then
+      RstAI <= RstSyncB2A(RstSyncB2A'left) or a_rst_i;
     end if;
   end process;
-  RstOutA <= RstAI;
+  a_rst_o <= RstAI;
 
   -- Domain B reset sync
-  BRstSync_p : process(ClkB, RstInA)
+  BRstSync_p : process(b_clk_i, a_rst_i)
   begin
-    if RstInA = '1' then
+    if a_rst_i = '1' then
       RstSyncA2B <= (others => '1');
-    elsif rising_edge(ClkB) then
+    elsif rising_edge(b_clk_i) then
       RstSyncA2B <= RstSyncA2B(RstSyncA2B'left - 1 downto 0) & '0';
     end if;
   end process;
-  BRst_p : process(ClkB)
+  BRst_p : process(b_clk_i)
   begin
-    if rising_edge(ClkB) then
-      RstBI <= RstSyncA2B(RstSyncA2B'left) or RstInB;
+    if rising_edge(b_clk_i) then
+      RstBI <= RstSyncA2B(RstSyncA2B'left) or b_rst_i;
     end if;
   end process;
-  RstOutB <= RstBI;
+  b_rst_o <= RstBI;
 
   -- Pulse transmit side (A)
-  PulseA_p : process(ClkA)
+  PulseA_p : process(a_clk_i)
   begin
-    if rising_edge(ClkA) then
+    if rising_edge(a_clk_i) then
       if RstAI = '1' then
         ToggleA <= (others => '0');
       else
-        ToggleA <= ToggleA xor PulseA;
+        ToggleA <= ToggleA xor a_dat_i;
       end if;
     end if;
   end process;
 
   -- Data receive side (B)
-  PulseB_p : process(ClkB)
+  PulseB_p : process(b_clk_i)
   begin
-    if rising_edge(ClkB) then
+    if rising_edge(b_clk_i) then
       if RstBI = '1' then
         ToggleSyncB <= (others => (others => '0'));
-        PulseB      <= (others => '0');
+        b_dat_o      <= (others => '0');
       else
         ToggleSyncB <= ToggleSyncB(ToggleSyncB'left - 1 downto 0) & ToggleA;
-        PulseB      <= ToggleSyncB(ToggleSyncB'left) xor ToggleSyncB(ToggleSyncB'left - 1);
+        b_dat_o      <= ToggleSyncB(ToggleSyncB'left) xor ToggleSyncB(ToggleSyncB'left - 1);
       end if;
     end if;
   end process;

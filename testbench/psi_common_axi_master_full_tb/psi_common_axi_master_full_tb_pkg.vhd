@@ -27,22 +27,22 @@ package psi_common_axi_master_full_tb_pkg is
 
   -- *** Generics Record ***
   type Generics_t is record
-    DataWidth_g : natural;
-    ImplRead_g  : boolean;
-    ImplWrite_g : boolean;
+    data_width_g : natural;
+    impl_read_g  : boolean;
+    impl_write_g : boolean;
   end record;
 
   ------------------------------------------------------------
   -- Not exported Generics
   ------------------------------------------------------------
-  constant AxiAddrWidth_g            : natural := 32;
-  constant DataFifoDepth_g           : natural := 10;
-  constant AxiFifoDepth_g            : natural := 32;
-  constant UserTransactionSizeBits_g : natural := 10;
-  constant RamBehavior_g             : string  := "RBW";
-  constant AxiMaxOpenTrasactions_g   : natural := 3;
-  constant AxiMaxBeats_g             : natural := 16;
-  constant AxiDataWidth_g            : natural := 32;
+  constant axi_addr_width_g            : natural := 32;
+  constant data_fifo_depth_g           : natural := 10;
+  constant axi_fifo_depth_g            : natural := 32;
+  constant user_transaction_size_bits_g : natural := 10;
+  constant ram_behavior_g             : string  := "RBW";
+  constant axi_max_open_trasactions_g   : natural := 3;
+  constant axi_max_beats_g             : natural := 16;
+  constant axi_data_width_g            : natural := 32;
 
   ------------------------------------------------------------
   -- Axi
@@ -76,8 +76,8 @@ package psi_common_axi_master_full_tb_pkg is
   procedure ApplyCommand(Addr               : in integer;
                          Size               : in integer;
                          LowLat             : in boolean;
-                         signal CmdX_Addr   : out std_logic_vector(AxiAddrWidth_g-1 downto 0);
-                         signal CmdX_Size   : out std_logic_vector(UserTransactionSizeBits_g-1 downto 0);
+                         signal CmdX_Addr   : out std_logic_vector(axi_addr_width_g-1 downto 0);
+                         signal CmdX_Size   : out std_logic_vector(user_transaction_size_bits_g-1 downto 0);
                          signal CmdX_LowLat : out std_logic;
                          signal CmdX_Vld    : out std_logic;
                          signal CmdX_Rdy    : in std_logic;
@@ -94,17 +94,17 @@ package psi_common_axi_master_full_tb_pkg is
 
   procedure ApplyWrData(DataStart         : in integer;
                         NrBytes           : in integer;
-                        signal WrDat_Data : out std_logic_vector;
-                        signal WrDat_Vld  : out std_logic;
-                        signal WrDat_Rdy  : in std_logic;
+                        signal wr_dat_i : out std_logic_vector;
+                        signal wr_vld_i  : out std_logic;
+                        signal wr_rdy_o  : in std_logic;
                         signal Clk        : in std_logic;
                         VldDelay          : in time := 0 ns);
 
   procedure CheckRdData(DataStart         : in integer;
                         NrBytes           : in integer;
-                        signal RdDat_Data : in std_logic_vector;
-                        signal RdDat_Vld  : in std_logic;
-                        signal RdDat_Rdy  : out std_logic;
+                        signal rd_dat_o : in std_logic_vector;
+                        signal rd_vld_o  : in std_logic;
+                        signal rd_rdy_i  : out std_logic;
                         signal Clk        : in std_logic;
                         RdyDelay          : in time   := 0 ns;
                         msg               : in string := "");
@@ -151,8 +151,8 @@ package body psi_common_axi_master_full_tb_pkg is
   procedure ApplyCommand(Addr               : in integer;
                          Size               : in integer;
                          LowLat             : in boolean;
-                         signal CmdX_Addr   : out std_logic_vector(AxiAddrWidth_g-1 downto 0);
-                         signal CmdX_Size   : out std_logic_vector(UserTransactionSizeBits_g-1 downto 0);
+                         signal CmdX_Addr   : out std_logic_vector(axi_addr_width_g-1 downto 0);
+                         signal CmdX_Size   : out std_logic_vector(user_transaction_size_bits_g-1 downto 0);
                          signal CmdX_LowLat : out std_logic;
                          signal CmdX_Vld    : out std_logic;
                          signal CmdX_Rdy    : in std_logic;
@@ -196,71 +196,71 @@ package body psi_common_axi_master_full_tb_pkg is
 
   procedure ApplyWrData(DataStart         : in integer;
                         NrBytes           : in integer;
-                        signal WrDat_Data : out std_logic_vector;
-                        signal WrDat_Vld  : out std_logic;
-                        signal WrDat_Rdy  : in std_logic;
+                        signal wr_dat_i : out std_logic_vector;
+                        signal wr_vld_i  : out std_logic;
+                        signal wr_rdy_o  : in std_logic;
                         signal Clk        : in std_logic;
                         VldDelay          : in time := 0 ns) is
-    constant DataWidth_c : integer := WrDat_Data'length;
+    constant DataWidth_c : integer := wr_dat_i'length;
     variable BitsDone_v  : integer := 0;
     variable Data_v      : integer := DataStart;
   begin
     assert DataWidth_c = 16 or DataWidth_c = 32 report "###ERROR###: ApplyWrData() only works for 16 or 32 bits data width" severity error;
-    WrDat_Vld <= '0';
+    wr_vld_i <= '0';
     while BitsDone_v < NrBytes * 8 loop
       if VldDelay > 0 ns then
-        WrDat_Vld <= '0';
+        wr_vld_i <= '0';
         wait for VldDelay;
         wait until rising_edge(Clk);
-        WrDat_Vld <= '1';
+        wr_vld_i <= '1';
       else
-        WrDat_Vld <= '1';
+        wr_vld_i <= '1';
       end if;
       for byte in 0 to DataWidth_c / 8 - 1 loop
         if BitsDone_v < NrBytes * 8 then
-          WrDat_Data((byte + 1) * 8 - 1 downto byte * 8) <= std_logic_vector(to_unsigned(Data_v, 8));
+          wr_dat_i((byte + 1) * 8 - 1 downto byte * 8) <= std_logic_vector(to_unsigned(Data_v, 8));
           Data_v                                         := Data_v + 1;
           BitsDone_v                                     := BitsDone_v + 8;
         end if;
       end loop;
-      wait until rising_edge(Clk) and WrDat_Rdy = '1';
+      wait until rising_edge(Clk) and wr_rdy_o = '1';
     end loop;
-    WrDat_Vld <= '0';
+    wr_vld_i <= '0';
   end procedure;
 
   procedure CheckRdData(DataStart         : in integer;
                         NrBytes           : in integer;
-                        signal RdDat_Data : in std_logic_vector;
-                        signal RdDat_Vld  : in std_logic;
-                        signal RdDat_Rdy  : out std_logic;
+                        signal rd_dat_o : in std_logic_vector;
+                        signal rd_vld_o  : in std_logic;
+                        signal rd_rdy_i  : out std_logic;
                         signal Clk        : in std_logic;
                         RdyDelay          : in time   := 0 ns;
                         msg               : in string := "") is
-    constant DataWidth_c : integer := RdDat_Data'length;
+    constant DataWidth_c : integer := rd_dat_o'length;
     variable BitsDone_v  : integer := 0;
     variable Data_v      : integer := DataStart;
   begin
     assert DataWidth_c = 16 or DataWidth_c = 32 report "###ERROR###: CheckRdData() only works for 16 or 32 bits data width {" & msg & "}" severity error;
-    RdDat_Rdy <= '0';
+    rd_rdy_i <= '0';
     while BitsDone_v < NrBytes * 8 loop
       if RdyDelay > 0 ns then
-        RdDat_Rdy <= '0';
+        rd_rdy_i <= '0';
         wait for RdyDelay;
         wait until rising_edge(Clk);
-        RdDat_Rdy <= '1';
+        rd_rdy_i <= '1';
       else
-        RdDat_Rdy <= '1';
+        rd_rdy_i <= '1';
       end if;
-      wait until rising_edge(Clk) and RdDat_Vld = '1';
+      wait until rising_edge(Clk) and rd_vld_o = '1';
       for byte in 0 to DataWidth_c / 8 - 1 loop
         if BitsDone_v < NrBytes * 8 then
-          StdlvCompareInt(Data_v, RdDat_Data((byte + 1) * 8 - 1 downto byte * 8), "Wrong read data byte " & str(BitsDone_v / 8) & " {" & msg & "}", false);
+          StdlvCompareInt(Data_v, rd_dat_o((byte + 1) * 8 - 1 downto byte * 8), "Wrong read data byte " & str(BitsDone_v / 8) & " {" & msg & "}", false);
           Data_v     := (Data_v + 1) mod 256;
           BitsDone_v := BitsDone_v + 8;
         end if;
       end loop;
     end loop;
-    RdDat_Rdy <= '0';
+    rd_rdy_i <= '0';
   end procedure;
 
   procedure CheckAxiWrite(Addr          : in integer;

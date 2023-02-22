@@ -66,8 +66,8 @@ begin
                 sync_g     => sync_g)
     port map(clk_i => clk_sti,
              rst_i => rst_sti,
-             inp_i => inp_sti,
-             out_o => out_obs);
+             dat_i => inp_sti,
+             dat_o => out_obs);
 
   --*** stim process ***
   proc_stim : process

@@ -83,10 +83,10 @@ begin
       freq_strobe_g => str_freq_g,
       rst_pol_g     => rst_pol_g)
     port map(
-      InClk  => clk_i,
-      InRst  => rst_i,
-      InSync => trig_i,
-      OutVld => str_s);
+      clk_i  => clk_i,
+      rst_i  => rst_i,
+      sync_i => trig_i,
+      vld_o => str_s);
   
   --*** Pulse generator ***  
   inst_pulse : entity work.psi_common_ramp_gene

@@ -30,8 +30,8 @@ entity psi_common_debouncer is
           sync_g     : boolean    := true);   -- add 2 DFF input sync
   port(   clk_i      : in  std_logic;
           rst_i      : in  std_logic;
-          inp_i      : in  std_logic_vector(len_g-1 downto 0);
-          out_o      : out std_logic_vector(len_g-1 downto 0)
+          dat_i      : in  std_logic_vector(len_g-1 downto 0);
+          dat_o      : out std_logic_vector(len_g-1 downto 0)
     );
 end entity;
 
@@ -60,18 +60,18 @@ begin
   gene_sync : if sync_g generate
     i_sync : entity work.psi_common_bit_cc
       generic map (
-        NumBits_g => len_g
+        num_bits_g => len_g
       )
       port map (
-        BitsA => inp_i,
-        ClkB  => clk_i,
-        BitsB => inp_sync_s
+        dat_i => dat_i,
+        clk_i  => clk_i,
+        dat_o => inp_sync_s
     );
   end generate;
   
   --*** no sync ***
   gene_nosync : if not sync_g generate
-    inp_sync_s <= inp_i;
+    inp_sync_s <= dat_i;
   end generate;
 
   proc_comb : process(inp_sync_s, r)
@@ -101,7 +101,7 @@ begin
     end if;
     
     --*** out map ***
-    out_o <= r.output;
+    dat_o <= r.output;
     
     --*** v in r next ***
     r_next <= v;

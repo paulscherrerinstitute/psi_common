@@ -32,19 +32,19 @@ entity psi_common_trigger_digital is
     rst_pol_g              : std_logic := '1' -- reset polarity
   );
   port(
-    InClk                 : in  std_logic; --clk in    $$ type=clk; freq=100.0 $$
-    InRst                 : in  std_logic; --rst in    $$ type=rst; clk=clk_i $$
+    clk_i                 : in  std_logic; --clk in    $$ type=clk; freq=100.0 $$
+    rst_i                 : in  std_logic; --rst in    $$ type=rst; clk=clk_i $$
     --InDelay : real := 0.0; -- -- delay in us
-    InTrgModeCfg          : in  std_logic_vector(0 downto 0); -- Trigger mode (0:Continuous,1:Single) configuration register
-    InTrgArmCfg           : in  std_logic; -- Arm/dis--arm the trigger, rising edge sensitive
-    InTrgEdgeCfg          : in  std_logic_vector(1 downto 0); -- Trigger edge direction configuration register (bit0:falling edge sensitive, bit1: rising edge sensitive)
+    trg_mode_cfg_i          : in  std_logic_vector(0 downto 0); -- Trigger mode (0:Continuous,1:Single) configuration register
+    trg_arm_cfg_i           : in  std_logic; -- Arm/dis--arm the trigger, rising edge sensitive
+    trg_edge_cfg_i          : in  std_logic_vector(1 downto 0); -- Trigger edge direction configuration register (bit0:falling edge sensitive, bit1: rising edge sensitive)
 
-    InTrgDigitalSourceCfg : in  std_logic_vector(choose(digital_input_number_g>1,log2ceil(digital_input_number_g)-1,0) downto 0); -- Trigger source configuration  register
-    InDigitalTrg          : in  std_logic_vector(digital_input_number_g - 1 downto 0); -- digital trigger input 
-    InExtDisarm           : in  std_logic; -- if different trigger causes are armed at the same time for a single trigger all the other cause must be disarmed once a trigger is generated
+    trg_digital_source_cfg_i : in  std_logic_vector(choose(digital_input_number_g>1,log2ceil(digital_input_number_g)-1,0) downto 0); -- Trigger source configuration  register
+    digital_trg_i          : in  std_logic_vector(digital_input_number_g - 1 downto 0); -- digital trigger input 
+    ext_disarm_i           : in  std_logic; -- if different trigger causes are armed at the same time for a single trigger all the other cause must be disarmed once a trigger is generated
     
-    OutTrgIsArmed         : out std_logic;
-    OutTrigger            : out std_logic -- trigger output
+    trg_is_armed_o         : out std_logic;
+    trigger_o            : out std_logic -- trigger output
   );
 end entity;
 
@@ -67,40 +67,40 @@ begin
   --------------------------------------------------------------------------
   -- Combinatorial Process
   --------------------------------------------------------------------------
-  p_comb : process(r, InTrgModeCfg, InTrgArmCfg, InTrgEdgeCfg, InDigitalTrg, InTrgDigitalSourceCfg, InExtDisarm)
+  p_comb : process(r, trg_mode_cfg_i, trg_arm_cfg_i, trg_edge_cfg_i, digital_trg_i, trg_digital_source_cfg_i, ext_disarm_i)
     variable v : two_process_r;
   begin
     -- hold variables stable
     v := r;
 
     -- *** Implementation ***
-    v.InTrgArmCfg_dff := InTrgArmCfg;
+    v.InTrgArmCfg_dff := trg_arm_cfg_i;
 
     v.TrgArmed := r.TrgArmed;
 
-    if (r.OTrg = '1' or InExtDisarm = '1') and InTrgModeCfg(0) = '1' then -- if single mode, the trigger is dis-armed once the trigger is generated
+    if (r.OTrg = '1' or ext_disarm_i = '1') and trg_mode_cfg_i(0) = '1' then -- if single mode, the trigger is dis-armed once the trigger is generated
       v.TrgArmed := '0';
-    elsif InTrgArmCfg = '1' and r.InTrgArmCfg_dff = '0' then -- toggle arm or dis-arm
+    elsif trg_arm_cfg_i = '1' and r.InTrgArmCfg_dff = '0' then -- toggle arm or dis-arm
       v.TrgArmed := not r.TrgArmed;
     end if;
 
     v.OTrg := '0';
     -- Digital Trigger
 
-    v.RegDigitalValue_dff := InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg)));
+    v.RegDigitalValue_dff := digital_trg_i(to_integer(unsigned(trg_digital_source_cfg_i)));
     if r.TrgArmed = '1' then
-      if r.RegDigitalValue_dff = '0' and InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg))) = '1' and InTrgEdgeCfg(1) = '1' then --rising edge
+      if r.RegDigitalValue_dff = '0' and digital_trg_i(to_integer(unsigned(trg_digital_source_cfg_i))) = '1' and trg_edge_cfg_i(1) = '1' then --rising edge
         v.OTrg := '1';
       end if;
-      if r.RegDigitalValue_dff = '1' and InDigitalTrg(to_integer(unsigned(InTrgDigitalSourceCfg))) = '0' and InTrgEdgeCfg(0) = '1' then --falling edge
+      if r.RegDigitalValue_dff = '1' and digital_trg_i(to_integer(unsigned(trg_digital_source_cfg_i))) = '0' and trg_edge_cfg_i(0) = '1' then --falling edge
         v.OTrg := '1';
       end if;
     end if;
 
     -- *** Outputs ***
 
-    OutTrigger    <= r.OTrg;
-    OutTrgIsArmed <= r.TrgArmed;
+    trigger_o    <= r.OTrg;
+    trg_is_armed_o <= r.TrgArmed;
     -- Apply to record
     r_next        <= v;
 
@@ -109,11 +109,11 @@ begin
   --------------------------------------------------------------------------
   -- Sequential Process
   --------------------------------------------------------------------------  
-  p_seq : process(InClk)
+  p_seq : process(clk_i)
   begin
-    if rising_edge(InClk) then
+    if rising_edge(clk_i) then
       r <= r_next;
-      if InRst = rst_pol_g then
+      if rst_i = rst_pol_g then
         r.RegDigitalValue_dff <= '0';
         r.OTrg              <= '0';
         r.TrgArmed          <= '0';

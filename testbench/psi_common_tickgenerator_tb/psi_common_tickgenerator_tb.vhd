@@ -10,7 +10,7 @@
 -- Unit    : psi_common_tickgenerator_tb.vhd
 -- Author  : Patric Bucher
 -- -----------------------------------------------------------------------------
--- Copyright© PSI, Section DSV
+-- CopyrightÃÂÃÂ© PSI, Section DSV
 -- -----------------------------------------------------------------------------
 -- Comment : Testbench for Tick Generator.
 -- -----------------------------------------------------------------------------
@@ -26,8 +26,8 @@ use work.psi_tb_txt_util.all;
 
 entity psi_common_tickgenerator_tb is
   generic(
-    g_CLK_IN_MHZ  : integer := 8;
-    g_TICK_WIDTH  : integer := 1
+    clk_in_mhz_g  : integer := 8;
+    tick_width_g  : integer := 1
   );
 end psi_common_tickgenerator_tb;
 
@@ -37,7 +37,7 @@ architecture testbench of psi_common_tickgenerator_tb is
   -- ---------------------------------------------------------------------------
   -- Constant Declarations                                    
   -- --------------------------------------------------------------------------- 
-  constant t_CLK          		: time      := (1 sec)/(g_CLK_IN_MHZ * 1000000);
+  constant t_CLK          		: time      := (1 sec)/(clk_in_mhz_g * 1000000);
   constant SIM_SPEEDUP_FACTOR	: integer	:= 20;
   
   -- ---------------------------------------------------------------------------
@@ -61,9 +61,9 @@ begin
   ------------------------------------------------------------------------------
   DUT: entity work.psi_common_tickgenerator
     generic map(
-      g_CLK_IN_MHZ  => g_CLK_IN_MHZ,
-      g_TICK_WIDTH  => g_TICK_WIDTH,
-      g_SIM_SEC_SPEEDUP_FACTOR => SIM_SPEEDUP_FACTOR
+      clk_in_mhz_g  => clk_in_mhz_g,
+      tick_width_g  => tick_width_g,
+      sim_sec_speedup_factor_g => SIM_SPEEDUP_FACTOR
     )
     port map( 
       clock_i       => clock,                     
