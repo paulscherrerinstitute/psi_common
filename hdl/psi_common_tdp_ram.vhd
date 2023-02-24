@@ -9,19 +9,12 @@
 ------------------------------------------------------------------------------
 -- This is a pure VHDL and vendor indpendent true dual port RAM.
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 entity psi_common_tdp_ram is
   generic(
     depth_g    : positive := 1024;
@@ -34,19 +27,16 @@ entity psi_common_tdp_ram is
     a_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
     a_wr_i   : in  std_logic                                        := '0';
     a_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-    a_dat_o : out std_logic_vector(width_g - 1 downto 0);
+    a_dat_o  : out std_logic_vector(width_g - 1 downto 0);
     -- Port B
     b_clk_i  : in  std_logic                                        := '0';
     b_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
     b_wr_i   : in  std_logic                                        := '0';
     b_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-    b_dat_o : out std_logic_vector(width_g - 1 downto 0)
+    b_dat_o  : out std_logic_vector(width_g - 1 downto 0)
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_tdp_ram is
 
   -- memory array
@@ -88,5 +78,7 @@ begin
       end if;
     end if;
   end process;
-end;
+  
+end architecture;
+
 

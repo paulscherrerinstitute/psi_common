@@ -9,19 +9,12 @@
 ------------------------------------------------------------------------------
 -- This is a pure VHDL and vendor indpendent true dual port RAM with byte enables.
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 entity psi_common_tdp_ram_be is
   generic(
     depth_g    : positive := 1024;
@@ -46,9 +39,6 @@ entity psi_common_tdp_ram_be is
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_tdp_ram_be is
 
   -- Constants
@@ -102,5 +92,6 @@ begin
       end if;
     end if;
   end process;
-end;
+  
+end architecture;
 

@@ -11,17 +11,11 @@
 -- single-bit signals from one clock domain to another one.
 -- Double stage synchronizers are implemeted for each bit, including then
 -- required attributes.
---
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 entity psi_common_bit_cc is
   generic(
     num_bits_g : positive := 1
@@ -30,14 +24,11 @@ entity psi_common_bit_cc is
     -- Clock Domain A
     dat_i : in  std_logic_vector(num_bits_g - 1 downto 0);
     -- Clock Domain B
-    clk_i  : in  std_logic;
+    clk_i : in  std_logic;
     dat_o : out std_logic_vector(num_bits_g - 1 downto 0)
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_bit_cc is
 
   signal Reg0 : std_logic_vector(num_bits_g - 1 downto 0) := (others => '0');
@@ -57,7 +48,6 @@ architecture rtl of psi_common_bit_cc is
 
 begin
 
-  -- Process
   p : process(clk_i)
   begin
     if rising_edge(clk_i) then
@@ -66,5 +56,5 @@ begin
     end if;
   end process;
   dat_o <= Reg1;
-end;
+end architecture;
 

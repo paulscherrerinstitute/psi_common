@@ -9,9 +9,6 @@
 ------------------------------------------------------------------------------
 -- This entity implements a simple I2C-master (multi master capable)
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -32,70 +29,59 @@ package psi_common_i2c_master_pkg is
   constant CMD_REC      : std_logic_vector(2 downto 0) := "100";
 end package;
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 use work.psi_common_i2c_master_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 -- $$ processes=stim,i2c $$
 -- $$ tbpkg=work.psi_tb_compare_pkg,work.psi_tb_activity_pkg,work.psi_tb_txt_util,work.psi_tb_i2c_pkg $$
 entity psi_common_i2c_master is
   generic(
-    clock_frequency_g   : real    := 125.0e6; -- in Hz		$$ constant=125.0e6 $$
-    i2c_frequency_g     : real    := 100.0e3; -- in Hz		$$ constant=1.0e6 $$
-    bus_busy_timeout_g   : real    := 1.0e-3; -- in sec		$$ constant=100.0e-6 $$
-    cmd_timeout_g       : real    := 100.0e-6; -- in sec		$$ constant=10.0e-6 $$
-    internal_tri_state_g : boolean := true; -- 				$$ constant=true $$
-    disable_asserts_g   : boolean := false
+    clock_frequency_g    : real    := 125.0e6;  -- in Hz		$$ constant=125.0e6 $$
+    i2c_frequency_g      : real    := 100.0e3;  -- in Hz		$$ constant=1.0e6 $$
+    bus_busy_timeout_g   : real    := 1.0e-3;   -- in sec		$$ constant=100.0e-6 $$
+    cmd_timeout_g        : real    := 100.0e-6; -- in sec		$$ constant=10.0e-6 $$
+    internal_tri_state_g : boolean := true;     -- 				$$ constant=true $$
+    disable_asserts_g    : boolean := false
   );
   port(
     -- Control Signals
-    clk_i        : in    std_logic;       -- $$ type=clk; freq=125e6 $$
-    rst_i        : in    std_logic;       -- $$ type=rst; clk=Clk $$
-
+    clk_i          : in    std_logic;   -- $$ type=clk; freq=125e6 $$
+    rst_i          : in    std_logic;   -- $$ type=rst; clk=Clk $$
     -- Command Interface
-    cmd_rdy_o     : out   std_logic;
-    cmd_vld_i     : in    std_logic;
-    cmd_type_i    : in    std_logic_vector(2 downto 0);
-    cmd_dat_i    : in    std_logic_vector(7 downto 0);
-    cmd_ack_i     : in    std_logic;
+    cmd_rdy_o      : out   std_logic;
+    cmd_vld_i      : in    std_logic;
+    cmd_type_i     : in    std_logic_vector(2 downto 0);
+    cmd_dat_i      : in    std_logic_vector(7 downto 0);
+    cmd_ack_i      : in    std_logic;
     -- Response Interface
-    rsp_vld_o     : out   std_logic;
-    rsp_type_o    : out   std_logic_vector(2 downto 0);
-    rsp_dat_o    : out   std_logic_vector(7 downto 0);
-    rsp_ack_o     : out   std_logic;
+    rsp_vld_o      : out   std_logic;
+    rsp_type_o     : out   std_logic_vector(2 downto 0);
+    rsp_dat_o      : out   std_logic_vector(7 downto 0);
+    rsp_ack_o      : out   std_logic;
     rsp_arb_lost_o : out   std_logic;
-    rsp_seq_o     : out   std_logic;
-    -- Status Interface 
-    bus_busy_o    : out   std_logic;
-    timeout_cmd_o : out   std_logic;
+    rsp_seq_o      : out   std_logic;
+    -- Status Interface
+    bus_busy_o     : out   std_logic;
+    timeout_cmd_o  : out   std_logic;
     -- I2c Interface with internal Tri-State (InternalTriState_g = true)
     i2c_scl_io     : inout std_logic := 'Z';
     i2c_sda_io     : inout std_logic := 'Z';
     -- I2c Interface with external Tri-State (InternalTriState_g = false)
-    i2c_scl_i   : in    std_logic := '0';
-    i2c_scl_o   : out   std_logic;
-    i2c_scl_t   : out   std_logic;
-    i2c_sda_i   : in    std_logic := '0';
-    i2c_sda_o   : out   std_logic;
-    i2c_sda_t   : out   std_logic
+    i2c_scl_i      : in    std_logic := '0';
+    i2c_scl_o      : out   std_logic;
+    i2c_scl_t      : out   std_logic;
+    i2c_sda_i      : in    std_logic := '0';
+    i2c_sda_o      : out   std_logic;
+    i2c_sda_t      : out   std_logic
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_i2c_master is
 
   -- *** Constants ***
@@ -109,8 +95,8 @@ architecture rtl of psi_common_i2c_master is
 
   -- *** Two Process Method ***
   type two_process_r is record
-    bus_busy_o        : std_logic;
-    cmd_rdy_o         : std_logic;
+    bus_busy_o     : std_logic;
+    cmd_rdy_o      : std_logic;
     SclLast        : std_logic;
     SdaLast        : std_logic;
     BusBusyToCnt   : unsigned(log2ceil(BusyTimoutLimit_c + 1) - 1 downto 0);
@@ -122,15 +108,15 @@ architecture rtl of psi_common_i2c_master is
     Fsm            : Fsm_t;
     SclOut         : std_logic;
     SdaOut         : std_logic;
-    rsp_vld_o         : std_logic;
-    rsp_ack_o         : std_logic;
-    rsp_seq_o         : std_logic;
-    rsp_dat_o        : std_logic_vector(7 downto 0);
-    rsp_arb_lost_o     : std_logic;
+    rsp_vld_o      : std_logic;
+    rsp_ack_o      : std_logic;
+    rsp_seq_o      : std_logic;
+    rsp_dat_o      : std_logic_vector(7 downto 0);
+    rsp_arb_lost_o : std_logic;
     BitCnt         : unsigned(3 downto 0); -- 8 Data + 1 Ack = 9 = 4 bits
     ShReg          : std_logic_vector(8 downto 0);
     CmdTimeout     : std_logic;
-    timeout_cmd_o     : std_logic;
+    timeout_cmd_o  : std_logic;
   end record;
   signal r, r_next     : two_process_r;
   attribute dont_touch : string;
@@ -200,13 +186,13 @@ begin
     end if;
 
     -- *** Default Values ***
-    v.rsp_vld_o     := '0';
-    v.rsp_ack_o     := not r.ShReg(0);
-    v.rsp_dat_o    := r.ShReg(8 downto 1);
-    v.rsp_seq_o     := '0';
+    v.rsp_vld_o      := '0';
+    v.rsp_ack_o      := not r.ShReg(0);
+    v.rsp_dat_o      := r.ShReg(8 downto 1);
+    v.rsp_seq_o      := '0';
     v.rsp_arb_lost_o := '0';
-    v.timeout_cmd_o := '0';
-    v.cmd_rdy_o     := '0';
+    v.timeout_cmd_o  := '0';
+    v.cmd_rdy_o      := '0';
 
     -- *** FSM ***
     case r.Fsm is
@@ -216,7 +202,7 @@ begin
       -- **********************************************************************************************
       when BusIdle_s =>
         -- Default Outputs
-        v.cmd_rdy_o       := '1';
+        v.cmd_rdy_o    := '1';
         v.BusBusyToCnt := (others => '0');
         v.SclOut       := '1';
         v.SdaOut       := '1';
@@ -230,7 +216,7 @@ begin
           severity error;
           if cmd_type_i = CMD_START then
             v.Fsm          := Start1_s;
-            v.cmd_rdy_o       := '0';
+            v.cmd_rdy_o    := '0';
             v.CmdTypeLatch := cmd_type_i;
           else
             v.rsp_vld_o := '1';
@@ -238,7 +224,7 @@ begin
           end if;
         -- Detect Busy from other master
         elsif (I2cScl_Sync = '0') or (I2cStart_v = '1') then
-          v.Fsm    := BusBusy_s;
+          v.Fsm       := BusBusy_s;
           v.cmd_rdy_o := '0';
         end if;
 
@@ -277,7 +263,7 @@ begin
       -- State	BusBusy_s   Start1_s   Start2_s   WaitCmd_s
       --        __________________________________
       -- Scl ...                                  |___________ ...
-      --        _______________________  
+      --        _______________________
       -- SDA ...                       |______________________ ...
       -- **********************************************************************************************
 
@@ -301,7 +287,7 @@ begin
 
       when Start2_s =>
         if r.QPeriodTick = '1' then
-          v.Fsm    := WaitCmd_s;
+          v.Fsm       := WaitCmd_s;
           v.rsp_vld_o := '1';
         end if;
         v.SclOut := '1';
@@ -309,11 +295,11 @@ begin
 
       -- **********************************************************************************************
       -- Wait for user command (in first half of SCL low phase)
-      -- **********************************************************************************************				
+      -- **********************************************************************************************
       when WaitCmd_s =>
         -- Default Outputs
         v.cmd_rdy_o := '1';
-        v.SclOut := '0';
+        v.SclOut    := '0';
 
         -- All commands except START are allowed, START commands are ignored
         if (r.cmd_rdy_o = '1') and (cmd_vld_i = '1') then
@@ -321,7 +307,7 @@ begin
           report "###ERROR###: psi_common_i2c_master: In WaitCmd_s state, CMD_START commands are not allowed!"
           severity error;
           if (cmd_type_i = CMD_STOP) or (cmd_type_i = CMD_REPSTART) or (cmd_type_i = CMD_SEND) or (cmd_type_i = CMD_REC) then
-            v.Fsm    := WaitLowCenter_s;
+            v.Fsm       := WaitLowCenter_s;
             v.cmd_rdy_o := '0';
           else
             v.rsp_vld_o := '1';
@@ -331,14 +317,14 @@ begin
           v.ShReg := cmd_dat_i & '0';
         -- Command timeout - In this case send a STOP to free the bus
         elsif r.CmdTimeout = '1' then
-          v.Fsm        := WaitLowCenter_s;
+          v.Fsm           := WaitLowCenter_s;
           v.cmd_rdy_o     := '0';
           v.timeout_cmd_o := '1';
         end if;
 
       -- **********************************************************************************************
       -- Wait for center of SCL low phase (after user command arrived)
-      -- **********************************************************************************************				
+      -- **********************************************************************************************
       when WaitLowCenter_s =>
         -- State Handling
         v.SclOut := '0';
@@ -367,7 +353,7 @@ begin
       -- State	   RepStart1_s   Start1_s   Start2_s   WaitCmd_s
       --                          _____________________
       -- Scl ..._________________|                     |___________ ...
-      --           __________________________  
+      --           __________________________
       -- SDA ...XXX                          |_____________________ ...
       -- **********************************************************************************************
       -- States after RepStart1_s are shared with normal start condition
@@ -391,7 +377,7 @@ begin
       -- State  DataBit1_s   DataBit2_s   DataBit3_s   WaitCmd_s / DataBit4_s
       --                    _________________________
       -- Scl ...___________|                         |___________ ...
-      --            
+      --
       -- SDA ...XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -- **********************************************************************************************
       -- The DataBit1_s is the second half of the SCL low period. So the
@@ -454,7 +440,7 @@ begin
         if r.QPeriodTick = '1' then
           -- Command Done after 9 bits (8 Data + 1 Ack)
           if r.BitCnt = 8 then
-            v.Fsm    := WaitCmd_s;
+            v.Fsm       := WaitCmd_s;
             v.rsp_vld_o := '1';
           -- Else goto next bit
           else
@@ -514,7 +500,7 @@ begin
             v.Fsm := ArbitLost_s;
           -- Else the STOP was successful
           else
-            v.Fsm    := BusIdle_s;
+            v.Fsm       := BusIdle_s;
             v.rsp_vld_o := '1';
           end if;
         end if;
@@ -526,12 +512,12 @@ begin
       -- **********************************************************************************************
 
       when ArbitLost_s =>
-        v.Fsm        := BusBusy_s;
-        v.rsp_vld_o     := '1';
-        v.rsp_ack_o     := '0';
+        v.Fsm            := BusBusy_s;
+        v.rsp_vld_o      := '1';
+        v.rsp_ack_o      := '0';
         v.rsp_arb_lost_o := '1';
-        v.SclOut     := '1';
-        v.SdaOut     := '1';
+        v.SclOut         := '1';
+        v.SdaOut         := '1';
 
       when others => null;
     end case;
@@ -552,30 +538,30 @@ begin
   --------------------------------------------------------------------------
   -- Outputs
   --------------------------------------------------------------------------
-  bus_busy_o    <= r.bus_busy_o;
-  cmd_rdy_o     <= r.cmd_rdy_o;
-  rsp_vld_o     <= r.rsp_vld_o;
-  rsp_type_o    <= r.CmdTypeLatch;
+  bus_busy_o     <= r.bus_busy_o;
+  cmd_rdy_o      <= r.cmd_rdy_o;
+  rsp_vld_o      <= r.rsp_vld_o;
+  rsp_type_o     <= r.CmdTypeLatch;
   rsp_arb_lost_o <= r.rsp_arb_lost_o;
-  rsp_ack_o     <= r.rsp_ack_o;
-  rsp_dat_o    <= r.rsp_dat_o;
-  rsp_seq_o     <= r.rsp_seq_o;
-  timeout_cmd_o <= r.timeout_cmd_o;
+  rsp_ack_o      <= r.rsp_ack_o;
+  rsp_dat_o      <= r.rsp_dat_o;
+  rsp_seq_o      <= r.rsp_seq_o;
+  timeout_cmd_o  <= r.timeout_cmd_o;
   g_intTristate : if internal_tri_state_g generate
-    i2c_scl_io   <= 'Z' when r.SclOut = '1' else '0';
-    i2c_sda_io   <= 'Z' when r.SdaOut = '1' else '0';
-    i2c_scl_o <= '0';
-    i2c_sda_o <= '0';
-    i2c_scl_t <= '1';
-    i2c_sda_t <= '1';
+    i2c_scl_io <= 'Z' when r.SclOut = '1' else '0';
+    i2c_sda_io <= 'Z' when r.SdaOut = '1' else '0';
+    i2c_scl_o  <= '0';
+    i2c_sda_o  <= '0';
+    i2c_scl_t  <= '1';
+    i2c_sda_t  <= '1';
   end generate;
   g_extTristatte : if not internal_tri_state_g generate
-    i2c_scl_o <= r.SclOut;
-    i2c_sda_o <= r.SdaOut;
-    i2c_scl_t <= r.SclOut;
-    i2c_sda_t <= r.SdaOut;
-    i2c_scl_io   <= 'Z';
-    i2c_sda_io   <= 'Z';
+    i2c_scl_o  <= r.SclOut;
+    i2c_sda_o  <= r.SdaOut;
+    i2c_scl_t  <= r.SclOut;
+    i2c_sda_t  <= r.SdaOut;
+    i2c_scl_io <= 'Z';
+    i2c_sda_io <= 'Z';
   end generate;
 
   --------------------------------------------------------------------------
@@ -586,22 +572,22 @@ begin
     if rising_edge(clk_i) then
       r <= r_next;
       if rst_i = '1' then
-        r.bus_busy_o      <= '0';
-        r.cmd_rdy_o       <= '0';
+        r.bus_busy_o   <= '0';
+        r.cmd_rdy_o    <= '0';
         r.SclLast      <= '1';
         r.SdaLast      <= '1';
         r.BusBusyToCnt <= (others => '0');
         r.Fsm          <= BusIdle_s;
         r.SclOut       <= '1';
         r.SdaOut       <= '1';
-        r.rsp_vld_o       <= '0';
+        r.rsp_vld_o    <= '0';
       end if;
     end if;
   end process;
 
   --------------------------------------------------------------------------
   -- Component Instantiations
-  --------------------------------------------------------------------------	
+  --------------------------------------------------------------------------
   I2cScl_Input <= to_01X(i2c_scl_io) when internal_tri_state_g else i2c_scl_i;
   I2cSda_Input <= to_01X(i2c_sda_io) when internal_tri_state_g else i2c_sda_i;
 
@@ -610,12 +596,11 @@ begin
       num_bits_g => 2
     )
     port map(
-      dat_i(0)                                                                                               => I2cScl_Input,
-      dat_i(1)                                                                                                                              => I2cSda_Input,
-      clk_i => clk_i,
-      dat_o(0)                                                                                                                                                                               => I2cScl_Sync,
-      dat_o(1)                                                                                                                                                                                                             => I2cSda_Sync
+      dat_i(0) => I2cScl_Input,
+      dat_i(1) => I2cSda_Input,
+      clk_i    => clk_i,
+      dat_o(0) => I2cScl_Sync,
+      dat_o(1) => I2cSda_Sync
     );
 
-end;
-
+end architecture;

@@ -24,21 +24,18 @@ use work.psi_common_logic_pkg.all;
 
 ------------------------------------------------------------------------------
 -- Entity
-------------------------------------------------------------------------------	
+------------------------------------------------------------------------------
 -- $$ processes=stimuli $$
 entity psi_common_arb_priority is
   generic(
-    size_g           : natural := 8;    -- $$ constant=5 $$
-    out_reg_g : boolean := true  -- $$ constant=true &&
+    size_g    : natural := 8;           -- $$ constant=5 $$
+    out_reg_g : boolean := true         -- $$ constant=true &&
   );
   port(
-    -- Control Signals
-    clk_i     : in  std_logic;            -- $$ type=clk; freq=100e6 $$
-    rst_i     : in  std_logic;            -- $$ type=rst; clk=Clk $$
-
-    -- Data Ports
-    req_i : in  std_logic_vector(size_g - 1 downto 0);
-    grant_o   : out std_logic_vector(size_g - 1 downto 0)
+    clk_i   : in  std_logic;            -- $$ type=clk; freq=100e6 $$
+    rst_i   : in  std_logic;            -- $$ type=rst; clk=Clk $$
+    req_i   : in  std_logic_vector(size_g - 1 downto 0);
+    grant_o : out std_logic_vector(size_g - 1 downto 0)
   );
 end entity;
 
@@ -70,7 +67,7 @@ begin
 
     --------------------------------------------------------------------------
     -- Output Handling
-    --------------------------------------------------------------------------	
+    --------------------------------------------------------------------------
     -- Registered
     g_reg : if out_reg_g generate
       p_outreg : process(clk_i)
@@ -90,4 +87,4 @@ begin
     end generate;
   end generate;
 
-end rtl;
+end architecture;

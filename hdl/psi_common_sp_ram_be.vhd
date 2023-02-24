@@ -7,27 +7,20 @@
 ------------------------------------------------------------------------------
 -- Description
 ------------------------------------------------------------------------------
--- This is a pure VHDL and vendor indpendent true dual port RAM that has 
+-- This is a pure VHDL and vendor indpendent true dual port RAM that has
 -- byte enables.
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 entity psi_common_sp_ram_be is
   generic(
-    depth_g    : positive := 1024;
-    width_g    : positive := 32;
-    ram_behavior_g : string   := "RBW"      -- "RBW" = read-before-write, "WBR" = write-before-read
+    depth_g        : positive := 1024;
+    width_g        : positive := 32;
+    ram_behavior_g : string   := "RBW"  -- "RBW" = read-before-write, "WBR" = write-before-read
   );
   port(
     -- Port A
@@ -36,13 +29,10 @@ entity psi_common_sp_ram_be is
     be_i   : in  std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '1');
     wr_i   : in  std_logic                                        := '0';
     dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-    dat_o : out std_logic_vector(width_g - 1 downto 0)
+    dat_o  : out std_logic_vector(width_g - 1 downto 0)
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_sp_ram_be is
 
   -- Constants
@@ -76,5 +66,5 @@ begin
     end if;
   end process;
 
-end;
+end architecture;
 

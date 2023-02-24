@@ -11,17 +11,11 @@
 -- the input clock period is an integer multiple of the output clock period
 -- (output clock frequency is an integer multiple of the input clock frequency).
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 -- $$ processes=stim,check $$
 entity psi_common_sync_cc_n2xn is
   generic(
@@ -29,16 +23,16 @@ entity psi_common_sync_cc_n2xn is
   );
   port(
     -- Input
-    clk_i   : in  std_logic;            -- $$ type=clk; freq=100e6 $$
-    rst_i   : in  std_logic;            -- $$ type=rst; clk=InClk $$
-    vld_i   : in  std_logic;
-    rdy_o   : out std_logic;
-    dat_i  : in  std_logic_vector(width_g - 1 downto 0);
+    clk_i : in  std_logic;              -- $$ type=clk; freq=100e6 $$
+    rst_i : in  std_logic;              -- $$ type=rst; clk=InClk $$
+    vld_i : in  std_logic;
+    rdy_o : out std_logic;
+    dat_i : in  std_logic_vector(width_g - 1 downto 0);
     -- Output
-    clk_o  : in  std_logic;            -- $$ type=clk; freq=200e6 $$
-    rst_o  : in  std_logic := '0';     -- $$ type=rst; clk=OutClk $$
-    vld_o  : out std_logic;
-    rdy_i  : in  std_logic := '1';
+    clk_o : in  std_logic;              -- $$ type=clk; freq=200e6 $$
+    rst_o : in  std_logic := '0';       -- $$ type=rst; clk=OutClk $$
+    vld_o : out std_logic;
+    rdy_i : in  std_logic := '1';
     dat_o : out std_logic_vector(width_g - 1 downto 0)
   );
 end entity;
@@ -83,7 +77,7 @@ begin
       else
         -- Forward new sample to output
         if InCnt /= OutCnt and (OutVld_I = '0' or rdy_i = '1') then
-          dat_o  <= InDataReg;
+          dat_o    <= InDataReg;
           OutVld_I <= '1';
         end if;
         -- New sample was acknowledged
@@ -97,4 +91,4 @@ begin
 
   vld_o <= OutVld_I;
 
-end;
+end architecture;

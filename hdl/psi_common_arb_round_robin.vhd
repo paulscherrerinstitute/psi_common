@@ -9,21 +9,13 @@
 ------------------------------------------------------------------------------
 -- This entity implements an efficient round-robin arbiter.
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity
-------------------------------------------------------------------------------	
 -- $$ processes=stimuli $$
 entity psi_common_arb_round_robin is
   generic(
@@ -31,20 +23,14 @@ entity psi_common_arb_round_robin is
   );
   port(
     -- Control Signals
-    clk_i       : in  std_logic;          -- $$ type=clk; freq=100e6 $$
-    rst_i       : in  std_logic;          -- $$ type=rst; clk=Clk $$
-
-    -- Data Ports
+    clk_i       : in  std_logic;        -- $$ type=clk; freq=100e6 $$
+    rst_i       : in  std_logic;        -- $$ type=rst; clk=Clk $$
     request_i   : in  std_logic_vector(size_g - 1 downto 0);
     grant_o     : out std_logic_vector(size_g - 1 downto 0);
     grant_rdy_o : in  std_logic;
     grant_vld_o : out std_logic
   );
 end entity;
-
-------------------------------------------------------------------------------
--- Architecture section
-------------------------------------------------------------------------------
 
 architecture rtl of psi_common_arb_round_robin is
 
@@ -101,7 +87,7 @@ begin
 
     --------------------------------------------------------------------------
     -- Sequential Process
-    --------------------------------------------------------------------------	
+    --------------------------------------------------------------------------
     p_seq : process(clk_i)
     begin
       if rising_edge(clk_i) then
@@ -114,30 +100,30 @@ begin
 
     --------------------------------------------------------------------------
     -- Component Instantiations
-    --------------------------------------------------------------------------		
+    --------------------------------------------------------------------------
     i_prio_masked : entity work.psi_common_arb_priority
       generic map(
-        size_g           => size_g,
+        size_g    => size_g,
         out_reg_g => false
       )
       port map(
-        clk_i     => clk_i,
-        rst_i     => rst_i,
-        req_i => RequestMasked,
-        grant_o   => GrantMasked
+        clk_i   => clk_i,
+        rst_i   => rst_i,
+        req_i   => RequestMasked,
+        grant_o => GrantMasked
       );
 
     i_prio_unmasked : entity work.psi_common_arb_priority
       generic map(
-        size_g           => size_g,
+        size_g    => size_g,
         out_reg_g => false
       )
       port map(
-        clk_i     => clk_i,
-        rst_i     => rst_i,
-        req_i => request_i,
-        grant_o   => GrantUnmasked
+        clk_i   => clk_i,
+        rst_i   => rst_i,
+        req_i   => request_i,
+        grant_o => GrantUnmasked
       );
   end generate;
 
-end rtl;
+end architecture;

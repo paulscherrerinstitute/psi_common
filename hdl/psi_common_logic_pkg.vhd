@@ -3,10 +3,6 @@
 --  All rights reserved.
 --  Authors: Oliver Bruendler
 ------------------------------------------------------------------------------
-
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -24,17 +20,17 @@ package psi_common_logic_pkg is
   function ones_vector(size : in natural) return std_logic_vector;
 
   function partially_ones_vector(size    : in natural;
-                               ones_nb : in natural)
+                                 ones_nb : in natural)
   return std_logic_vector;
 
   function shift_left(arg  : in std_logic_vector;
-                     bits : in integer;
-                     fill : in std_logic := '0')
+                      bits : in integer;
+                      fill : in std_logic := '0')
   return std_logic_vector;
 
   function shift_right(arg  : in std_logic_vector;
-                      bits : in integer;
-                      fill : in std_logic := '0')
+                       bits : in integer;
+                       fill : in std_logic := '0')
   return std_logic_vector;
 
   function binary_to_gray(binary : in std_logic_vector)
@@ -66,7 +62,7 @@ package psi_common_logic_pkg is
 
   function to_01X(inp : in std_logic_vector)
   return std_logic_vector;
-  
+
   function invert_bit_order(inp : in std_logic_vector)
   return std_logic_vector;
 
@@ -93,7 +89,7 @@ package body psi_common_logic_pkg is
 
   -- *** PartiallyOnesVector ***
   function partially_ones_vector(size    : in natural;
-                               ones_nb : in natural)
+                                 ones_nb : in natural)
   return std_logic_vector is
     variable v_low    : std_logic_vector(size downto 0);
     variable v_high   : std_logic_vector(size downto 0);
@@ -109,8 +105,8 @@ package body psi_common_logic_pkg is
 
   -- *** ShiftLeft ***
   function shift_left(arg  : in std_logic_vector;
-                     bits : in integer;
-                     fill : in std_logic := '0')
+                      bits : in integer;
+                      fill : in std_logic := '0')
   return std_logic_vector is
     constant argDt : std_logic_vector(arg'high downto arg'low) := arg;
     variable v     : std_logic_vector(argDt'range);
@@ -118,16 +114,16 @@ package body psi_common_logic_pkg is
     if bits < 0 then
       return shift_right(argDt, -bits, fill);
     else
-      v(v'left downto bits) := argDt(argDt'left - bits downto argDt'right);
-      v(bits - 1 downto v'right)  := (others => fill);
+      v(v'left downto bits)      := argDt(argDt'left - bits downto argDt'right);
+      v(bits - 1 downto v'right) := (others => fill);
       return v;
     end if;
   end function;
 
   -- *** ShiftRight ***
   function shift_right(arg  : in std_logic_vector;
-                      bits : in integer;
-                      fill : in std_logic := '0')
+                       bits : in integer;
+                       fill : in std_logic := '0')
   return std_logic_vector is
     constant argDt : std_logic_vector(arg'high downto arg'low) := arg;
     variable v     : std_logic_vector(argDt'range);
@@ -146,7 +142,7 @@ package body psi_common_logic_pkg is
   return std_logic_vector is
     variable Gray_v : std_logic_vector(binary'range);
   begin
-    Gray_v := binary xor ('0' & binary(binary'high downto binary'low+1));
+    Gray_v := binary xor ('0' & binary(binary'high downto binary'low + 1));
     return Gray_v;
   end function;
 
@@ -240,16 +236,15 @@ package body psi_common_logic_pkg is
     end loop;
     return tmp;
   end function;
-  
+
   function invert_bit_order(inp : in std_logic_vector)
   return std_logic_vector is
     variable tmp : std_logic_vector(inp'range);
   begin
     for i in inp'low to inp'high loop
-      tmp(tmp'high-i) := inp(i);
+      tmp(tmp'high - i) := inp(i);
     end loop;
     return tmp;
   end function;
 
-end psi_common_logic_pkg;
-
+end package;

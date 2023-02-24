@@ -25,7 +25,7 @@ use work.psi_common_math_pkg.all;
 entity psi_common_ser_par is
   generic(rst_pol_g : std_logic := '1';                     -- reset polarity
           length_g  : natural   := 16;                      -- vector width
-          msb_g     : boolean   := false);                   -- MSB first = true
+          msb_g     : boolean   := false);                  -- MSB first = true
   port(clk_i : in  std_logic;                               -- clock system
        rst_i : in  std_logic;                               -- reset system
        dat_i : in  std_logic;                               -- data in

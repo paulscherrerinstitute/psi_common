@@ -10,65 +10,56 @@
 -- This is a very basic asynchronous FIFO. The clocks can be fully asynchronous
 -- (unrelated). It  has optional level- and almost-full/empty ports.
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_logic_pkg.all;
 use work.psi_common_math_pkg.all;
-
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
+--@formatter:off
 entity psi_common_async_fifo is
   generic(
     width_g         : positive  := 16;
     depth_g         : positive  := 32;
-    afull_on_g     : boolean   := false;
-    afull_lvl_g  : natural   := 28;
-    aempty_on_g    : boolean   := false;
-    aempty_level_g : natural   := 4;
-    ram_style_g      : string    := "auto";
-    ram_behavior_g   : string    := "RBW"; -- "RBW" = read-before-write, "WBR" = write-before-read
-    rdy_rst_state_g   : std_logic := '1'  -- Use '1' for minimal logic on Rdy path
+    afull_on_g      : boolean   := false;
+    afull_lvl_g     : natural   := 28;
+    aempty_on_g     : boolean   := false;
+    aempty_level_g  : natural   := 4;
+    ram_style_g     : string    := "auto";
+    ram_behavior_g  : string    := "RBW"; -- "RBW" = read-before-write, "WBR" = write-before-read
+    rdy_rst_state_g : std_logic := '1'   -- Use '1' for minimal logic on Rdy path
   );
   port(
     -- Control Ports
-    in_clk_i       : in  std_logic;
-    in_rst_i       : in  std_logic;
-    out_clk_i      : in  std_logic;
-    out_rst_i      : in  std_logic;
+    in_clk_i     : in  std_logic;
+    in_rst_i     : in  std_logic;
+    out_clk_i    : in  std_logic;
+    out_rst_i    : in  std_logic;
     -- Input Data
-    in_dat_i      : in  std_logic_vector(width_g - 1 downto 0);
-    in_vld_i       : in  std_logic;
-    in_rdy_o       : out std_logic;        -- not full
+    in_dat_i     : in  std_logic_vector(width_g - 1 downto 0);
+    in_vld_i     : in  std_logic;
+    in_rdy_o     : out std_logic;       -- not full
 
     -- Output Data
-    out_dat_o     : out std_logic_vector(width_g - 1 downto 0);
-    out_vld_o      : out std_logic;        -- not empty
-    out_rdy_o      : in  std_logic;
+    out_dat_o    : out std_logic_vector(width_g - 1 downto 0);
+    out_vld_o    : out std_logic;       -- not empty
+    out_rdy_o    : in  std_logic;
     -- Input Status
-    in_full_o      : out std_logic;
-    in_empty_o     : out std_logic;
+    in_full_o    : out std_logic;
+    in_empty_o   : out std_logic;
     in_afull_o   : out std_logic;
     in_aempty_o  : out std_logic;
     in_lvl_o     : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0);
     -- Output Status
-    out_full_o     : out std_logic;
-    out_empty_o    : out std_logic;
+    out_full_o   : out std_logic;
+    out_empty_o  : out std_logic;
     out_afull_o  : out std_logic;
     out_aempty_o : out std_logic;
     out_lvl_o    : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0)
   );
 end entity;
+--@formatter:on
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_async_fifo is
 
   type two_process_in_r is record
@@ -85,7 +76,7 @@ architecture rtl of psi_common_async_fifo is
     WrAddrGraySync : std_logic_vector(log2ceil(depth_g) downto 0);
     WrAddrGray     : std_logic_vector(log2ceil(depth_g) downto 0);
     WrAddr         : unsigned(log2ceil(depth_g) downto 0);
-    out_lvl_o       : unsigned(log2ceil(depth_g) downto 0);
+    out_lvl_o      : unsigned(log2ceil(depth_g) downto 0);
   end record;
 
   signal ri, ri_next : two_process_in_r  := (WrAddr         => (others => '0'),
@@ -98,7 +89,7 @@ architecture rtl of psi_common_async_fifo is
                                              WrAddrGraySync => (others => '0'),
                                              WrAddrGray     => (others => '0'),
                                              WrAddr         => (others => '0'),
-                                             out_lvl_o       => (others => '0'));
+                                             out_lvl_o      => (others => '0'));
 
   signal RstInInt  : std_logic;
   signal RstOutInt : std_logic;
@@ -138,16 +129,16 @@ begin
 
     -- *** Write Side ***
     -- Defaults
-    in_rdy_o      <= '0';
-    in_full_o     <= '0';
-    in_empty_o    <= '0';
+    in_rdy_o    <= '0';
+    in_full_o   <= '0';
+    in_empty_o  <= '0';
     in_afull_o  <= '0';
     in_aempty_o <= '0';
-    RamWr      <= '0';
+    RamWr       <= '0';
 
     -- Level Detection
     InLevel_v := ri.WrAddr - ri.RdAddr;
-    in_lvl_o   <= std_logic_vector(InLevel_v);
+    in_lvl_o  <= std_logic_vector(InLevel_v);
 
     -- Full
     if InLevel_v = depth_g then
@@ -178,9 +169,9 @@ begin
 
     -- *** Read Side ***
     -- Defaults
-    out_vld_o      <= '0';
-    out_full_o     <= '0';
-    out_empty_o    <= '0';
+    out_vld_o    <= '0';
+    out_full_o   <= '0';
+    out_empty_o  <= '0';
     out_afull_o  <= '0';
     out_aempty_o <= '0';
 
@@ -266,7 +257,7 @@ begin
         ro.WrAddrGraySync <= (others => '0');
         ro.WrAddrGray     <= (others => '0');
         ro.WrAddr         <= (others => '0');
-        ro.out_lvl_o       <= (others => '0');
+        ro.out_lvl_o      <= (others => '0');
       end if;
     end if;
   end process;
@@ -277,38 +268,37 @@ begin
   RamWrAddr <= std_logic_vector(ri.WrAddr(log2ceil(depth_g) - 1 downto 0));
   i_ram : entity work.psi_common_sdp_ram
     generic map(
-      depth_g    => depth_g,
-      width_g    => width_g,
-      ram_style_g => ram_style_g,
-      is_async_g  => true,
+      depth_g        => depth_g,
+      width_g        => width_g,
+      ram_style_g    => ram_style_g,
+      is_async_g     => true,
       ram_behavior_g => ram_behavior_g
     )
     port map(
       -- Port A
-      wr_clk_i    => in_clk_i,
+      wr_clk_i  => in_clk_i,
       wr_addr_i => RamWrAddr,
-      wr_i     => RamWr,
-      wr_dat_i => in_dat_i,
+      wr_i      => RamWr,
+      wr_dat_i  => in_dat_i,
       -- Port B
       rd_clk_i  => out_clk_i,
       rd_addr_i => RamRdAddr,
-      rd_i     => '1',
-      rd_dat_o => out_dat_o
+      rd_i      => '1',
+      rd_dat_o  => out_dat_o
     );
 
   -- only used for reset crossing and oring
   i_rst_cc : entity work.psi_common_pulse_cc
     port map(
       -- Clock Domain A
-      a_clk_i    => in_clk_i,
-      a_rst_i  => in_rst_i,
+      a_clk_i => in_clk_i,
+      a_rst_i => in_rst_i,
       a_rst_o => RstInInt,
-      a_dat_i  => (others => '0'),
+      a_dat_i => (others => '0'),
       -- Clock Domain B
-      b_clk_i    => out_clk_i,
-      b_rst_i  => out_rst_i,
+      b_clk_i => out_clk_i,
+      b_rst_i => out_rst_i,
       b_rst_o => RstOutInt,
-      b_dat_o  => open
+      b_dat_o => open
     );
-
-end;
+end architecture;

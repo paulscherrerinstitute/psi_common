@@ -10,49 +10,39 @@
 -- This entity implements a simple data-width conversion. The input width
 -- must be an integer multiple of the output width (Wi = n*Wo)
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 -- $$ processes=stim,check $$
 entity psi_common_wconv_xn2n is
   generic(
-    in_width_g  : natural;               -- $$ constant=16 $$
-    out_width_g : natural                -- $$ constant=4 $$
+    in_width_g  : natural;              -- $$ constant=16 $$
+    out_width_g : natural               -- $$ constant=4 $$
   );
   port(
     -- Control Signals
-    clk_i     : in  std_logic;            -- $$ type=clk; freq=100e6 $$
-    rst_i     : in  std_logic;            -- $$ type=rst; clk=Clk $$
+    clk_i  : in  std_logic;             -- $$ type=clk; freq=100e6 $$
+    rst_i  : in  std_logic;             -- $$ type=rst; clk=Clk $$
 
     -- Input
-    vld_i   : in  std_logic;
-    rdy_o   : out std_logic;
+    vld_i  : in  std_logic;
+    rdy_o  : out std_logic;
     dat_i  : in  std_logic_vector(in_width_g - 1 downto 0);
-    last_i  : in  std_logic                                             := '0';
-    we_i    : in  std_logic_vector(in_width_g / out_width_g - 1 downto 0) := (others => '1');
+    last_i : in  std_logic                                               := '0';
+    we_i   : in  std_logic_vector(in_width_g / out_width_g - 1 downto 0) := (others => '1');
     -- Output
     vld_o  : out std_logic;
-    rdy_i  : in  std_logic                                             := '1';
-    dat_o : out std_logic_vector(out_width_g - 1 downto 0);
+    rdy_i  : in  std_logic                                               := '1';
+    dat_o  : out std_logic_vector(out_width_g - 1 downto 0);
     last_o : out std_logic
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_wconv_xn2n is
 
   -- *** Constants ***
@@ -68,14 +58,8 @@ architecture rtl of psi_common_wconv_xn2n is
   signal r, r_next : two_process_r;
 
 begin
-  --------------------------------------------------------------------------
-  -- Assertions
-  --------------------------------------------------------------------------
   assert floor(RatioReal_c) = ceil(RatioReal_c) report "psi_common_wconv_xn2n: Ratio out_width_g/in_width_g must be an integer number" severity error;
 
-  --------------------------------------------------------------------------
-  -- Combinatorial Proccess
-  --------------------------------------------------------------------------
   p_comb : process(r, vld_i, dat_i, rdy_i, we_i, last_i)
     variable v         : two_process_r;
     variable IsReady_v : std_logic;
@@ -107,8 +91,8 @@ begin
     end if;
 
     -- Outputs
-    dat_o <= r.Data(out_width_g - 1 downto 0);
-    rdy_o   <= IsReady_v;
+    dat_o  <= r.Data(out_width_g - 1 downto 0);
+    rdy_o  <= IsReady_v;
     vld_o  <= r.DataVld(0);
     last_o <= r.DataLast(0);
 
@@ -116,9 +100,6 @@ begin
     r_next <= v;
   end process;
 
-  --------------------------------------------------------------------------
-  -- Sequential Proccess
-  --------------------------------------------------------------------------
   p_seq : process(clk_i)
   begin
     if rising_edge(clk_i) then
@@ -129,5 +110,4 @@ begin
     end if;
   end process;
 
-end;
-
+end process;

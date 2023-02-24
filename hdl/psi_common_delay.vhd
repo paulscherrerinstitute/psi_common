@@ -9,10 +9,8 @@
 ------------------------------------------------------------------------------
 -- This is a delay element. It is either emplemented in BRAM or SRL. The output
 -- is always a fabric register for improved timing.
--- 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
+
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -20,40 +18,32 @@ use ieee.numeric_std.all;
 library work;
 use work.psi_common_math_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 entity psi_common_delay is
   generic(
-    width_g         : positive := 16;
-    delay_g         : positive := 10;
-    resource_g      : string   := "AUTO"; -- AUTO, SRL or BRAM
-    bram_threshold_g : positive := 128;  -- Number of delay taps to start using BRAM from (if Resource_g = AUTO)
-    rst_state_g      : boolean  := True; -- True = '0' is outputted after reset, '1' after reset the existing state is outputted
-    ram_behavior_g   : string   := "RBW" -- "RBW" = read-before-write, "WBR" = write-before-read
+    width_g          : positive := 16;      -- vector length
+    delay_g          : positive := 10;      -- delay
+    resource_g       : string   := "AUTO";  -- AUTO, SRL or BRAM
+    bram_threshold_g : positive := 128;     -- Number of delay taps to start using BRAM from (if Resource_g = AUTO)
+    rst_state_g      : boolean  := True;    -- True = '0' is outputted after reset, '1' after reset the existing state is outputted
+    ram_behavior_g   : string   := "RBW"    -- "RBW" = read-before-write, "WBR" = write-before-read
   );
   port(
-    -- Control Ports
-    clk_i     : in  std_logic;            -- $$ type=clk; freq=100e6 $$
-    rst_i     : in  std_logic;
-    -- Data
-    dat_i  : in  std_logic_vector(width_g - 1 downto 0);
-    vld_i   : in  std_logic;
+    clk_i : in  std_logic;              -- $$ type=clk; freq=100e6 $$
+    rst_i : in  std_logic;
+    dat_i : in  std_logic_vector(width_g - 1 downto 0);
+    vld_i : in  std_logic;
     dat_o : out std_logic_vector((width_g - 1) downto 0)
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_delay is
 
   signal MemOut      : std_logic_vector(width_g - 1 downto 0);
   constant MemTaps_c : natural := delay_g - 1;
 
-  signal RstStateCnt : integer range 0 to delay_g - 1;
+  signal RstStateCnt      : integer range 0 to delay_g - 1;
   attribute shreg_extract : string;
-  attribute srl_style : string;
+  attribute srl_style     : string;
 
 begin
 
@@ -66,8 +56,8 @@ begin
   g_srl : if (delay_g > 1) and ((resource_g = "SRL") or ((resource_g = "AUTO") and (delay_g < bram_threshold_g))) generate
     type Srl_t is array (0 to MemTaps_c - 1) of std_logic_vector(width_g - 1 downto 0);
     signal SrlSig : Srl_t := (others => (others => '0'));
-	attribute shreg_extract of SrlSig : signal is "true";
-	attribute srl_style of SrlSig : signal is "srl"; 
+    attribute shreg_extract of SrlSig : signal is "true";
+    attribute srl_style of SrlSig : signal is "srl";
   begin
     p_srl : process(clk_i)
     begin
@@ -112,18 +102,18 @@ begin
     -- memory instantiation
     i_bram : entity work.psi_common_sdp_ram
       generic map(
-        depth_g    => MemTaps_c,
-        width_g    => width_g,
+        depth_g        => MemTaps_c,
+        width_g        => width_g,
         ram_behavior_g => ram_behavior_g
       )
       port map(
-        wr_clk_i    => clk_i,
+        wr_clk_i  => clk_i,
         wr_addr_i => WrAddr,
-        wr_i     => vld_i,
-        wr_dat_i => dat_i,
+        wr_i      => vld_i,
+        wr_dat_i  => dat_i,
         rd_addr_i => RdAddr,
-        rd_i     => vld_i,
-        rd_dat_o => MemOut
+        rd_i      => vld_i,
+        rd_dat_o  => MemOut
       );
   end generate;
 
@@ -137,18 +127,17 @@ begin
   begin
     if rising_edge(clk_i) then
       if rst_i = '1' then
-        dat_o     <= (others => '0');
+        dat_o       <= (others => '0');
         RstStateCnt <= 0;
       elsif vld_i = '1' then
         if rst_state_g = false or RstStateCnt = delay_g - 1 then
           dat_o <= MemOut;
         else
-          dat_o     <= (others => '0');
+          dat_o       <= (others => '0');
           RstStateCnt <= RstStateCnt + 1;
         end if;
       end if;
     end if;
   end process;
 
-end;
-
+end architecture;

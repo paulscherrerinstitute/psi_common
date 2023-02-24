@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
---  Authors: Oliver Bruendler
+--  Authors: Oliver Bruendler, Daniel Llorente
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -9,46 +9,26 @@
 ------------------------------------------------------------------------------
 -- This entity measures the frequency of a clock under the assumption that
 -- the frequency of the main-clock is exactly correct.
-
--------------------------------------------------------------------------------
--- Libraries
--------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--------------------------------------------------------------------------------
--- Entity
--------------------------------------------------------------------------------
 entity psi_common_clk_meas is
-  generic(
-    master_frequency_g  : positive := 125000000; -- $$ constant=125e6 $$
-    max_meas_frequency_g : positive := 250000000 -- $$ constant=250e6 $$
+  generic(  master_frequency_g   : positive := 125000000; -- $$ constant=125e6 $$
+           max_meas_frequency_g  : positive := 250000000 -- $$ constant=250e6 $$
   );
   port(
-    ----------------------------------------
     -- Control Signals
-    ----------------------------------------
-    clk_master_i    : in  std_logic;       -- $$ type=clk; freq=125e6 $$
-    rst_i          : in  std_logic;       -- $$ type=rst; clk=ClkMaster $$
-
-    ----------------------------------------
+    clk_master_i   : in  std_logic;     -- $$ type=clk; freq=125e6 $$
+    rst_i          : in  std_logic;     -- $$ type=rst; clk=ClkMaster $$
     -- Test
-    ----------------------------------------
-    frequency_hz_o  : out std_logic_vector(31 downto 0); -- Synchronous to ClkMaster
-    vld_o : out std_logic;       -- Pulse when frequency is valid
-    clk_test_i      : in  std_logic        -- $$ type=clk; freq=101.35e6 $$
+    frequency_hz_o : out std_logic_vector(31 downto 0); -- Synchronous to ClkMaster
+    vld_o          : out std_logic;     -- Pulse when frequency is valid
+    clk_test_i     : in  std_logic      -- $$ type=clk; freq=101.35e6 $$
   );
 end;
 
--------------------------------------------------------------------------------
--- Architecture
--------------------------------------------------------------------------------
 architecture rtl of psi_common_clk_meas is
-
-  ----------------------------------------
-  -- Constants
-  ----------------------------------------
 
   ----------------------------------------
   -- Signals Master Clock
@@ -57,7 +37,6 @@ architecture rtl of psi_common_clk_meas is
   signal Toggle1Hz_M        : std_logic;
   signal ResultToggleSync_M : std_logic_vector(2 downto 0);
   signal AwaitResult_M      : std_logic;
-
   ----------------------------------------
   -- Signals Test Clock
   ----------------------------------------	
@@ -78,9 +57,9 @@ begin
         Cntr1Hz_M          <= master_frequency_g - 1;
         Toggle1Hz_M        <= '0';
         AwaitResult_M      <= '0';
-        frequency_hz_o        <= (others => '0');
+        frequency_hz_o     <= (others => '0');
         ResultToggleSync_M <= (others => '0');
-        vld_o       <= '0';
+        vld_o              <= '0';
       else
         -- Default Value
         vld_o <= '0';
@@ -91,8 +70,8 @@ begin
           Toggle1Hz_M   <= not Toggle1Hz_M;
           AwaitResult_M <= '1';
           if AwaitResult_M = '1' then
-            frequency_hz_o  <= (others => '0');
-            vld_o <= '1';
+            frequency_hz_o <= (others => '0');
+            vld_o          <= '1';
           end if;
         else
           Cntr1Hz_M <= Cntr1Hz_M - 1;
@@ -101,9 +80,9 @@ begin
         -- Latch new result
         ResultToggleSync_M <= ResultToggleSync_M(1 downto 0) & ResultToggle_T;
         if ResultToggleSync_M(2) /= ResultToggleSync_M(1) then
-          frequency_hz_o   <= std_logic_vector(to_unsigned(Result_T, 32));
-          AwaitResult_M <= '0';
-          vld_o  <= '1';
+          frequency_hz_o <= std_logic_vector(to_unsigned(Result_T, 32));
+          AwaitResult_M  <= '0';
+          vld_o          <= '1';
         end if;
       end if;
     end if;
@@ -135,9 +114,4 @@ begin
     end if;
   end process;
 
-end;
-
--------------------------------------------------------------------------------
--- EOF
--------------------------------------------------------------------------------
-
+end architecture;

@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --	Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
 --	All rights reserved.
---	Authors: Patric Bucher, Oliver Bruendler
+--	Authors: Patric Buche
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -10,15 +10,9 @@
 -- This entity implements a timing generator that generates pulses on all 
 -- important time units (seconds, milliseconds, microseconds).
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 entity psi_common_tickgenerator is
   generic(
     clk_in_mhz_g             : integer := 8;
@@ -31,11 +25,8 @@ entity psi_common_tickgenerator is
     tick1ms_o  : out std_logic;
     tick1sec_o : out std_logic
   );
-end psi_common_tickgenerator;
+end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_tickgenerator is
 
   -- Constant Declarations
@@ -108,4 +99,4 @@ begin
   tick1ms_o  <= tick1ms(tick_width_g - 1);
   tick1sec_o <= tick1sec(tick_width_g - 1);
 
-end rtl;
+end architecture;

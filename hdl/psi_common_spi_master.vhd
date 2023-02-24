@@ -9,58 +9,48 @@
 ------------------------------------------------------------------------------
 -- This entity implements a simple SPI-master.
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 -- $$ processes=stim,spi $$
 -- $$ tbpkg=work.psi_tb_compare_pkg,work.psi_tb_activity_pkg,work.psi_tb_txt_util $$
 entity psi_common_spi_master is
   generic(
-    clk_div_g   : natural range 4 to 1_000_000; -- Must be a multiple of two	$$ constant=8 $$
-    trans_width_g     : positive;          -- SPI Transaction width		$$ constant=8 $$
-    cs_high_cycles_g   : positive;          -- $$ constant=2 $$
-    spi_cpol_g        : natural range 0 to 1; -- $$ export=true $$
-    spi_cpha_g        : natural range 0 to 1; -- $$ export=true $$
-    slave_cnt_g       : positive := 1;     -- $$ constant=2 $$
-    lsb_first_g       : boolean  := false;  -- $$ export=true $$
-    mosi_idle_state_g	 : std_logic := '0'
+    clk_div_g         : natural range 4 to 1_000_000; -- Must be a multiple of two	$$ constant=8 $$
+    trans_width_g     : positive;                     -- SPI Transaction width		$$ constant=8 $$
+    cs_high_cycles_g  : positive;                     -- $$ constant=2 $$
+    spi_cpol_g        : natural range 0 to 1;         -- $$ export=true $$
+    spi_cpha_g        : natural range 0 to 1;         -- $$ export=true $$
+    slave_cnt_g       : positive  := 1;               -- $$ constant=2 $$
+    lsb_first_g       : boolean   := false;           -- $$ export=true $$
+    mosi_idle_state_g : std_logic := '0'
   );
   port(
     -- Control Signals
-    clk_i     : in  std_logic;            -- $$ type=clk; freq=100e6 $$
-    rst_i     : in  std_logic;            -- $$ type=rst; clk=Clk $$
+    clk_i      : in  std_logic;         -- $$ type=clk; freq=100e6 $$
+    rst_i      : in  std_logic;         -- $$ type=rst; clk=Clk $$
 
     -- Parallel Interface
-    start_i   : in  std_logic;
-    slave_i   : in  std_logic_vector(log2ceil(slave_cnt_g) - 1 downto 0);
-    busy_o    : out std_logic;
-    done_o    : out std_logic;
-    dat_i  : in  std_logic_vector(trans_width_g - 1 downto 0);
-    dat_o  : out std_logic_vector(trans_width_g - 1 downto 0);
-    -- SPI 
+    start_i    : in  std_logic;
+    slave_i    : in  std_logic_vector(log2ceil(slave_cnt_g) - 1 downto 0);
+    busy_o     : out std_logic;
+    done_o     : out std_logic;
+    dat_i      : in  std_logic_vector(trans_width_g - 1 downto 0);
+    dat_o      : out std_logic_vector(trans_width_g - 1 downto 0);
+    -- SPI
     spi_sck_o  : out std_logic;
     spi_mosi_o : out std_logic;
     spi_miso_i : in  std_logic;
     spi_cs_n_o : out std_logic_vector(slave_cnt_g - 1 downto 0);
-    spi_le_o   : out std_logic_vector(slave_cnt_g-1 downto 0)
+    spi_le_o   : out std_logic_vector(slave_cnt_g - 1 downto 0)
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_spi_master is
 
   -- *** Types ***
@@ -71,20 +61,20 @@ architecture rtl of psi_common_spi_master is
 
   -- *** Two Process Method ***
   type two_process_r is record
-    State     : State_t;
-    StateLast : State_t;
-    ShiftReg  : std_logic_vector(trans_width_g - 1 downto 0);
-    dat_o    : std_logic_vector(trans_width_g - 1 downto 0);
-    spi_cs_n_o   : std_logic_vector(slave_cnt_g - 1 downto 0);
-    spi_le_o     : std_logic_vector(slave_cnt_g - 1 downto 0);
-    spi_sck_o    : std_logic;
-    spi_mosi_o   : std_logic;
-    ClkDivCnt : integer range 0 to ClkDivThres_c;
-    BitCnt    : integer range 0 to trans_width_g;
-    CsHighCnt : integer range 0 to cs_high_cycles_g - 1;
-    busy_o      : std_logic;
-    done_o      : std_logic;
-    MosiNext  : std_logic;
+    State      : State_t;
+    StateLast  : State_t;
+    ShiftReg   : std_logic_vector(trans_width_g - 1 downto 0);
+    dat_o      : std_logic_vector(trans_width_g - 1 downto 0);
+    spi_cs_n_o : std_logic_vector(slave_cnt_g - 1 downto 0);
+    spi_le_o   : std_logic_vector(slave_cnt_g - 1 downto 0);
+    spi_sck_o  : std_logic;
+    spi_mosi_o : std_logic;
+    ClkDivCnt  : integer range 0 to ClkDivThres_c;
+    BitCnt     : integer range 0 to trans_width_g;
+    CsHighCnt  : integer range 0 to cs_high_cycles_g - 1;
+    busy_o     : std_logic;
+    done_o     : std_logic;
+    MosiNext   : std_logic;
   end record;
   signal r, r_next : two_process_r;
 
@@ -126,9 +116,6 @@ begin
   --------------------------------------------------------------------------
   assert floor(real(clk_div_g) / 2.0) = ceil(real(clk_div_g) / 2.0) report "###ERROR###: psi_common_spi_master - Ratio clk_div_g must be a multiple of two" severity error;
 
-  --------------------------------------------------------------------------
-  -- Combinatorial Proccess
-  --------------------------------------------------------------------------
   p_comb : process(r, start_i, dat_i, spi_miso_i, slave_i)
     variable v : two_process_r;
   begin
@@ -143,15 +130,15 @@ begin
       when Idle_s =>
         -- Start of Transfer
         if start_i = '1' then
-          v.ShiftReg                             := dat_i;
+          v.ShiftReg                                  := dat_i;
           v.spi_cs_n_o(to_integer(unsigned(slave_i))) := '0';
-          v.State                                := SftComp_s;
-          v.busy_o                                 := '1';
+          v.State                                     := SftComp_s;
+          v.busy_o                                    := '1';
         end if;
         v.CsHighCnt := 0;
         v.ClkDivCnt := 0;
         v.BitCnt    := 0;
-        v.spi_le_o     := (others => '0');
+        v.spi_le_o  := (others => '0');
       when SftComp_s =>
         v.State := ClkInact_s;
         -- Compensate shift for CPHA 0
@@ -174,7 +161,7 @@ begin
           -- All bits done
           if r.BitCnt = trans_width_g then
             v.spi_mosi_o := mosi_idle_state_g;
-            v.State   := CsHigh_s;
+            v.State      := CsHigh_s;
             v.spi_le_o   := not r.spi_cs_n_o;
           -- Otherwise contintue
           else
@@ -209,9 +196,9 @@ begin
         v.spi_cs_n_o := (others => '1');
         if r.CsHighCnt = cs_high_cycles_g - 1 then
           v.State  := Idle_s;
-          v.busy_o   := '0';
-          v.done_o   := '1';
-          v.dat_o := r.ShiftReg;
+          v.busy_o := '0';
+          v.done_o := '1';
+          v.dat_o  := r.ShiftReg;
         else
           v.CsHighCnt := r.CsHighCnt + 1;
         end if;
@@ -223,35 +210,29 @@ begin
     r_next <= v;
   end process;
 
-  --------------------------------------------------------------------------
   -- Outputs
-  --------------------------------------------------------------------------
-  busy_o    <= r.busy_o;
-  done_o    <= r.done_o;
-  dat_o  <= r.dat_o;
+  busy_o     <= r.busy_o;
+  done_o     <= r.done_o;
+  dat_o      <= r.dat_o;
   spi_sck_o  <= r.spi_sck_o;
   spi_cs_n_o <= r.spi_cs_n_o;
   spi_mosi_o <= r.spi_mosi_o;
   spi_le_o   <= r.spi_le_o;
-  --------------------------------------------------------------------------
-  -- Sequential Proccess
-  --------------------------------------------------------------------------
   p_seq : process(clk_i)
   begin
     if rising_edge(clk_i) then
       r <= r_next;
       if rst_i = '1' then
-        r.State   <= Idle_s;
+        r.State      <= Idle_s;
         r.spi_cs_n_o <= (others => '1');
         r.spi_le_o   <= (others => '0');
         r.spi_sck_o  <= GetClockLevel(false);
-        r.busy_o    <= '0';
-        r.done_o    <= '0';
+        r.busy_o     <= '0';
+        r.done_o     <= '0';
         r.spi_mosi_o <= mosi_idle_state_g;
       end if;
     end if;
   end process;
 
-
-end;
+end architecture;
 

@@ -11,20 +11,13 @@
 -- (multiple values transferred over the same signal one after the other) to
 -- parallel (multiple values distributed over multiple parallel signals).
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity
-------------------------------------------------------------------------------	
 -- $$ processes=inp,outp $$
 entity psi_common_tdm_par is
   generic(
@@ -49,10 +42,6 @@ entity psi_common_tdm_par is
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture section
-------------------------------------------------------------------------------
-
 architecture rtl of psi_common_tdm_par is
 
   -- Two Process Method
@@ -69,9 +58,6 @@ architecture rtl of psi_common_tdm_par is
   signal r, r_next : two_process_r;
 begin
 
-  --------------------------------------------------------------------------
-  -- Combinatorial Process
-  --------------------------------------------------------------------------
   p_comb : process(r, dat_i, vld_i, TdmLast, rdy_i)
     variable v : two_process_r;
     variable Blocked_v : boolean;
@@ -123,9 +109,6 @@ begin
 
   end process;
 
-  --------------------------------------------------------------------------
-  -- Sequential Process
-  --------------------------------------------------------------------------	
   p_seq : process(clk_i)
   begin
     if rising_edge(clk_i) then
@@ -139,4 +122,4 @@ begin
     end if;
   end process;
 
-end rtl;
+end architecture;

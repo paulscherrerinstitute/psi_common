@@ -14,37 +14,28 @@
 -- The main use cause of this entity is to pass status information or configuration
 -- register values between clock domains.
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 entity psi_common_status_cc is
   generic(
     data_width_g : positive := 16
   );
   port(
     -- Clock Domain A
-    a_clk_i    : in  std_logic;
-    a_rst_i  : in  std_logic;
+    a_clk_i : in  std_logic;
+    a_rst_i : in  std_logic;
     a_rst_o : out std_logic;
-    a_dat_i   : in  std_logic_vector(data_width_g - 1 downto 0);
+    a_dat_i : in  std_logic_vector(data_width_g - 1 downto 0);
     -- Clock Domain B
-    b_clk_i    : in  std_logic;
-    b_rst_i  : in  std_logic;
+    b_clk_i : in  std_logic;
+    b_rst_i : in  std_logic;
     b_rst_o : out std_logic;
-    b_dat_o   : out std_logic_vector(data_width_g - 1 downto 0)
+    b_dat_o : out std_logic_vector(data_width_g - 1 downto 0)
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_status_cc is
   signal RstIntA       : std_logic;
   signal RstIntB       : std_logic;
@@ -120,19 +111,19 @@ begin
       data_width_g => data_width_g
     )
     port map(
-      a_clk_i    => a_clk_i,
-      a_rst_i  => a_rst_i,
+      a_clk_i => a_clk_i,
+      a_rst_i => a_rst_i,
       a_rst_o => RstIntA,
-      a_dat_i   => a_dat_i,
-      a_vld_i    => VldA,
-      b_clk_i    => b_clk_i,
-      b_rst_i  => b_rst_i,
+      a_dat_i => a_dat_i,
+      a_vld_i => VldA,
+      b_clk_i => b_clk_i,
+      b_rst_i => b_rst_i,
       b_rst_o => RstIntB,
-      b_dat_o   => b_dat_o,
-      b_vld_o    => VldB
+      b_dat_o => b_dat_o,
+      b_vld_o => VldB
     );
   a_rst_o <= RstIntA;
   b_rst_o <= RstIntB;
 
-end;
+end architecture;
 

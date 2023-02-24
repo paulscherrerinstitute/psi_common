@@ -14,37 +14,28 @@
 -- that pulses arriving in the same clock cycle are transmitted in the same
 -- clock cycle.
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 entity psi_common_pulse_cc is
   generic(
     num_pulses_g : positive := 1
   );
   port(
     -- Clock Domain A
-    a_clk_i    : in  std_logic;
-    a_rst_i  : in  std_logic;
+    a_clk_i : in  std_logic;
+    a_rst_i : in  std_logic;
     a_rst_o : out std_logic;
-    a_dat_i  : in  std_logic_vector(num_pulses_g - 1 downto 0);
+    a_dat_i : in  std_logic_vector(num_pulses_g - 1 downto 0);
     -- Clock Domain B
-    b_clk_i    : in  std_logic;
-    b_rst_i  : in  std_logic;
+    b_clk_i : in  std_logic;
+    b_rst_i : in  std_logic;
     b_rst_o : out std_logic;
-    b_dat_o  : out std_logic_vector(num_pulses_g - 1 downto 0)
+    b_dat_o : out std_logic_vector(num_pulses_g - 1 downto 0)
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_pulse_cc is
 
   type Pulse_t is array (natural range <>) of std_logic_vector(num_pulses_g - 1 downto 0);
@@ -132,12 +123,12 @@ begin
     if rising_edge(b_clk_i) then
       if RstBI = '1' then
         ToggleSyncB <= (others => (others => '0'));
-        b_dat_o      <= (others => '0');
+        b_dat_o     <= (others => '0');
       else
         ToggleSyncB <= ToggleSyncB(ToggleSyncB'left - 1 downto 0) & ToggleA;
-        b_dat_o      <= ToggleSyncB(ToggleSyncB'left) xor ToggleSyncB(ToggleSyncB'left - 1);
+        b_dat_o     <= ToggleSyncB(ToggleSyncB'left) xor ToggleSyncB(ToggleSyncB'left - 1);
       end if;
     end if;
   end process;
-end;
+end architecture;
 

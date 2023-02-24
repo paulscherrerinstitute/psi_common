@@ -11,9 +11,6 @@
 -- division-multiplexed (i.e. the values are transferred one after the other
 -- over a single signal)
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -22,38 +19,28 @@ library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity
-------------------------------------------------------------------------------  
 -- $$ processes=inp,outp $$
 entity psi_common_par_tdm is
   generic(
-    channel_count_g  : natural := 8;      -- $$ constant=3 $$
-    channel_width_g  : natural := 16      -- $$ constant=8 $$
+    channel_count_g : natural := 8;     -- $$ constant=3 $$
+    channel_width_g : natural := 16     -- $$ constant=8 $$
   );
   port(
-    -- Control Signals
-    clk_i             : in    std_logic;        -- $$ type=clk; freq=100e6 $$
-    rst_i             : in    std_logic;        -- $$ type=rst; clk=Clk $$
+    clk_i  : in  std_logic;             -- $$ type=clk; freq=100e6 $$
+    rst_i  : in  std_logic;             -- $$ type=rst; clk=Clk $$
 
-    -- Data Ports
-    dat_i        : in    std_logic_vector(channel_count_g * channel_width_g - 1 downto 0);
-    vld_i     : in    std_logic;
-    rdy_o     : out   std_logic;
-    last_i    : in    std_logic := '1';
-    dat_o             : out   std_logic_vector(channel_width_g - 1 downto 0);
-    vld_o          : out   std_logic;
-    rdy_i          : in    std_logic := '1';
-    last_o         : out   std_logic
+    dat_i  : in  std_logic_vector(channel_count_g * channel_width_g - 1 downto 0);
+    vld_i  : in  std_logic;
+    rdy_o  : out std_logic;
+    last_i : in  std_logic := '1';
+    dat_o  : out std_logic_vector(channel_width_g - 1 downto 0);
+    vld_o  : out std_logic;
+    rdy_i  : in  std_logic := '1';
+    last_o : out std_logic
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture section
-------------------------------------------------------------------------------
-
 architecture rtl of psi_common_par_tdm is
-
   -- Two Process Method
   type two_process_r is record
     ShiftReg : std_logic_vector(dat_i'range);
@@ -66,9 +53,9 @@ begin
   --------------------------------------------------------------------------
   -- Combinatorial Process
   --------------------------------------------------------------------------
-    p_comb : process(   r, dat_i, vld_i, rdy_i, last_i)   
-    variable v : two_process_r;
-        variable ParallelRdy_v : std_logic;
+  p_comb : process(r, dat_i, vld_i, rdy_i, last_i)
+    variable v             : two_process_r;
+    variable ParallelRdy_v : std_logic;
   begin
     -- hold variables stable
     v := r;
@@ -78,14 +65,14 @@ begin
       ParallelRdy_v := '1';
     else
       ParallelRdy_v := '0';
-    end if;     
-        
+    end if;
+
     -- *** Implementation ***
     if (vld_i = '1') and (ParallelRdy_v = '1') then
-      v.ShiftReg := dat_i;
-      v.VldSr    := (others => '1');
-      v.LastSr   := (others => '0');
-      v.LastSr(channel_count_g-1) := last_i;
+      v.ShiftReg                    := dat_i;
+      v.VldSr                       := (others => '1');
+      v.LastSr                      := (others => '0');
+      v.LastSr(channel_count_g - 1) := last_i;
     elsif rdy_i = '1' then
       v.ShiftReg := shift_right(r.ShiftReg, channel_width_g);
       v.LastSr   := shift_right(r.LastSr, 1);
@@ -93,19 +80,15 @@ begin
     end if;
 
     -- *** Outputs ***
-    dat_o     <= r.ShiftReg(channel_width_g - 1 downto 0);
+    dat_o  <= r.ShiftReg(channel_width_g - 1 downto 0);
     vld_o  <= r.VldSr(0);
     last_o <= r.LastSr(0);
-    rdy_o <= ParallelRdy_v;
+    rdy_o  <= ParallelRdy_v;
 
     -- Apply to record
     r_next <= v;
 
   end process;
-
-  --------------------------------------------------------------------------
-  -- Sequential Process
-  --------------------------------------------------------------------------    
   p_seq : process(clk_i)
   begin
     if rising_edge(clk_i) then
@@ -116,4 +99,4 @@ begin
     end if;
   end process;
 
-end rtl;
+end architecture;

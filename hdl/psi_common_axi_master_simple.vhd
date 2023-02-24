@@ -7,130 +7,112 @@
 ------------------------------------------------------------------------------
 -- Description
 ------------------------------------------------------------------------------
--- This entity implements a simple AXI master. Simple means: It does not 
+-- This entity implements a simple AXI master. Simple means: It does not
 -- support any unaligned reads/writes and it does not do any width conversions.
 -- It just executes the transfers requested and splits them into multiple AXI
 -- transactions in order to not burst over 4k boundaries and respect the maximum
 -- transaction size.
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
-
+--@fomratter:off
 ------------------------------------------------------------------------------
 -- Entity
-------------------------------------------------------------------------------	
+------------------------------------------------------------------------------
 -- $$ testcases=simple_tf,max_transact,axi_hs,split,internals,highlat$$
 -- $$ processes=user_cmd,user_data,user_resp,axi $$
 -- $$ tbpkg=work.psi_tb_txt_util,work.psi_tb_compare_pkg,work.psi_tb_activity_pkg $$
 entity psi_common_axi_master_simple is
   generic(
-    axi_addr_width_g            : natural range 12 to 64  := 32; -- $$ constant=32 $$
-    axi_data_width_g            : natural range 8 to 1024 := 32; -- $$ constant=16 $$
-    axi_max_beats_g             : natural range 1 to 256  := 256; -- $$ constant=16 $$
-    axi_max_open_transactions_g   : natural range 1 to 8    := 8; -- $$ constant=3 $$
-    user_transaction_size_bits_g : natural                 := 32; -- $$ constant=10 $$
-    data_fifo_depth_g           : natural                 := 1024; -- $$ constant=10 $$
-    impl_read_g                : boolean                 := true; -- $$ export=true $$
-    impl_write_g               : boolean                 := true; -- $$ export=true $$
-    ram_behavior_g             : string                  := "RBW" -- $$ constant="RBW" $$
+    axi_addr_width_g             : natural range 12 to 64  := 32;   -- $$ constant=32 $$
+    axi_data_width_g             : natural range 8 to 1024 := 32;   -- $$ constant=16 $$
+    axi_max_beats_g              : natural range 1 to 256  := 256;  -- $$ constant=16 $$
+    axi_max_open_transactions_g  : natural range 1 to 8    := 8;    -- $$ constant=3 $$
+    user_transaction_size_bits_g : natural                 := 32;   -- $$ constant=10 $$
+    data_fifo_depth_g            : natural                 := 1024; -- $$ constant=10 $$
+    impl_read_g                  : boolean                 := true; -- $$ export=true $$
+    impl_write_g                 : boolean                 := true; -- $$ export=true $$
+    ram_behavior_g               : string                  := "RBW" -- $$ constant="RBW" $$
   );
   port(
     -- Control Signals
-    m_axi_aclk    : in  std_logic;      -- $$ type=clk; freq=100e6 $$
-    m_axi_aresetn : in  std_logic;      -- $$ type=rst; clk=M_Axi_Aclk; lowactive=true $$
-
+    m_axi_aclk       : in  std_logic;                                                                       -- $$ type=clk; freq=100e6 $$
+    m_axi_aresetn    : in  std_logic;                                                                       -- $$ type=rst; clk=M_Axi_Aclk; lowactive=true $$
     -- User Command Interface
-    cmd_wr_addr_i    : in  std_logic_vector(axi_addr_width_g - 1 downto 0)            := (others => '0'); -- $$ proc=user_cmd $$
-    cmd_wr_size_i    : in  std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0'); -- $$ proc=user_cmd $$
-    cmd_wr_low_lat_i  : in  std_logic                                                := '0'; -- $$ proc=user_cmd $$
-    cmd_wr_vld_i     : in  std_logic                                                := '0'; -- $$ proc=user_cmd $$
-    cmd_wr_rdy_o     : out std_logic;      -- $$ proc=user_cmd $$
-
+    cmd_wr_addr_i    : in  std_logic_vector(axi_addr_width_g - 1 downto 0)             := (others => '0');  -- $$ proc=user_cmd $$
+    cmd_wr_size_i    : in  std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0');  -- $$ proc=user_cmd $$
+    cmd_wr_low_lat_i : in  std_logic                                                   := '0';              -- $$ proc=user_cmd $$
+    cmd_wr_vld_i     : in  std_logic                                                   := '0';              -- $$ proc=user_cmd $$
+    cmd_wr_rdy_o     : out std_logic;                                                                       -- $$ proc=user_cmd $$
     -- User Command Interface
-    cmd_rd_addr_i    : in  std_logic_vector(axi_addr_width_g - 1 downto 0)            := (others => '0'); -- $$ proc=user_cmd $$
-    cmd_rd_size_o    : in  std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0'); -- $$ proc=user_cmd $$
-    cmd_rd_low_lat_i  : in  std_logic                                                := '0'; -- $$ proc=user_cmd $$
-    cmd_rd_vld_i     : in  std_logic                                                := '0'; -- $$ proc=user_cmd $$
-    cmd_rd_rdy_o     : out std_logic;      -- $$ proc=user_cmd $$		
-
+    cmd_rd_addr_i    : in  std_logic_vector(axi_addr_width_g - 1 downto 0)             := (others => '0');  -- $$ proc=user_cmd $$
+    cmd_rd_size_o    : in  std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0');  -- $$ proc=user_cmd $$
+    cmd_rd_low_lat_i : in  std_logic                                                   := '0';              -- $$ proc=user_cmd $$
+    cmd_rd_vld_i     : in  std_logic                                                   := '0';              -- $$ proc=user_cmd $$
+    cmd_rd_rdy_o     : out std_logic;                                                                       -- $$ proc=user_cmd $$
     -- Write Data
-    wr_dat_i    : in  std_logic_vector(axi_data_width_g - 1 downto 0)            := (others => '0'); -- $$ proc=user_data $$
-    wr_data_be      : in  std_logic_vector(axi_data_width_g / 8 - 1 downto 0)        := (others => '0'); -- $$ proc=user_data $$
-    wr_vld_i     : in  std_logic                                                := '0'; -- $$ proc=user_data $$
-    wr_rdy_o     : out std_logic;      -- $$ proc=user_data $$		
-
+    wr_dat_i         : in  std_logic_vector(axi_data_width_g - 1 downto 0)             := (others => '0');  -- $$ proc=user_data $$
+    wr_data_be       : in  std_logic_vector(axi_data_width_g / 8 - 1 downto 0)         := (others => '0');  -- $$ proc=user_data $$
+    wr_vld_i         : in  std_logic                                                   := '0';              -- $$ proc=user_data $$
+    wr_rdy_o         : out std_logic;                                                                       -- $$ proc=user_data $$
     -- Read Data
-    rd_dat_o    : out std_logic_vector(axi_data_width_g - 1 downto 0); -- $$ proc=user_data $$
-    rd_vld_o     : out std_logic;      -- $$ proc=user_data $$
-    rd_rdy_i     : in  std_logic                                                := '0'; -- $$ proc=user_data $$			
-
+    rd_dat_o         : out std_logic_vector(axi_data_width_g - 1 downto 0);                                 -- $$ proc=user_data $$
+    rd_vld_o         : out std_logic;                                                                       -- $$ proc=user_data $$
+    rd_rdy_i         : in  std_logic                                                   := '0';              -- $$ proc=user_data $$
     -- Response
-    wr_done_o       : out std_logic;      -- $$ proc=user_resp $$
-    wr_error_o      : out std_logic;      -- $$ proc=user_resp $$
-    rd_done_o       : out std_logic;      -- $$ proc=user_resp $$
-    rd_error_o      : out std_logic;      -- $$ proc=user_resp $$
-
+    wr_done_o        : out std_logic;                                                                       -- $$ proc=user_resp $$
+    wr_error_o       : out std_logic;                                                                       -- $$ proc=user_resp $$
+    rd_done_o        : out std_logic;                                                                       -- $$ proc=user_resp $$
+    rd_error_o       : out std_logic;                                                                       -- $$ proc=user_resp $$
     -- AXI Address Write Channel
-    m_axi_awaddr  : out std_logic_vector(axi_addr_width_g - 1 downto 0); -- $$ proc=axi $$
-    m_axi_awlen   : out std_logic_vector(7 downto 0); -- $$ proc=axi $$
-    m_axi_awsize  : out std_logic_vector(2 downto 0); -- $$ proc=axi $$
-    m_axi_awburst : out std_logic_vector(1 downto 0); -- $$ proc=axi $$
-    m_axi_awlock  : out std_logic;      -- $$ proc=axi $$
-    m_axi_awcache : out std_logic_vector(3 downto 0); -- $$ proc=axi $$
-    m_axi_awprot  : out std_logic_vector(2 downto 0); -- $$ proc=axi $$
-    m_axi_awvalid : out std_logic;      -- $$ proc=axi $$
-    m_axi_awready : in  std_logic                                                := '0'; -- $$ proc=axi $$
-
-    -- AXI Write Data Channel                                                           					-- $$ proc=axi $$
-    m_axi_wdata   : out std_logic_vector(axi_data_width_g - 1 downto 0); -- $$ proc=axi $$
-    m_axi_wstrb   : out std_logic_vector(axi_data_width_g / 8 - 1 downto 0); -- $$ proc=axi $$
-    m_axi_wlast   : out std_logic;      -- $$ proc=axi $$
-    m_axi_wvalid  : out std_logic;      -- $$ proc=axi $$
-    m_axi_wready  : in  std_logic                                                := '0'; -- $$ proc=axi $$
-
-    -- AXI Write Response Channel                                                      
-    m_axi_bresp   : in  std_logic_vector(1 downto 0)                             := (others => '0'); -- $$ proc=axi $$
-    m_axi_bvalid  : in  std_logic                                                := '0'; -- $$ proc=axi $$
-    m_axi_bready  : out std_logic;      -- $$ proc=axi $$
-
-    -- AXI Read Address Channel                                               
-    m_axi_araddr  : out std_logic_vector(axi_addr_width_g - 1 downto 0); -- $$ proc=axi $$
-    m_axi_arlen   : out std_logic_vector(7 downto 0); -- $$ proc=axi $$
-    m_axi_arsize  : out std_logic_vector(2 downto 0); -- $$ proc=axi $$
-    m_axi_arburst : out std_logic_vector(1 downto 0); -- $$ proc=axi $$
-    m_axi_arlock  : out std_logic;      -- $$ proc=axi $$
-    m_axi_arcache : out std_logic_vector(3 downto 0); -- $$ proc=axi $$
-    m_axi_arprot  : out std_logic_vector(2 downto 0); -- $$ proc=axi $$
-    m_axi_arvalid : out std_logic;      -- $$ proc=axi $$
-    m_axi_arready : in  std_logic                                                := '0'; -- $$ proc=axi $$
-
-    -- AXI Read Data Channel                                                      
-    m_axi_rdata   : in  std_logic_vector(axi_data_width_g - 1 downto 0)            := (others => '0'); -- $$ proc=axi $$
-    m_axi_rresp   : in  std_logic_vector(1 downto 0)                             := (others => '0'); -- $$ proc=axi $$
-    m_axi_rlast   : in  std_logic                                                := '0'; -- $$ proc=axi $$
-    m_axi_rvalid  : in  std_logic                                                := '0'; -- $$ proc=axi $$
-    m_axi_rready  : out std_logic       -- $$ proc=axi $$
+    m_axi_awaddr     : out std_logic_vector(axi_addr_width_g - 1 downto 0);                                 -- $$ proc=axi $$
+    m_axi_awlen      : out std_logic_vector(7 downto 0);                                                    -- $$ proc=axi $$
+    m_axi_awsize     : out std_logic_vector(2 downto 0);                                                    -- $$ proc=axi $$
+    m_axi_awburst    : out std_logic_vector(1 downto 0);                                                    -- $$ proc=axi $$
+    m_axi_awlock     : out std_logic;                                                                       -- $$ proc=axi $$
+    m_axi_awcache    : out std_logic_vector(3 downto 0);                                                    -- $$ proc=axi $$
+    m_axi_awprot     : out std_logic_vector(2 downto 0);                                                    -- $$ proc=axi $$
+    m_axi_awvalid    : out std_logic;                                                                       -- $$ proc=axi $$
+    m_axi_awready    : in  std_logic                                                   := '0';              -- $$ proc=axi $$
+    -- AXI Write Data Channel                                                                               -- $$ proc=axi $$
+    m_axi_wdata      : out std_logic_vector(axi_data_width_g - 1 downto 0);                                 -- $$ proc=axi $$
+    m_axi_wstrb      : out std_logic_vector(axi_data_width_g / 8 - 1 downto 0);                             -- $$ proc=axi $$
+    m_axi_wlast      : out std_logic;                                                                       -- $$ proc=axi $$
+    m_axi_wvalid     : out std_logic;                                                                       -- $$ proc=axi $$
+    m_axi_wready     : in  std_logic                                                   := '0';              -- $$ proc=axi $$
+    -- AXI Write Response Channel
+    m_axi_bresp      : in  std_logic_vector(1 downto 0)                                := (others => '0');  -- $$ proc=axi $$
+    m_axi_bvalid     : in  std_logic                                                   := '0';              -- $$ proc=axi $$
+    m_axi_bready     : out std_logic;                                                                       -- $$ proc=axi $$
+    -- AXI Read Address Channel
+    m_axi_araddr     : out std_logic_vector(axi_addr_width_g - 1 downto 0);                                 -- $$ proc=axi $$
+    m_axi_arlen      : out std_logic_vector(7 downto 0);                                                    -- $$ proc=axi $$
+    m_axi_arsize     : out std_logic_vector(2 downto 0);                                                    -- $$ proc=axi $$
+    m_axi_arburst    : out std_logic_vector(1 downto 0);                                                    -- $$ proc=axi $$
+    m_axi_arlock     : out std_logic;                                                                       -- $$ proc=axi $$
+    m_axi_arcache    : out std_logic_vector(3 downto 0);                                                    -- $$ proc=axi $$
+    m_axi_arprot     : out std_logic_vector(2 downto 0);                                                    -- $$ proc=axi $$
+    m_axi_arvalid    : out std_logic;                                                                       -- $$ proc=axi $$
+    m_axi_arready    : in  std_logic                                                   := '0';              -- $$ proc=axi $$
+    -- AXI Read Data Channel
+    m_axi_rdata      : in  std_logic_vector(axi_data_width_g - 1 downto 0)             := (others => '0');  -- $$ proc=axi $$
+    m_axi_rresp      : in  std_logic_vector(1 downto 0)                                := (others => '0');  -- $$ proc=axi $$
+    m_axi_rlast      : in  std_logic                                                   := '0';              -- $$ proc=axi $$
+    m_axi_rvalid     : in  std_logic                                                   := '0';              -- $$ proc=axi $$
+    m_axi_rready     : out std_logic                                                                        -- $$ proc=axi $$
   );
 end entity;
-
-------------------------------------------------------------------------------
--- Architecture section
-------------------------------------------------------------------------------
+--@fomratter:on
 
 architecture rtl of psi_common_axi_master_simple is
 
   ------------------------------------------------------------------------------
   -- Constants
-  ------------------------------------------------------------------------------	
+  ------------------------------------------------------------------------------
   constant Axi_BurstType_Incr_c : std_logic_vector(1 downto 0) := "01";
   constant Axi_Resp_Okay_c      : std_logic_vector(1 downto 0) := "00";
   constant UnusedAddrBits_c     : natural                      := log2(axi_data_width_g / 8);
@@ -144,7 +126,7 @@ architecture rtl of psi_common_axi_master_simple is
 
   ------------------------------------------------------------------------------
   -- Type
-  ------------------------------------------------------------------------------	
+  ------------------------------------------------------------------------------
   type WriteTfGen_s is (Idle_s, MaxCalc_s, GenTf_s, WriteTf_s);
   type ReadTfGen_s is (Idle_s, MaxCalc_s, GenTf_s, WriteTf_s);
   type AwFsm_s is (Idle_s, Wait_s);
@@ -153,7 +135,7 @@ architecture rtl of psi_common_axi_master_simple is
 
   ------------------------------------------------------------------------------
   -- Functions
-  ------------------------------------------------------------------------------	
+  ------------------------------------------------------------------------------
   function AddrMasked_f(Addr : in std_logic_vector) return std_logic_vector is
     variable Masked_v : std_logic_vector(Addr'range);
   begin
@@ -164,15 +146,15 @@ architecture rtl of psi_common_axi_master_simple is
 
   ------------------------------------------------------------------------------
   -- Two Process Record
-  ------------------------------------------------------------------------------		
+  ------------------------------------------------------------------------------
   type two_process_r is record
 
     -- *** Write Related Registers ***
     -- Command Interface
-    cmd_wr_rdy_o       : std_logic;
-    wr_error_o        : std_logic;
-    wr_done_o         : std_logic;
-    -- Generate Write Transactions		
+    cmd_wr_rdy_o    : std_logic;
+    wr_error_o      : std_logic;
+    wr_done_o       : std_logic;
+    -- Generate Write Transactions
     WriteTfGenState : WriteTfGen_s;
     WrAddr          : unsigned(cmd_wr_addr_i'range);
     WrBeats         : unsigned(cmd_wr_size_i'range);
@@ -204,12 +186,12 @@ architecture rtl of psi_common_axi_master_simple is
     m_axi_awvalid   : std_logic;
     m_axi_wlast     : std_logic;
 
-    -- *** Read Related Registers *** 
+    -- *** Read Related Registers ***
     -- Command Interface
-    cmd_rd_rdy_o       : std_logic;
-    rd_error_o        : std_logic;
-    rd_done_o         : std_logic;
-    -- Generate Read Transactions		
+    cmd_rd_rdy_o    : std_logic;
+    rd_error_o      : std_logic;
+    rd_done_o       : std_logic;
+    -- Generate Read Transactions
     ReadTfGenState  : ReadTfGen_s;
     RdAddr          : unsigned(cmd_rd_addr_i'range);
     RdBeats         : unsigned(cmd_rd_size_o'range);
@@ -266,7 +248,7 @@ begin
 
   ------------------------------------------------------------------------------
   -- Combinatorial Process
-  ------------------------------------------------------------------------------	
+  ------------------------------------------------------------------------------
   p_comb : process(r, m_axi_awready, m_axi_bvalid, m_axi_bresp, WrDataFifoORdy, WrDataFifoOVld, WrTransFifoOutVld, WrTransFifoBeats, WrRespIsLast, WrRespFifoVld, cmd_wr_addr_i, cmd_wr_size_i, cmd_wr_low_lat_i, cmd_wr_vld_i, wr_vld_i, WrData_Rdy_I, m_axi_arready, RdRespIsLast, RdRespFifoVld, RdRespLast, cmd_rd_addr_i, cmd_rd_size_o, cmd_rd_low_lat_i, cmd_rd_vld_i, rd_rdy_i, RdDat_Vld_I)
     variable v               : two_process_r;
     variable WrMax4kBeats_v  : unsigned(13 - UnusedAddrBits_c downto 0);
@@ -280,7 +262,7 @@ begin
 
     --------------------------------------------------------------------------
     -- Write Related Code
-    --------------------------------------------------------------------------	
+    --------------------------------------------------------------------------
     if impl_write_g then
 
       -- *** Write Transfer Generation ***
@@ -289,7 +271,7 @@ begin
         when Idle_s =>
           v.cmd_wr_rdy_o := '1';
           if (r.cmd_wr_rdy_o = '1') and (cmd_wr_vld_i = '1') then
-            v.cmd_wr_rdy_o       := '0';
+            v.cmd_wr_rdy_o    := '0';
             v.WrAddr          := unsigned(AddrMasked_f(cmd_wr_addr_i));
             v.WrBeats         := unsigned(cmd_wr_size_i);
             v.WrLowLat        := cmd_wr_low_lat_i;
@@ -363,7 +345,7 @@ begin
       -- .. Implementation is a bit weird for timing optimization reasons.
       -- Use registered WDataFifoWrite: This helps with timing and it does not introduce any risk since
       -- .. the decrement is still done immediately, the increment is delayed by one clock cycle. So worst
-      -- .. case a High-Latency transfer is delayed by one cycle which is acceptable.		
+      -- .. case a High-Latency transfer is delayed by one cycle which is acceptable.
       v.WDataFifoWrite := WrData_Rdy_I and wr_vld_i;
       if r.AwCmdSent = '1' then
         if r.WDataFifoWrite = '1' then
@@ -396,7 +378,7 @@ begin
 
         when Last_s =>
           if WDataTransfer_v then
-            -- Immediately start next transfer 
+            -- Immediately start next transfer
             -- .. WDataFifoRd is checked to leave time for the FIFO to complete the read in case of single cycle transfers
             if (WrTransFifoOutVld = '1') and (r.WDataFifoRd = '0') then
               StartWBurst_v := true;    -- shared code
@@ -434,8 +416,8 @@ begin
           if (m_axi_bresp /= Axi_Resp_Okay_c) then
             v.wr_error_o := '1';
           else
-            v.wr_error_o    := r.WrRespError;
-            v.wr_done_o     := not r.WrRespError;
+            v.wr_error_o  := r.WrRespError;
+            v.wr_done_o   := not r.WrRespError;
             v.WrRespError := '0';
           end if;
         elsif m_axi_bresp /= Axi_Resp_Okay_c then
@@ -447,7 +429,7 @@ begin
 
     --------------------------------------------------------------------------
     -- Read Related Code
-    --------------------------------------------------------------------------	
+    --------------------------------------------------------------------------
     if impl_read_g then
 
       -- *** Read Transfer Generation ***
@@ -456,7 +438,7 @@ begin
         when Idle_s =>
           v.cmd_rd_rdy_o := '1';
           if (r.cmd_rd_rdy_o = '1') and (cmd_rd_vld_i = '1') then
-            v.cmd_rd_rdy_o      := '0';
+            v.cmd_rd_rdy_o   := '0';
             v.RdAddr         := unsigned(AddrMasked_f(cmd_rd_addr_i));
             v.RdBeats        := unsigned(cmd_rd_size_o);
             v.RdLowLat       := cmd_rd_low_lat_i;
@@ -530,7 +512,7 @@ begin
       -- .. Implementation is a bit weird for timing optimization reasons.
       -- Use registered RDataFifoRead: This helps with timing and it does not introduce any risk since
       -- .. the decrement is still done immediately, the increment is delayed by one clock cycle. So worst
-      -- .. case a High-Latency transfer is delayed by one cycle which is acceptable.		
+      -- .. case a High-Latency transfer is delayed by one cycle which is acceptable.
       v.RDataFifoRead := rd_rdy_i and RdDat_Vld_I;
       if r.ArCmdSent = '1' then
         if r.RDataFifoRead = '1' then
@@ -552,8 +534,8 @@ begin
           if (m_axi_rresp /= Axi_Resp_Okay_c) then
             v.rd_error_o := '1';
           else
-            v.rd_error_o    := r.RdRespError;
-            v.rd_done_o     := not r.RdRespError;
+            v.rd_error_o  := r.RdRespError;
+            v.rd_done_o   := not r.RdRespError;
             v.RdRespError := '0';
           end if;
         elsif m_axi_rresp /= Axi_Resp_Okay_c then
@@ -577,7 +559,7 @@ begin
       if m_axi_aresetn = '0' then
         -- *** Write Related Registers ***
         if impl_write_g then
-          r.cmd_wr_rdy_o       <= '0';
+          r.cmd_wr_rdy_o    <= '0';
           r.WriteTfGenState <= Idle_s;
           r.WrTfVld         <= '0';
           r.AwFsm           <= Idle_s;
@@ -588,15 +570,15 @@ begin
           r.WDataEna        <= '0';
           r.WrOpenTrans     <= 0;
           r.WrRespError     <= '0';
-          r.wr_done_o         <= '0';
-          r.wr_error_o        <= '0';
+          r.wr_done_o       <= '0';
+          r.wr_error_o      <= '0';
           r.WrBeatsNoCmd    <= (others => '0');
           r.WFsm            <= Idle_s;
           r.WDataFifoWrite  <= '0';
         end if;
         -- *** Read Related Registers ***
         if impl_read_g then
-          r.cmd_rd_rdy_o       <= '0';
+          r.cmd_rd_rdy_o    <= '0';
           r.ReadTfGenState  <= Idle_s;
           r.RdTfVld         <= '0';
           r.ArFsmRdy        <= '0';
@@ -605,8 +587,8 @@ begin
           r.ArFsm           <= Idle_s;
           r.RdOpenTrans     <= (others => '0');
           r.RdRespError     <= '0';
-          r.rd_done_o         <= '0';
-          r.rd_error_o        <= '0';
+          r.rd_done_o       <= '0';
+          r.rd_error_o      <= '0';
           r.RdFifoSpaceFree <= to_signed(data_fifo_depth_g, r.RdFifoSpaceFree'length);
           r.RDataFifoRead   <= '0';
         end if;
@@ -616,24 +598,24 @@ begin
 
   ------------------------------------------------------------------------------
   -- Outputs
-  ------------------------------------------------------------------------------		
-  cmd_wr_rdy_o     <= r.cmd_wr_rdy_o;
+  ------------------------------------------------------------------------------
+  cmd_wr_rdy_o  <= r.cmd_wr_rdy_o;
   m_axi_awaddr  <= r.m_axi_awaddr;
   m_axi_awlen   <= r.m_axi_awlen;
   m_axi_awvalid <= r.m_axi_awvalid;
   m_axi_wlast   <= r.m_axi_wlast;
-  wr_done_o       <= r.wr_done_o;
-  wr_error_o      <= r.wr_error_o;
-  cmd_rd_rdy_o     <= r.cmd_rd_rdy_o;
+  wr_done_o     <= r.wr_done_o;
+  wr_error_o    <= r.wr_error_o;
+  cmd_rd_rdy_o  <= r.cmd_rd_rdy_o;
   m_axi_araddr  <= r.m_axi_araddr;
   m_axi_arlen   <= r.m_axi_arlen;
   m_axi_arvalid <= r.m_axi_arvalid;
-  rd_done_o       <= r.rd_done_o;
-  rd_error_o      <= r.rd_error_o;
+  rd_done_o     <= r.rd_done_o;
+  rd_error_o    <= r.rd_error_o;
 
   ------------------------------------------------------------------------------
   -- Constant Outputs
-  ------------------------------------------------------------------------------	
+  ------------------------------------------------------------------------------
   m_axi_awsize  <= std_logic_vector(to_unsigned(log2(axi_data_width_g / 8), 3));
   m_axi_arsize  <= std_logic_vector(to_unsigned(log2(axi_data_width_g / 8), 3));
   m_axi_awburst <= Axi_BurstType_Incr_c;
@@ -642,8 +624,8 @@ begin
   m_axi_arcache <= "0011";              -- According AXI reference guide
   m_axi_awprot  <= "000";               -- According AXI reference guide
   m_axi_arprot  <= "000";               -- According AXI reference guide
-  m_axi_awlock  <= '0';                 -- Exclusive access support not implemented 
-  m_axi_arlock  <= '0';                 -- Exclusive access support not implemented 	
+  m_axi_awlock  <= '0';                 -- Exclusive access support not implemented
+  m_axi_arlock  <= '0';                 -- Exclusive access support not implemented
   m_axi_bready  <= '1' when impl_write_g else '0';
 
   ------------------------------------------------------------------------------
@@ -658,22 +640,22 @@ begin
     WrTransFifoInVld <= r.AwFsmRdy and r.WrTfVld;
     fifo_wr_trans : entity work.psi_common_sync_fifo
       generic map(
-        width_g       => BeatsBits_c,
-        depth_g       => axi_max_open_transactions_g,
-        alm_full_on_g   => false,
-        alm_empty_on_g  => false,
+        width_g        => BeatsBits_c,
+        depth_g        => axi_max_open_transactions_g,
+        alm_full_on_g  => false,
+        alm_empty_on_g => false,
         ram_style_g    => "auto",
         ram_behavior_g => ram_behavior_g
       )
       port map(
-        clk_i     => m_axi_aclk,
-        rst_i     => Rst,
-        dat_i  => std_logic_vector(r.WrTfBeats),
-        vld_i   => WrTransFifoInVld,
-        rdy_o   => open,                -- Not required since maximum of open transactions is limitted
+        clk_i => m_axi_aclk,
+        rst_i => Rst,
+        dat_i => std_logic_vector(r.WrTfBeats),
+        vld_i => WrTransFifoInVld,
+        rdy_o => open,                  -- Not required since maximum of open transactions is limitted
         dat_o => WrTransFifoBeats,
-        vld_o  => WrTransFifoOutVld,
-        rdy_i  => r.WDataFifoRd
+        vld_o => WrTransFifoOutVld,
+        rdy_i => r.WDataFifoRd
       );
 
     -- Write Data FIFO
@@ -681,29 +663,29 @@ begin
       signal InData  : std_logic_vector(wr_dat_i'length + wr_data_be'length - 1 downto 0);
       signal OutData : std_logic_vector(InData'range);
     begin
-      InData(wr_dat_i'high downto wr_dat_i'low)                        <= wr_dat_i;
+      InData(wr_dat_i'high downto wr_dat_i'low)                          <= wr_dat_i;
       InData(wr_dat_i'high + wr_data_be'length downto wr_dat_i'high + 1) <= wr_data_be;
       fifo_wr_data : entity work.psi_common_sync_fifo
         generic map(
-          width_g       => wr_dat_i'length + wr_data_be'length,
-          depth_g       => data_fifo_depth_g,
-          alm_full_on_g   => false,
-          alm_empty_on_g  => false,
+          width_g        => wr_dat_i'length + wr_data_be'length,
+          depth_g        => data_fifo_depth_g,
+          alm_full_on_g  => false,
+          alm_empty_on_g => false,
           ram_style_g    => "auto",
           ram_behavior_g => ram_behavior_g
         )
         port map(
-          clk_i     => m_axi_aclk,
-          rst_i     => Rst,
-          dat_i  => InData,
-          vld_i   => wr_vld_i,
-          rdy_o   => WrData_Rdy_I,
+          clk_i => m_axi_aclk,
+          rst_i => Rst,
+          dat_i => InData,
+          vld_i => wr_vld_i,
+          rdy_o => WrData_Rdy_I,
           dat_o => OutData,
-          vld_o  => WrDataFifoOVld,
-          rdy_i  => WrDataFifoORdy
+          vld_o => WrDataFifoOVld,
+          rdy_i => WrDataFifoORdy
         );
-      m_axi_wdata                                                          <= OutData(wr_dat_i'high downto wr_dat_i'low);
-      m_axi_wstrb                                                          <= OutData(wr_dat_i'high + wr_data_be'length downto wr_dat_i'high + 1);
+      m_axi_wdata                                                        <= OutData(wr_dat_i'high downto wr_dat_i'low);
+      m_axi_wstrb                                                        <= OutData(wr_dat_i'high + wr_data_be'length downto wr_dat_i'high + 1);
 
       m_axi_wvalid   <= WrDataFifoOVld and r.WDataEna;
       WrDataFifoORdy <= m_axi_wready and r.WDataEna;
@@ -714,22 +696,22 @@ begin
     -- FIFO for write response FSM
     fifo_wr_resp : entity work.psi_common_sync_fifo
       generic map(
-        width_g       => 1,
-        depth_g       => axi_max_open_transactions_g,
-        alm_full_on_g   => false,
-        alm_empty_on_g  => false,
+        width_g        => 1,
+        depth_g        => axi_max_open_transactions_g,
+        alm_full_on_g  => false,
+        alm_empty_on_g => false,
         ram_style_g    => "auto",
         ram_behavior_g => ram_behavior_g
       )
       port map(
         clk_i    => m_axi_aclk,
         rst_i    => Rst,
-        dat_i(0)                                                                                                                                                                                                                                                                                                                => r.WrTfIsLast,
-        vld_i  => WrTransFifoInVld,
-        rdy_o  => open,                 -- Not required since maximum of open transactions is limitted
-        dat_o(0)                                                                                                                                                                                                                                                                                                                                                                                                                                                                  => WrRespIsLast,
-        vld_o => WrRespFifoVld,
-        rdy_i => m_axi_bvalid
+        dat_i(0) => r.WrTfIsLast,
+        vld_i    => WrTransFifoInVld,
+        rdy_o    => open,               -- Not required since maximum of open transactions is limitted
+        dat_o(0) => WrRespIsLast,
+        vld_o    => WrRespFifoVld,
+        rdy_i    => m_axi_bvalid
       );
   end generate;
 
@@ -738,7 +720,7 @@ begin
     m_axi_wstrb  <= (others => '0');
     m_axi_wdata  <= (others => '0');
     m_axi_wvalid <= '0';
-    wr_rdy_o    <= '0';
+    wr_rdy_o     <= '0';
   end generate;
 
   -- *** Read FIFOs ***
@@ -749,25 +731,25 @@ begin
     begin
       fifo_wr_data : entity work.psi_common_sync_fifo
         generic map(
-          width_g       => rd_dat_o'length,
-          depth_g       => data_fifo_depth_g,
-          alm_full_on_g   => false,
-          alm_empty_on_g  => false,
+          width_g        => rd_dat_o'length,
+          depth_g        => data_fifo_depth_g,
+          alm_full_on_g  => false,
+          alm_empty_on_g => false,
           ram_style_g    => "auto",
           ram_behavior_g => ram_behavior_g
         )
         port map(
-          clk_i     => m_axi_aclk,
-          rst_i     => Rst,
-          dat_i  => m_axi_rdata,
-          vld_i   => m_axi_rvalid,
-          rdy_o   => M_Axi_RReady_I,
+          clk_i => m_axi_aclk,
+          rst_i => Rst,
+          dat_i => m_axi_rdata,
+          vld_i => m_axi_rvalid,
+          rdy_o => M_Axi_RReady_I,
           dat_o => rd_dat_o,
-          vld_o  => RdDat_Vld_I,
-          rdy_i  => rd_rdy_i
+          vld_o => RdDat_Vld_I,
+          rdy_i => rd_rdy_i
         );
 
-      rd_vld_o    <= RdDat_Vld_I;
+      rd_vld_o     <= RdDat_Vld_I;
       m_axi_rready <= M_Axi_RReady_I;
     end block;
 
@@ -776,22 +758,22 @@ begin
     RdRespLast       <= m_axi_rvalid and M_Axi_RReady_I and m_axi_rlast;
     fifo_rd_resp : entity work.psi_common_sync_fifo
       generic map(
-        width_g       => 1,
-        depth_g       => axi_max_open_transactions_g,
-        alm_full_on_g   => false,
-        alm_empty_on_g  => false,
+        width_g        => 1,
+        depth_g        => axi_max_open_transactions_g,
+        alm_full_on_g  => false,
+        alm_empty_on_g => false,
         ram_style_g    => "auto",
         ram_behavior_g => ram_behavior_g
       )
       port map(
         clk_i    => m_axi_aclk,
         rst_i    => Rst,
-        dat_i(0)                                                                                                                                                                                                                                                                                                                => r.RdTfIsLast,
-        vld_i  => RdTransFifoInVld,
-        rdy_o  => open,                 -- Not required since maximum of open transactions is limitted
-        dat_o(0)                                                                                                                                                                                                                                                                                                                                                                                                                                                                  => RdRespIsLast,
-        vld_o => RdRespFifoVld,
-        rdy_i => RdRespLast
+        dat_i(0) => r.RdTfIsLast,
+        vld_i    => RdTransFifoInVld,
+        rdy_o    => open,               -- Not required since maximum of open transactions is limitted
+        dat_o(0) => RdRespIsLast,
+        vld_o    => RdRespFifoVld,
+        rdy_i    => RdRespLast
       );
 
   end generate;
@@ -799,8 +781,8 @@ begin
   -- Tie signals to ground if read not implemented
   g_nread : if not impl_read_g generate
     m_axi_rready <= '0';
-    rd_dat_o   <= (others => '0');
-    rd_vld_o    <= '0';
+    rd_dat_o     <= (others => '0');
+    rd_vld_o     <= '0';
   end generate;
 
-end rtl;
+end architecture;

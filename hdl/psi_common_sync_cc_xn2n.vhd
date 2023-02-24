@@ -11,17 +11,11 @@
 -- the output clock period is an integer multiple of the input clock period
 -- (input clock frequency is an integer multiple of the output clock frequency).
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 -- $$ processes=stim,check $$
 entity psi_common_sync_cc_xn2n is
   generic(
@@ -29,23 +23,20 @@ entity psi_common_sync_cc_xn2n is
   );
   port(
     -- Input
-    clk_i   : in  std_logic;            -- $$ type=clk; freq=200e6 $$
-    rst_i   : in  std_logic;            -- $$ type=rst; clk=InClk $$
-    vld_i   : in  std_logic;
-    rdy_o   : out std_logic;
-    dat_i  : in  std_logic_vector(width_g - 1 downto 0);
+    clk_i : in  std_logic;              -- $$ type=clk; freq=200e6 $$
+    rst_i : in  std_logic;              -- $$ type=rst; clk=InClk $$
+    vld_i : in  std_logic;
+    rdy_o : out std_logic;
+    dat_i : in  std_logic_vector(width_g - 1 downto 0);
     -- Output
-    clk_o  : in  std_logic;            -- $$ type=clk; freq=100e6 $$
-    rst_o  : in  std_logic := '0';     -- $$ type=rst; clk=OutClk $$
-    vld_o  : out std_logic;
-    rdy_i  : in  std_logic := '1';
+    clk_o : in  std_logic;              -- $$ type=clk; freq=100e6 $$
+    rst_o : in  std_logic := '0';       -- $$ type=rst; clk=OutClk $$
+    vld_o : out std_logic;
+    rdy_i : in  std_logic := '1';
     dat_o : out std_logic_vector(width_g - 1 downto 0)
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_sync_cc_xn2n is
 
   -- Input Side
@@ -103,5 +94,4 @@ begin
 
   vld_o <= OutVld_I;
 
-end;
-
+end architecture;

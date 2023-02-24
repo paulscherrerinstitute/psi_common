@@ -33,32 +33,23 @@
 --
 --
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
 entity psi_common_dont_opt is
   generic(
     from_dut_width_g : positive := 8;
     to_dut_width_g   : positive := 16
   );
   port(
-    clk_i     : in    std_logic;          -- && type=clk; freq=100e6 &&
-    pin_io  : inout std_logic_vector(3 downto 0);
-    dat_o   : out   std_logic_vector(to_dut_width_g - 1 downto 0);
-    dat_i : in    std_logic_vector(from_dut_width_g - 1 downto 0)
+    clk_i  : in    std_logic;           -- && type=clk; freq=100e6 &&
+    pin_io : inout std_logic_vector(3 downto 0);
+    dat_o  : out   std_logic_vector(to_dut_width_g - 1 downto 0);
+    dat_i  : in    std_logic_vector(from_dut_width_g - 1 downto 0)
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_dont_opt is
 
   type two_process_t is record
@@ -107,5 +98,4 @@ begin
     end if;
   end process;
 
-end;
-
+end architecture;

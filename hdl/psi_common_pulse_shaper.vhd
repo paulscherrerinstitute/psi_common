@@ -8,42 +8,34 @@
 -- Description
 ------------------------------------------------------------------------------
 -- This is a pulse shaping block allowing to generate pulses of a fixed length
--- from pulses with an unknown length. Additionally input pulses occuring 
+-- from pulses with an unknown length. Additionally input pulses occuring
 -- during a configurable hold-off time can be ignored after one pulse was detected.
 -- A new parameter has been added in order to hold, if wanted, the pulse value
 -- when this mode is used the holdoff parameter is not releveant anymore -> 0
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
+
 -- $$ processes=stimuli $$
 entity psi_common_pulse_shaper is
   generic(
-    duration_g : positive := 3;         -- Output pulse duration in clock cycles															$$ constant=3 $$
-    hold_in_g   : boolean  := false;     -- Hold input pulse to the output																	
-    hold_off_g  : natural  := 0          -- Minimum number of clock cycles between input pulses, if pulses arrive faster, they are ignored	$$ constant=20 $$
+    duration_g : positive := 3;         -- Output pulse duration in clock cycles
+    hold_in_g  : boolean  := false;     -- Hold input pulse to the output
+    hold_off_g : natural  := 0          -- Minimum number of clock cycles between input pulses, if pulses arrive faster, they are ignored	$$ constant=20 $$
   );
   port(
-    clk_i      : in  std_logic;           -- $$ type=clk; freq=100e6 $$
-    rst_i      : in  std_logic;           -- $$ type=rst; clk=Clk $$
-    dat_i  : in  std_logic;
+    clk_i : in  std_logic;              -- $$ type=clk; freq=100e6 $$
+    rst_i : in  std_logic;              -- $$ type=rst; clk=Clk $$
+    dat_i : in  std_logic;
     dat_o : out std_logic
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_pulse_shaper is
   -- Two Process Method
   type two_process_r is record
     PulseLast : std_logic;
-    dat_o  : std_logic;
+    dat_o     : std_logic;
     DurCnt    : integer range 0 to duration_g - 1;
     HoCnt     : integer range 0 to hold_off_g;
   end record;
@@ -51,9 +43,6 @@ architecture rtl of psi_common_pulse_shaper is
 
 begin
 
-  --------------------------------------------------------------------------
-  -- Combinatorial Process
-  --------------------------------------------------------------------------
   p_comb : process(r, dat_i)
     variable v : two_process_r;
   begin
@@ -64,7 +53,7 @@ begin
     v.PulseLast := dat_i;
     if r.DurCnt = 0 then
       if hold_in_g then
-        v.dat_o := r.dat_o and dat_i; --keep the value of the input pulse
+        v.dat_o := r.dat_o and dat_i;   --keep the value of the input pulse
       else
         v.dat_o := '0';
       end if;
@@ -75,9 +64,9 @@ begin
       v.HoCnt := r.HoCnt - 1;
     end if;
     if (dat_i = '1') and (r.PulseLast = '0') and (r.HoCnt = 0) then
-      v.dat_o := '1';
-      v.HoCnt    := hold_off_g;
-      v.DurCnt   := duration_g - 1;
+      v.dat_o  := '1';
+      v.HoCnt  := hold_off_g;
+      v.DurCnt := duration_g - 1;
     end if;
 
     -- Apply to record
@@ -88,16 +77,13 @@ begin
   -- *** Output ***
   dat_o <= r.dat_o;
 
-  --------------------------------------------------------------------------
-  -- Sequential Process
-  --------------------------------------------------------------------------	
   p_seq : process(clk_i)
   begin
     if rising_edge(clk_i) then
       r <= r_next;
       if rst_i = '1' then
         r.dat_o <= '0';
-        r.HoCnt    <= 0;
+        r.HoCnt <= 0;
       end if;
     end if;
   end process;

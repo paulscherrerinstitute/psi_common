@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --  Copyright (c) 2021 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
---  Authors: BenoÃÂ®t Stef
+--  Authors: Benoit Stef
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -11,13 +11,10 @@
 -- the RAZ signal allows to generate the min || max value prior this signal
 -- is set to 1. Output is one clock cycle delayed with a strobe 
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
---@formater:off
+--@formatter:off
 entity psi_common_find_min_max is
   generic(rst_pol_g : std_logic := '0';                            --rst pol select
           length_g  : natural   := 16;                             --data lenght
@@ -27,14 +24,14 @@ entity psi_common_find_min_max is
           rst_i     : in  std_logic;                               --sync reset
           str_i     : in  std_logic;                               --strobe in
           raz_i     : in  std_logic;                               --reset  output
-          dat_i    : in  std_logic_vector(length_g - 1 downto 0); --data input
+          dat_i     : in  std_logic_vector(length_g - 1 downto 0); --data input
           str_o     : out std_logic;                               --strobe output
-          dat_o    : out std_logic_vector(length_g - 1 downto 0); --data output
-          run_dat_o : out std_logic_vector(length_g - 1 downto 0);    --data output running
+          dat_o     : out std_logic_vector(length_g - 1 downto 0); --data output
+          run_dat_o : out std_logic_vector(length_g - 1 downto 0); --data output running
           run_str_o : out std_logic
       );
 end entity;
---@formater:on
+--@formatter:on
 architecture rtl of psi_common_find_min_max is
   signal data_s    : std_logic_vector(length_g - 1 downto 0) := (others => '0');
   signal raz_dff_s : std_logic                               := '0';

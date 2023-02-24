@@ -9,17 +9,11 @@
 ------------------------------------------------------------------------------
 -- This entity implements multiple pipeline stages for an axi mm slave interface.
 -- It is based on
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
-
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
+-
 -- $$ processes=master,slave $$
 entity psi_common_axi_multi_pl_stage is
   generic(
@@ -29,13 +23,12 @@ entity psi_common_axi_multi_pl_stage is
   );
   port(
     -- global signals
-    clk_i        : in  std_logic;         -- $$ type=clk; freq=100.0e6 $$
-    rst_i        : in  std_logic;         -- $$ type=rst; clk=Clk $$
+    clk_i        : in  std_logic;       -- $$ type=clk; freq=100.0e6 $$
+    rst_i        : in  std_logic;       -- $$ type=rst; clk=Clk $$
 
     -------------------------------------------------------------------------------------------
     -- input interface
     -------------------------------------------------------------------------------------------
-
     -- write address channel
     InAwAddr   : in  std_logic_vector(addr_width_g - 1 downto 0);
     InAwValid  : in  std_logic;
@@ -75,7 +68,6 @@ entity psi_common_axi_multi_pl_stage is
     -------------------------------------------------------------------------------------------
     -- output interface
     -------------------------------------------------------------------------------------------
-
     -- write address channel
     OutAwAddr  : out std_logic_vector(addr_width_g - 1 downto 0);
     OutAwValid : out std_logic;
@@ -115,9 +107,6 @@ entity psi_common_axi_multi_pl_stage is
   );
 end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_axi_multi_pl_stage is
 
   constant LenWidth_c   : positive := 8;
@@ -262,5 +251,4 @@ begin
   InRResp <= RDataOut(RespWidth_c - 1 + 1 downto 1);
   InRData <= RDataOut(data_width_g + RespWidth_c downto data_width_g + RespWidth_c - data_width_g + 1);
 
-end;
-
+end architecture;
