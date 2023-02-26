@@ -47,16 +47,16 @@ architecture sim of psi_common_par_tdm_tb is
   constant TbProcNr_outp_c    : integer                  := 1;
 
   -- *** DUT Signals ***
-  signal clk_i          : std_logic                                                      := '1';
-  signal rst_i          : std_logic                                                      := '1';
-  signal dat_i     : std_logic_vector(channel_count_g * channel_width_g - 1 downto 0) := (others => '0');
-  signal vld_i  : std_logic                                                      := '0';
-  signal rdy_o  : std_logic                                                      := '0';
-  signal last_i : std_logic                                                      := '1';
-  signal dat_o          : std_logic_vector(channel_width_g - 1 downto 0)                  := (others => '0');
-  signal vld_o       : std_logic                                                      := '0';
-  signal rdy_i       : std_logic                                                      := '1';
-  signal last_o      : std_logic                                                      := '0';
+  signal clk_i  : std_logic                                                        := '1';
+  signal rst_i  : std_logic                                                        := '1';
+  signal dat_i  : std_logic_vector(channel_count_g * channel_width_g - 1 downto 0) := (others => '0');
+  signal vld_i  : std_logic                                                        := '0';
+  signal rdy_o  : std_logic                                                        := '0';
+  signal last_i : std_logic                                                        := '1';
+  signal dat_o  : std_logic_vector(channel_width_g - 1 downto 0)                   := (others => '0');
+  signal vld_o  : std_logic                                                        := '0';
+  signal rdy_i  : std_logic                                                        := '1';
+  signal last_o : std_logic                                                        := '0';
 
   -- handwritten
   signal TestCase : integer         := -1;
@@ -86,19 +86,20 @@ begin
   i_dut : entity work.psi_common_par_tdm
     generic map(
       channel_count_g => channel_count_g,
-      channel_width_g => channel_width_g
+      channel_width_g => channel_width_g,
+      rst_pol_g       => '1'
     )
     port map(
-      clk_i          => clk_i,
-      rst_i          => rst_i,
-      dat_i     => dat_i,
+      clk_i  => clk_i,
+      rst_i  => rst_i,
+      dat_i  => dat_i,
       vld_i  => vld_i,
       rdy_o  => rdy_o,
       last_i => last_i,
-      dat_o          => dat_o,
-      vld_o       => vld_o,
-      rdy_i       => rdy_i,
-      last_o      => last_o
+      dat_o  => dat_o,
+      vld_o  => vld_o,
+      rdy_i  => rdy_i,
+      last_o => last_o
     );
 
   ------------------------------------------------------------
@@ -154,9 +155,9 @@ begin
     Channels(0) <= X"01";
     Channels(1) <= X"11";
     Channels(2) <= X"21";
-    vld_i <= '1';
+    vld_i       <= '1';
     wait until rising_edge(clk_i);
-    vld_i <= '0';
+    vld_i       <= '0';
     Channels    <= (others => (others => '0'));
     wait for 1 us;
 
@@ -165,9 +166,9 @@ begin
     Channels(0) <= X"02";
     Channels(1) <= X"12";
     Channels(2) <= X"22";
-    vld_i <= '1';
+    vld_i       <= '1';
     wait until rising_edge(clk_i);
-    vld_i <= '0';
+    vld_i       <= '0';
     Channels    <= (others => (others => '0'));
     wait for 1 us;
 
@@ -178,25 +179,25 @@ begin
       Channels(0) <= std_logic_vector(to_unsigned(16#50# + i, channel_width_g));
       Channels(1) <= std_logic_vector(to_unsigned(16#60# + i, channel_width_g));
       Channels(2) <= std_logic_vector(to_unsigned(16#70# + i, channel_width_g));
-      vld_i <= '1';
+      vld_i       <= '1';
       wait until rising_edge(clk_i);
-      vld_i <= '0';
+      vld_i       <= '0';
       Channels    <= (others => (others => '0'));
       wait until rising_edge(clk_i);
     end loop;
     wait for 1 us;
-        
+
     -- *** Handshaking ***
     TestCase <= 2;
     wait until rising_edge(clk_i);
-    vld_i <= '1';
-    for spl in 0 to 5 loop          
-      for ch in 0 to 2 loop             
-        Channels(ch) <= std_logic_vector(to_unsigned(spl*10+ch, channel_width_g));
+    vld_i    <= '1';
+    for spl in 0 to 5 loop
+      for ch in 0 to 2 loop
+        Channels(ch) <= std_logic_vector(to_unsigned(spl * 10 + ch, channel_width_g));
       end loop;
       wait until rising_edge(clk_i) and rdy_o = '1' for 1 us;
     end loop;
-    vld_i <= '0';     
+    vld_i    <= '0';
 
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_inp_c) <= '1';
@@ -225,18 +226,18 @@ begin
     -- *** Handshaking ***
     wait until TestCase = 2;
     rdy_i <= '0';
-    for spl in 0 to 5 loop          
-      for ch in 0 to 2 loop 
+    for spl in 0 to 5 loop
+      for ch in 0 to 2 loop
         for ck in 0 to 9 loop
           wait until rising_edge(clk_i);
         end loop;
         rdy_i <= '1';
         wait until rising_edge(clk_i) and vld_o = '1' for 1 us;
-        StdlvCompareInt (spl*10+ch, dat_o, "Wrong value Channel " & to_string(ch), false);
+        StdlvCompareInt(spl * 10 + ch, dat_o, "Wrong value Channel " & to_string(ch), false);
         rdy_i <= '0';
       end loop;
-    end loop;   
-        
+    end loop;
+
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_outp_c) <= '1';
     wait;

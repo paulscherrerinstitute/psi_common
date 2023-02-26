@@ -21,9 +21,6 @@ use ieee.numeric_std.all;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity
-------------------------------------------------------------------------------
 -- $$ testcases=simple_tf,axi_hs,user_hs,all_shifts$$
 -- $$ processes=user_cmd,user_data,user_resp,axi $$
 -- $$ tbpkg=work.psi_tb_txt_util,work.psi_tb_compare_pkg,work.psi_tb_activity_pkg $$
@@ -45,37 +42,31 @@ entity psi_common_axi_master_full is
     -- Control Signals
     m_axi_aclk       : in  std_logic;   -- $$ type=clk; freq=100e6; proc=user_cmd,user_data,user_resp,axi $$
     m_axi_aresetn    : in  std_logic;   -- $$ type=rst; clk=M_Axi_Aclk; lowactive=true $$
-
     -- User Command Interface
     cmd_wr_addr_i    : in  std_logic_vector(axi_addr_width_g - 1 downto 0)             := (others => '0'); -- $$ proc=user_cmd $$
     cmd_wr_size_i    : in  std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0'); -- $$ proc=user_cmd $$
     cmd_wr_low_lat_i : in  std_logic                                                   := '0'; -- $$ proc=user_cmd $$
     cmd_wr_vld_i     : in  std_logic                                                   := '0'; -- $$ proc=user_cmd $$
     cmd_wr_rdy_o     : out std_logic;   -- $$ proc=user_cmd $$
-
     -- User Command Interface
     cmd_rd_addr_i    : in  std_logic_vector(axi_addr_width_g - 1 downto 0)             := (others => '0'); -- $$ proc=user_cmd $$
     cmd_rd_size_o    : in  std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0'); -- $$ proc=user_cmd $$
     cmd_rd_low_lat_i : in  std_logic                                                   := '0'; -- $$ proc=user_cmd $$
     cmd_rd_vld_i     : in  std_logic                                                   := '0'; -- $$ proc=user_cmd $$
     cmd_rd_rdy_o     : out std_logic;   -- $$ proc=user_cmd $$
-
     -- Write Data
     wr_dat_i         : in  std_logic_vector(data_width_g - 1 downto 0)                 := (others => '0'); -- $$ proc=user_data $$
     wr_vld_i         : in  std_logic                                                   := '0'; -- $$ proc=user_data $$
     wr_rdy_o         : out std_logic;   -- $$ proc=user_data $$
-
     -- Read Data
     rd_dat_o         : out std_logic_vector(data_width_g - 1 downto 0); -- $$ proc=user_data $$
     rd_vld_o         : out std_logic;   -- $$ proc=user_data $$
     rd_rdy_i         : in  std_logic                                                   := '0'; -- $$ proc=user_data $$
-
     -- Response
     wr_done_o        : out std_logic;   -- $$ proc=user_resp $$
     wr_error_o       : out std_logic;   -- $$ proc=user_resp $$
     rd_done_o        : out std_logic;   -- $$ proc=user_resp $$
     rd_error_o       : out std_logic;   -- $$ proc=user_resp $$
-
     -- AXI Address Write Channel
     m_axi_awaddr     : out std_logic_vector(axi_addr_width_g - 1 downto 0); -- $$ proc=axi $$
     m_axi_awlen      : out std_logic_vector(7 downto 0); -- $$ proc=axi $$
@@ -86,19 +77,16 @@ entity psi_common_axi_master_full is
     m_axi_awprot     : out std_logic_vector(2 downto 0); -- $$ proc=axi $$
     m_axi_awvalid    : out std_logic;   -- $$ proc=axi $$
     m_axi_awready    : in  std_logic                                                   := '0'; -- $$ proc=axi $$
-
     -- AXI Write Data Channel                                                           					-- $$ proc=axi $$
     m_axi_wdata      : out std_logic_vector(axi_data_width_g - 1 downto 0); -- $$ proc=axi $$
     m_axi_wstrb      : out std_logic_vector(axi_data_width_g / 8 - 1 downto 0); -- $$ proc=axi $$
     m_axi_wlast      : out std_logic;   -- $$ proc=axi $$
     m_axi_wvalid     : out std_logic;   -- $$ proc=axi $$
     m_axi_wready     : in  std_logic                                                   := '0'; -- $$ proc=axi $$
-
     -- AXI Write Response Channel
     m_axi_bresp      : in  std_logic_vector(1 downto 0)                                := (others => '0'); -- $$ proc=axi $$
     m_axi_bvalid     : in  std_logic                                                   := '0'; -- $$ proc=axi $$
     m_axi_bready     : out std_logic;   -- $$ proc=axi $$
-
     -- AXI Read Address Channel
     m_axi_araddr     : out std_logic_vector(axi_addr_width_g - 1 downto 0); -- $$ proc=axi $$
     m_axi_arlen      : out std_logic_vector(7 downto 0); -- $$ proc=axi $$
@@ -109,7 +97,6 @@ entity psi_common_axi_master_full is
     m_axi_arprot     : out std_logic_vector(2 downto 0); -- $$ proc=axi $$
     m_axi_arvalid    : out std_logic;   -- $$ proc=axi $$
     m_axi_arready    : in  std_logic                                                   := '0'; -- $$ proc=axi $$
-
     -- AXI Read Data Channel
     m_axi_rdata      : in  std_logic_vector(axi_data_width_g - 1 downto 0)             := (others => '0'); -- $$ proc=axi $$
     m_axi_rresp      : in  std_logic_vector(1 downto 0)                                := (others => '0'); -- $$ proc=axi $$
@@ -126,7 +113,6 @@ architecture rtl of psi_common_axi_master_full is
   ------------------------------------------------------------------------------
   constant AxiBytes_c   : natural := axi_data_width_g / 8;
   constant DataBytes_c  : natural := data_width_g / 8;
-  constant WidthRatio_c : natural := axi_data_width_g / data_width_g;
 
   ------------------------------------------------------------------------------
   -- Type
@@ -209,7 +195,6 @@ architecture rtl of psi_common_axi_master_full is
   ------------------------------------------------------------------------------
   -- Instantiation Signals
   ------------------------------------------------------------------------------
-  signal Rst           : std_logic;
   signal WrFifo_Data   : std_logic_vector(wr_dat_i'range);
   signal WrFifo_Vld    : std_logic;
   signal AxiWrCmd_Rdy  : std_logic;
@@ -588,15 +573,6 @@ begin
   cmd_wr_rdy_o <= r.cmd_wr_rdy_o;
   cmd_rd_rdy_o <= r.cmd_rd_rdy_o;
 
-  ------------------------------------------------------------------------------
-  -- Constant Outputs
-  ------------------------------------------------------------------------------
-
-  ------------------------------------------------------------------------------
-  -- Instantiations
-  ------------------------------------------------------------------------------
-  Rst <= not m_axi_aresetn;
-
   -- AXI Master Interface
   AxiWrDat_Data <= r.WrAlignReg(AxiWrDat_Data'range);
   AxiWrDat_Be   <= r.WrAlignBe(AxiWrDat_Be'range);
@@ -610,8 +586,7 @@ begin
       data_fifo_depth_g            => axi_fifo_depth_g,
       impl_read_g                  => impl_read_g,
       impl_write_g                 => impl_write_g,
-      ram_behavior_g               => ram_behavior_g
-    )
+      ram_behavior_g               => ram_behavior_g)
     port map(
       -- Control Signals
       m_axi_aclk       => m_axi_aclk,
@@ -630,7 +605,7 @@ begin
       cmd_rd_rdy_o     => AxiRdCmd_Rdy,
       -- Write Data
       wr_dat_i         => AxiWrDat_Data,
-      wr_data_be       => AxiWrDat_Be,
+      wr_data_be_i     => AxiWrDat_Be,
       wr_vld_i         => r.WrAlignVld,
       wr_rdy_o         => AxiWrDat_Rdy,
       -- Read Data
@@ -677,26 +652,26 @@ begin
       m_axi_rresp      => m_axi_rresp,
       m_axi_rlast      => m_axi_rlast,
       m_axi_rvalid     => m_axi_rvalid,
-      m_axi_rready     => m_axi_rready
-    );
+      m_axi_rready     => m_axi_rready);
 
   -- *** Write Releated Code ***
   g_write : if impl_write_g generate
 
     -- Write Data FIFO
     WrFifo_Rdy <= WrWconv_Rdy and WrWconvEna;
-    fifo_wr_data : entity work.psi_common_sync_fifo
+    i_fifo_wr_data : entity work.psi_common_sync_fifo
       generic map(
         width_g        => data_width_g,
         depth_g        => data_fifo_depth_g,
         alm_full_on_g  => false,
         alm_empty_on_g => false,
         ram_style_g    => "auto",
-        ram_behavior_g => ram_behavior_g
+        ram_behavior_g => ram_behavior_g,
+        rst_pol_g      => '0'
       )
       port map(
         clk_i => m_axi_aclk,
-        rst_i => Rst,
+        rst_i => m_axi_aresetn,
         dat_i => wr_dat_i,
         vld_i => wr_vld_i,
         rdy_o => wr_rdy_o,
@@ -708,24 +683,21 @@ begin
     -- Write Data With Conversion
     WrWconv_Vld <= WrWconvEna and WrFifo_Vld;
     WrData_Rdy  <= AxiWrDat_Rdy and WrDataEna;
-    wc_wr : entity work.psi_common_wconv_n2xn
-      generic map(
-        width_in_g  => data_width_g,
-        width_out_g => axi_data_width_g
-      )
-      port map(
-        clk_i     => m_axi_aclk,
-        rst_i     => Rst,
-        vld_i     => WrWconv_Vld,
-        rdy_in_i  => WrWconv_Rdy,
-        dat_i     => WrFifo_Data,
-        last_i    => WrWconv_Last,
-        vld_o     => WrData_Vld,
-        rdy_out_i => WrData_Rdy,
-        dat_o     => WrData_Data,
-        last_o    => WrData_Last,
-        we_o      => WrData_We
-      );
+    i_wc_wr : entity work.psi_common_wconv_n2xn
+      generic map( width_in_g  => data_width_g,
+                   width_out_g => axi_data_width_g,
+                   rst_pol_g   => '0')
+      port map(    clk_i     => m_axi_aclk,
+                   rst_i     => m_axi_aresetn,
+                   vld_i     => WrWconv_Vld,
+                   rdy_in_i  => WrWconv_Rdy,
+                   dat_i     => WrFifo_Data,
+                   last_i    => WrWconv_Last,
+                   vld_o     => WrData_Vld,
+                   rdy_out_i => WrData_Rdy,
+                   dat_o     => WrData_Data,
+                   last_o    => WrData_Last,
+                   we_o      => WrData_We);
   end generate;
   g_nwrite : if not impl_write_g generate
     wr_rdy_o <= '0';
@@ -734,25 +706,22 @@ begin
   -- *** Read Releated Code ***
   g_read : if impl_read_g generate
     -- Read Data FIFO
-    fifo_rd_data : entity work.psi_common_sync_fifo
-      generic map(
-        width_g        => data_width_g,
-        depth_g        => data_fifo_depth_g,
-        alm_full_on_g  => false,
-        alm_empty_on_g => false,
-        ram_style_g    => "auto",
-        ram_behavior_g => ram_behavior_g
-      )
-      port map(
-        clk_i => m_axi_aclk,
-        rst_i => Rst,
-        dat_i => RdFifo_Data,
-        vld_i => RdFifo_Vld,
-        rdy_o => RdFifo_Rdy,
-        dat_o => rd_dat_o,
-        vld_o => rd_vld_o,
-        rdy_i => rd_rdy_i
-      );
+    i_fifo_rd_data : entity work.psi_common_sync_fifo
+      generic map(width_g        => data_width_g,
+                  depth_g        => data_fifo_depth_g,
+                  alm_full_on_g  => false,
+                  alm_empty_on_g => false,
+                  ram_style_g    => "auto",
+                  ram_behavior_g => ram_behavior_g,
+                  rst_pol_g      => '0'      )
+      port map(     clk_i => m_axi_aclk,
+                    rst_i => m_axi_aresetn,
+                    dat_i => RdFifo_Data,
+                    vld_i => RdFifo_Vld,
+                    rdy_o => RdFifo_Rdy,
+                    dat_o => rd_dat_o,
+                    vld_o => rd_vld_o,
+                    rdy_i => rd_rdy_i);
   end generate;
   g_nread : if not impl_read_g generate
     rd_vld_o <= '0';

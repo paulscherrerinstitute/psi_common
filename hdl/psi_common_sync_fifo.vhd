@@ -27,7 +27,8 @@ entity psi_common_sync_fifo is
     alm_empty_level_g : natural   := 4; -- almost empty level threshold val
     ram_style_g       : string    := "auto"; -- RAM style selected -> "Auto" choose depedning size block-RAM or dist-RAM | "distributed" | "block"
     ram_behavior_g    : string    := "RBW"; -- "RBW" = read-before-write, "WBR" = write-before-read
-    rdy_rst_state_g   : std_logic := '1' -- Use '1' for minimal logic on Rdy path
+    rdy_rst_state_g   : std_logic := '1'; -- Use '1' for minimal logic on Rdy path
+    rst_pol_g         : std_logic := '1'
   );
   port(
     -- Control Ports
@@ -159,7 +160,7 @@ begin
   begin
     if rising_edge(clk_i) then
       r <= r_next;
-      if rst_i = '1' then
+      if rst_i = rst_pol_g then
         r.WrLevel <= (others => '0');
         r.RdLevel <= (others => '0');
         r.RdUp    <= '0';

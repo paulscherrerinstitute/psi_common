@@ -56,7 +56,7 @@ entity psi_common_axi_master_simple is
     cmd_rd_rdy_o     : out std_logic;                                                                       -- $$ proc=user_cmd $$
     -- Write Data
     wr_dat_i         : in  std_logic_vector(axi_data_width_g - 1 downto 0)             := (others => '0');  -- $$ proc=user_data $$
-    wr_data_be       : in  std_logic_vector(axi_data_width_g / 8 - 1 downto 0)         := (others => '0');  -- $$ proc=user_data $$
+    wr_data_be_i     : in  std_logic_vector(axi_data_width_g / 8 - 1 downto 0)         := (others => '0');  -- $$ proc=user_data $$
     wr_vld_i         : in  std_logic                                                   := '0';              -- $$ proc=user_data $$
     wr_rdy_o         : out std_logic;                                                                       -- $$ proc=user_data $$
     -- Read Data
@@ -223,7 +223,7 @@ architecture rtl of psi_common_axi_master_simple is
   ------------------------------------------------------------------------------
   -- Instantiation Signals
   ------------------------------------------------------------------------------
-  signal Rst               : std_logic;
+ -- signal Rst               : std_logic;
   signal WrDataFifoORdy    : std_logic;
   signal WrDataFifoOVld    : std_logic;
   signal WrTransFifoInVld  : std_logic;
@@ -631,52 +631,50 @@ begin
   ------------------------------------------------------------------------------
   -- Instantiations
   ------------------------------------------------------------------------------
-  Rst <= not m_axi_aresetn;
 
   -- *** Write FIFOs ***
   g_write : if impl_write_g generate
 
     -- FIFO for data transfer FSM
     WrTransFifoInVld <= r.AwFsmRdy and r.WrTfVld;
-    fifo_wr_trans : entity work.psi_common_sync_fifo
+    i_fifo_wr_trans : entity work.psi_common_sync_fifo
       generic map(
+        rst_pol_g      => '0',
         width_g        => BeatsBits_c,
         depth_g        => axi_max_open_transactions_g,
         alm_full_on_g  => false,
         alm_empty_on_g => false,
         ram_style_g    => "auto",
-        ram_behavior_g => ram_behavior_g
-      )
+        ram_behavior_g => ram_behavior_g)
       port map(
         clk_i => m_axi_aclk,
-        rst_i => Rst,
+        rst_i => m_axi_aresetn,
         dat_i => std_logic_vector(r.WrTfBeats),
         vld_i => WrTransFifoInVld,
         rdy_o => open,                  -- Not required since maximum of open transactions is limitted
         dat_o => WrTransFifoBeats,
         vld_o => WrTransFifoOutVld,
-        rdy_i => r.WDataFifoRd
-      );
+        rdy_i => r.WDataFifoRd);
 
     -- Write Data FIFO
     b_fifo_wr_data : block
-      signal InData  : std_logic_vector(wr_dat_i'length + wr_data_be'length - 1 downto 0);
+      signal InData  : std_logic_vector(wr_dat_i'length + wr_data_be_i'length - 1 downto 0);
       signal OutData : std_logic_vector(InData'range);
     begin
       InData(wr_dat_i'high downto wr_dat_i'low)                          <= wr_dat_i;
-      InData(wr_dat_i'high + wr_data_be'length downto wr_dat_i'high + 1) <= wr_data_be;
-      fifo_wr_data : entity work.psi_common_sync_fifo
+      InData(wr_dat_i'high + wr_data_be_i'length downto wr_dat_i'high + 1) <= wr_data_be_i;
+      i_fifo_wr_data : entity work.psi_common_sync_fifo
         generic map(
-          width_g        => wr_dat_i'length + wr_data_be'length,
+          width_g        => wr_dat_i'length + wr_data_be_i'length,
           depth_g        => data_fifo_depth_g,
           alm_full_on_g  => false,
           alm_empty_on_g => false,
           ram_style_g    => "auto",
-          ram_behavior_g => ram_behavior_g
-        )
+          ram_behavior_g => ram_behavior_g,
+          rst_pol_g      => '0')
         port map(
           clk_i => m_axi_aclk,
-          rst_i => Rst,
+          rst_i => m_axi_aresetn,
           dat_i => InData,
           vld_i => wr_vld_i,
           rdy_o => WrData_Rdy_I,
@@ -685,7 +683,7 @@ begin
           rdy_i => WrDataFifoORdy
         );
       m_axi_wdata                                                        <= OutData(wr_dat_i'high downto wr_dat_i'low);
-      m_axi_wstrb                                                        <= OutData(wr_dat_i'high + wr_data_be'length downto wr_dat_i'high + 1);
+      m_axi_wstrb                                                        <= OutData(wr_dat_i'high + wr_data_be_i'length downto wr_dat_i'high + 1);
 
       m_axi_wvalid   <= WrDataFifoOVld and r.WDataEna;
       WrDataFifoORdy <= m_axi_wready and r.WDataEna;
@@ -694,25 +692,24 @@ begin
     end block;
 
     -- FIFO for write response FSM
-    fifo_wr_resp : entity work.psi_common_sync_fifo
+    i_fifo_wr_resp : entity work.psi_common_sync_fifo
       generic map(
         width_g        => 1,
         depth_g        => axi_max_open_transactions_g,
         alm_full_on_g  => false,
         alm_empty_on_g => false,
         ram_style_g    => "auto",
-        ram_behavior_g => ram_behavior_g
-      )
+        ram_behavior_g => ram_behavior_g,
+        rst_pol_g      => '0')
       port map(
         clk_i    => m_axi_aclk,
-        rst_i    => Rst,
+        rst_i    => m_axi_aresetn,
         dat_i(0) => r.WrTfIsLast,
         vld_i    => WrTransFifoInVld,
         rdy_o    => open,               -- Not required since maximum of open transactions is limitted
         dat_o(0) => WrRespIsLast,
         vld_o    => WrRespFifoVld,
-        rdy_i    => m_axi_bvalid
-      );
+        rdy_i    => m_axi_bvalid);
   end generate;
 
   -- Tie signals to ground if read not implemented
@@ -729,18 +726,19 @@ begin
     -- Read Data FIFO
     b_fifo_rd_data : block
     begin
-      fifo_wr_data : entity work.psi_common_sync_fifo
+      i_fifo_wr_data : entity work.psi_common_sync_fifo
         generic map(
           width_g        => rd_dat_o'length,
           depth_g        => data_fifo_depth_g,
           alm_full_on_g  => false,
           alm_empty_on_g => false,
           ram_style_g    => "auto",
-          ram_behavior_g => ram_behavior_g
+          ram_behavior_g => ram_behavior_g,
+          rst_pol_g      => '0'
         )
         port map(
           clk_i => m_axi_aclk,
-          rst_i => Rst,
+          rst_i => m_axi_aresetn,
           dat_i => m_axi_rdata,
           vld_i => m_axi_rvalid,
           rdy_o => M_Axi_RReady_I,
@@ -756,18 +754,19 @@ begin
     -- FIFO for read response FSM
     RdTransFifoInVld <= r.ArFsmRdy and r.RdTfVld;
     RdRespLast       <= m_axi_rvalid and M_Axi_RReady_I and m_axi_rlast;
-    fifo_rd_resp : entity work.psi_common_sync_fifo
+    i_fifo_rd_resp : entity work.psi_common_sync_fifo
       generic map(
         width_g        => 1,
         depth_g        => axi_max_open_transactions_g,
         alm_full_on_g  => false,
         alm_empty_on_g => false,
         ram_style_g    => "auto",
-        ram_behavior_g => ram_behavior_g
+        ram_behavior_g => ram_behavior_g,
+        rst_pol_g      => '0'
       )
       port map(
         clk_i    => m_axi_aclk,
-        rst_i    => Rst,
+        rst_i    => m_axi_aresetn,
         dat_i(0) => r.RdTfIsLast,
         vld_i    => RdTransFifoInVld,
         rdy_o    => open,               -- Not required since maximum of open transactions is limitted

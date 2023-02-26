@@ -70,15 +70,15 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_sync_cc_n2xn
     port map(
-      clk_i   => clk_i,
-      rst_i   => rst_i,
+      in_clk_i   => clk_i,
+      in_rst_i   => rst_i,
       vld_i   => vld_i,
-      rdy_o   => rdy_o,
+      in_rdy_o   => rdy_o,
       dat_i  => dat_i,
-      clk_o  => clk_o,
-      rst_o  => rst_o,
+      out_clk_i  => clk_o,
+      out_rst_i  => rst_o,
       vld_o  => vld_o,
-      rdy_i  => rdy_i,
+      out_rdy_i  => rdy_i,
       dat_o => dat_o
     );
 

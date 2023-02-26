@@ -53,14 +53,10 @@ begin
   --*** double stage synchronizer ***
   gene_sync : if sync_g generate
     i_sync : entity work.psi_common_bit_cc
-      generic map(
-        num_bits_g => len_g
-      )
-      port map(
-        dat_i => dat_i,
-        clk_i => clk_i,
-        dat_o => inp_sync_s
-      );
+      generic map( num_bits_g => len_g)
+      port    map( dat_i => dat_i,
+                   clk_i => clk_i,
+                   dat_o => inp_sync_s);
   end generate;
 
   --*** no sync ***

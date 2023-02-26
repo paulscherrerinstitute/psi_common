@@ -110,4 +110,4 @@ begin
     end if;
   end process;
 
-end process;
+end architecture;

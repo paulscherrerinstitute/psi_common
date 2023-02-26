@@ -20,7 +20,9 @@ use ieee.numeric_std.all;
 
 entity psi_common_pulse_cc is
   generic(
-    num_pulses_g : positive := 1
+    num_pulses_g : positive := 1;
+    a_rst_pol_g  : std_logic:= '1';
+    b_rst_pol_g  : std_logic:='1'
   );
   port(
     -- Clock Domain A
@@ -74,7 +76,7 @@ begin
   -- Domain A reset sync
   ARstSync_p : process(a_clk_i, b_rst_i)
   begin
-    if b_rst_i = '1' then
+    if b_rst_i = b_rst_pol_g then
       RstSyncB2A <= (others => '1');
     elsif rising_edge(a_clk_i) then
       RstSyncB2A <= RstSyncB2A(RstSyncB2A'left - 1 downto 0) & '0';
@@ -83,7 +85,11 @@ begin
   ARst_p : process(a_clk_i)
   begin
     if rising_edge(a_clk_i) then
-      RstAI <= RstSyncB2A(RstSyncB2A'left) or a_rst_i;
+      if a_rst_pol_g then
+        RstAI <= RstSyncB2A(RstSyncB2A'left) or a_rst_i;
+      else
+        RstAI <= RstSyncB2A(RstSyncB2A'left) and a_rst_i;  
+      end if;
     end if;
   end process;
   a_rst_o <= RstAI;
@@ -91,7 +97,7 @@ begin
   -- Domain B reset sync
   BRstSync_p : process(b_clk_i, a_rst_i)
   begin
-    if a_rst_i = '1' then
+    if a_rst_i = a_rst_pol_g then
       RstSyncA2B <= (others => '1');
     elsif rising_edge(b_clk_i) then
       RstSyncA2B <= RstSyncA2B(RstSyncA2B'left - 1 downto 0) & '0';
@@ -100,7 +106,11 @@ begin
   BRst_p : process(b_clk_i)
   begin
     if rising_edge(b_clk_i) then
-      RstBI <= RstSyncA2B(RstSyncA2B'left) or b_rst_i;
+      if b_rst_pol_g then
+        RstBI <= RstSyncA2B(RstSyncA2B'left) or b_rst_i;
+      else
+        RstBI <= RstSyncA2B(RstSyncA2B'left) and b_rst_i;
+      end if;
     end if;
   end process;
   b_rst_o <= RstBI;
@@ -109,7 +119,7 @@ begin
   PulseA_p : process(a_clk_i)
   begin
     if rising_edge(a_clk_i) then
-      if RstAI = '1' then
+      if RstAI = a_rst_pol_g then
         ToggleA <= (others => '0');
       else
         ToggleA <= ToggleA xor a_dat_i;
@@ -121,7 +131,7 @@ begin
   PulseB_p : process(b_clk_i)
   begin
     if rising_edge(b_clk_i) then
-      if RstBI = '1' then
+      if RstBI = b_rst_pol_g then
         ToggleSyncB <= (others => (others => '0'));
         b_dat_o     <= (others => '0');
       else

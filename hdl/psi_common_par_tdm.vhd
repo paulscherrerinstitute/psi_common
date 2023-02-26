@@ -15,7 +15,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
@@ -23,12 +22,11 @@ use work.psi_common_logic_pkg.all;
 entity psi_common_par_tdm is
   generic(
     channel_count_g : natural := 8;     -- $$ constant=3 $$
-    channel_width_g : natural := 16     -- $$ constant=8 $$
-  );
+    channel_width_g : natural := 16;     -- $$ constant=8 $$
+    rst_pol_g       : std_logic:='1');
   port(
     clk_i  : in  std_logic;             -- $$ type=clk; freq=100e6 $$
     rst_i  : in  std_logic;             -- $$ type=rst; clk=Clk $$
-
     dat_i  : in  std_logic_vector(channel_count_g * channel_width_g - 1 downto 0);
     vld_i  : in  std_logic;
     rdy_o  : out std_logic;
@@ -93,7 +91,7 @@ begin
   begin
     if rising_edge(clk_i) then
       r <= r_next;
-      if rst_i = '1' then
+      if rst_i = rst_pol_g then
         r.VldSr <= (others => '0');
       end if;
     end if;

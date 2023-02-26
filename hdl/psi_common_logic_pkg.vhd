@@ -247,4 +247,4 @@ package body psi_common_logic_pkg is
     return tmp;
   end function;
 
-end package;
+end package body;

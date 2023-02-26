@@ -15,7 +15,6 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
@@ -26,7 +25,8 @@ entity psi_common_dyn_sft is
     sel_bit_per_stage_g : positive := 4;      -- $$ export=true $$
     max_shift_g         : positive := 16;     -- $$ constant=20 $$
     width_g             : positive := 32;     -- $$ constant=32 $$
-    sign_extend_g       : boolean  := true    -- $$ export=true $$
+    sign_extend_g       : boolean  := true;   -- $$ export=true $$
+    rst_pol_g           : std_logic:= '1'
   );
   port(
     clk_i   : in  std_logic;                  -- $$ type=clk; freq=100e6 $$
@@ -120,7 +120,7 @@ begin
   begin
     if rising_edge(clk_i) then
       r <= r_next;
-      if rst_i = '1' then
+      if rst_i = rst_pol_g then
         r.Vld <= (others => '0');
       end if;
     end if;

@@ -15,20 +15,16 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
-library work;
 use work.psi_tb_txt_util.all;
 use work.psi_tb_compare_pkg.all;
 use work.psi_tb_activity_pkg.all;
 use work.psi_tb_axi_pkg.all;
 
-library work;
 use work.psi_common_axi_master_simple_tb_pkg.all;
 
-library work;
 use work.psi_common_axi_master_simple_tb_case_simple_tf.all;
 use work.psi_common_axi_master_simple_tb_case_max_transact.all;
 use work.psi_common_axi_master_simple_tb_case_axi_hs.all;
@@ -73,29 +69,29 @@ architecture sim of psi_common_axi_master_simple_tb is
   constant TbProcNr_axi_c       : integer                  := 3;
 
   -- *** DUT Signals ***
-  signal m_axi_aclk    : std_logic                                                := '1';
-  signal m_axi_aresetn : std_logic                                                := '0';
-  signal cmd_wr_addr_i    : std_logic_vector(axi_addr_width_g - 1 downto 0)            := (others => '0');
+  signal m_axi_aclk       : std_logic                                                   := '1';
+  signal m_axi_aresetn    : std_logic                                                   := '0';
+  signal cmd_wr_addr_i    : std_logic_vector(axi_addr_width_g - 1 downto 0)             := (others => '0');
   signal cmd_wr_size_i    : std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0');
-  signal cmd_wr_low_lat_i  : std_logic                                                := '0';
-  signal cmd_wr_vld_i     : std_logic                                                := '0';
-  signal cmd_wr_rdy_o     : std_logic                                                := '0';
-  signal cmd_rd_addr_i    : std_logic_vector(axi_addr_width_g - 1 downto 0)            := (others => '0');
+  signal cmd_wr_low_lat_i : std_logic                                                   := '0';
+  signal cmd_wr_vld_i     : std_logic                                                   := '0';
+  signal cmd_wr_rdy_o     : std_logic                                                   := '0';
+  signal cmd_rd_addr_i    : std_logic_vector(axi_addr_width_g - 1 downto 0)             := (others => '0');
   signal cmd_rd_size_o    : std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0');
-  signal cmd_rd_low_lat_i  : std_logic                                                := '0';
-  signal cmd_rd_vld_i     : std_logic                                                := '0';
-  signal cmd_rd_rdy_o     : std_logic                                                := '0';
-  signal wr_dat_i    : std_logic_vector(axi_data_width_g - 1 downto 0)            := (others => '0');
-  signal wr_data_be      : std_logic_vector(axi_data_width_g / 8 - 1 downto 0)        := (others => '0');
-  signal wr_vld_i     : std_logic                                                := '0';
-  signal wr_rdy_o     : std_logic                                                := '0';
-  signal rd_dat_o    : std_logic_vector(axi_data_width_g - 1 downto 0)            := (others => '0');
-  signal rd_vld_o     : std_logic                                                := '0';
-  signal rd_rdy_i     : std_logic                                                := '0';
-  signal wr_done_o       : std_logic                                                := '0';
-  signal wr_error_o      : std_logic                                                := '0';
-  signal rd_done_o       : std_logic                                                := '0';
-  signal rd_error_o      : std_logic                                                := '0';
+  signal cmd_rd_low_lat_i : std_logic                                                   := '0';
+  signal cmd_rd_vld_i     : std_logic                                                   := '0';
+  signal cmd_rd_rdy_o     : std_logic                                                   := '0';
+  signal wr_dat_i         : std_logic_vector(axi_data_width_g - 1 downto 0)             := (others => '0');
+  signal wr_data_be       : std_logic_vector(axi_data_width_g / 8 - 1 downto 0)         := (others => '0');
+  signal wr_vld_i         : std_logic                                                   := '0';
+  signal wr_rdy_o         : std_logic                                                   := '0';
+  signal rd_dat_o         : std_logic_vector(axi_data_width_g - 1 downto 0)             := (others => '0');
+  signal rd_vld_o         : std_logic                                                   := '0';
+  signal rd_rdy_i         : std_logic                                                   := '0';
+  signal wr_done_o        : std_logic                                                   := '0';
+  signal wr_error_o       : std_logic                                                   := '0';
+  signal rd_done_o        : std_logic                                                   := '0';
+  signal rd_error_o       : std_logic                                                   := '0';
 
 begin
   ------------------------------------------------------------
@@ -103,71 +99,71 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_axi_master_simple
     generic map(
-      axi_addr_width_g            => axi_addr_width_g,
-      axi_data_width_g            => axi_data_width_g,
-      axi_max_beats_g             => axi_max_beats_g,
-      axi_max_open_transactions_g   => axi_max_open_transactions_g,
+      axi_addr_width_g             => axi_addr_width_g,
+      axi_data_width_g             => axi_data_width_g,
+      axi_max_beats_g              => axi_max_beats_g,
+      axi_max_open_transactions_g  => axi_max_open_transactions_g,
       user_transaction_size_bits_g => user_transaction_size_bits_g,
-      data_fifo_depth_g           => data_fifo_depth_g,
-      impl_write_g               => impl_write_g,
-      impl_read_g                => impl_read_g,
-      ram_behavior_g             => ram_behavior_g
+      data_fifo_depth_g            => data_fifo_depth_g,
+      impl_write_g                 => impl_write_g,
+      impl_read_g                  => impl_read_g,
+      ram_behavior_g               => ram_behavior_g
     )
     port map(
-      m_axi_aclk    => m_axi_aclk,
-      m_axi_aresetn => m_axi_aresetn,
+      m_axi_aclk       => m_axi_aclk,
+      m_axi_aresetn    => m_axi_aresetn,
       cmd_wr_addr_i    => cmd_wr_addr_i,
       cmd_wr_size_i    => cmd_wr_size_i,
-      cmd_wr_low_lat_i  => cmd_wr_low_lat_i,
+      cmd_wr_low_lat_i => cmd_wr_low_lat_i,
       cmd_wr_vld_i     => cmd_wr_vld_i,
       cmd_wr_rdy_o     => cmd_wr_rdy_o,
       cmd_rd_addr_i    => cmd_rd_addr_i,
       cmd_rd_size_o    => cmd_rd_size_o,
-      cmd_rd_low_lat_i  => cmd_rd_low_lat_i,
+      cmd_rd_low_lat_i => cmd_rd_low_lat_i,
       cmd_rd_vld_i     => cmd_rd_vld_i,
       cmd_rd_rdy_o     => cmd_rd_rdy_o,
-      wr_dat_i    => wr_dat_i,
-      wr_data_be      => wr_data_be,
-      wr_vld_i     => wr_vld_i,
-      wr_rdy_o     => wr_rdy_o,
-      rd_dat_o    => rd_dat_o,
-      rd_vld_o     => rd_vld_o,
-      rd_rdy_i     => rd_rdy_i,
-      wr_done_o       => wr_done_o,
-      wr_error_o      => wr_error_o,
-      rd_done_o       => rd_done_o,
-      rd_error_o      => rd_error_o,
-      m_axi_awaddr  => axi_ms.awaddr,
-      m_axi_awlen   => axi_ms.awlen,
-      m_axi_awsize  => axi_ms.awsize,
-      m_axi_awburst => axi_ms.awburst,
-      m_axi_awlock  => axi_ms.awlock,
-      m_axi_awcache => axi_ms.awcache,
-      m_axi_awprot  => axi_ms.awprot,
-      m_axi_awvalid => axi_ms.awvalid,
-      m_axi_awready => axi_sm.awready,
-      m_axi_wdata   => axi_ms.wdata,
-      m_axi_wstrb   => axi_ms.wstrb,
-      m_axi_wlast   => axi_ms.wlast,
-      m_axi_wvalid  => axi_ms.wvalid,
-      m_axi_wready  => axi_sm.wready,
-      m_axi_bresp   => axi_sm.bresp,
-      m_axi_bvalid  => axi_sm.bvalid,
-      m_axi_bready  => axi_ms.bready,
-      m_axi_araddr  => axi_ms.araddr,
-      m_axi_arlen   => axi_ms.arlen,
-      m_axi_arsize  => axi_ms.arsize,
-      m_axi_arburst => axi_ms.arburst,
-      m_axi_arlock  => axi_ms.arlock,
-      m_axi_arcache => axi_ms.arcache,
-      m_axi_arprot  => axi_ms.arprot,
-      m_axi_arvalid => axi_ms.arvalid,
-      m_axi_arready => axi_sm.arready,
-      m_axi_rdata   => axi_sm.rdata,
-      m_axi_rresp   => axi_sm.rresp,
-      m_axi_rlast   => axi_sm.rlast,
-      m_axi_rvalid  => axi_sm.rvalid,
-      m_axi_rready  => axi_ms.rready
+      wr_dat_i         => wr_dat_i,
+      wr_data_be_i     => wr_data_be,
+      wr_vld_i         => wr_vld_i,
+      wr_rdy_o         => wr_rdy_o,
+      rd_dat_o         => rd_dat_o,
+      rd_vld_o         => rd_vld_o,
+      rd_rdy_i         => rd_rdy_i,
+      wr_done_o        => wr_done_o,
+      wr_error_o       => wr_error_o,
+      rd_done_o        => rd_done_o,
+      rd_error_o       => rd_error_o,
+      m_axi_awaddr     => axi_ms.awaddr,
+      m_axi_awlen      => axi_ms.awlen,
+      m_axi_awsize     => axi_ms.awsize,
+      m_axi_awburst    => axi_ms.awburst,
+      m_axi_awlock     => axi_ms.awlock,
+      m_axi_awcache    => axi_ms.awcache,
+      m_axi_awprot     => axi_ms.awprot,
+      m_axi_awvalid    => axi_ms.awvalid,
+      m_axi_awready    => axi_sm.awready,
+      m_axi_wdata      => axi_ms.wdata,
+      m_axi_wstrb      => axi_ms.wstrb,
+      m_axi_wlast      => axi_ms.wlast,
+      m_axi_wvalid     => axi_ms.wvalid,
+      m_axi_wready     => axi_sm.wready,
+      m_axi_bresp      => axi_sm.bresp,
+      m_axi_bvalid     => axi_sm.bvalid,
+      m_axi_bready     => axi_ms.bready,
+      m_axi_araddr     => axi_ms.araddr,
+      m_axi_arlen      => axi_ms.arlen,
+      m_axi_arsize     => axi_ms.arsize,
+      m_axi_arburst    => axi_ms.arburst,
+      m_axi_arlock     => axi_ms.arlock,
+      m_axi_arcache    => axi_ms.arcache,
+      m_axi_arprot     => axi_ms.arprot,
+      m_axi_arvalid    => axi_ms.arvalid,
+      m_axi_arready    => axi_sm.arready,
+      m_axi_rdata      => axi_sm.rdata,
+      m_axi_rresp      => axi_sm.rresp,
+      m_axi_rlast      => axi_sm.rlast,
+      m_axi_rvalid     => axi_sm.rvalid,
+      m_axi_rready     => axi_ms.rready
     );
 
   ------------------------------------------------------------

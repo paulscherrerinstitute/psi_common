@@ -96,7 +96,7 @@ entity psi_common_axi_slave_ipif64 is
   );
 end entity;
 
-architecture behavioral of psi_common_axi_slave_ipif64 is
+architecture behav of psi_common_axi_slave_ipif64 is
 
   -----------------------------------------------------------------------------
   -- AXI slave bus interface
@@ -108,7 +108,6 @@ architecture behavioral of psi_common_axi_slave_ipif64 is
     axi_fsm_wr_resp_delay,
     axi_fsm_wr_done
   );
-  signal rst                   : std_logic;
   signal axi_fsm_comb          : axi_fsm_type;
   signal axi_fsm               : axi_fsm_type;
   -- ADDR_INDEX_LOW is used for addressing 32/64 bit registers/memories
@@ -129,7 +128,6 @@ architecture behavioral of psi_common_axi_slave_ipif64 is
   signal axi_arlen             : unsigned(7 downto 0)                            := (others => '0');
   signal axi_arsize            : unsigned(axi_addr_width_g - 1 downto 0)         := (others => '0');
   signal axi_arburst           : std_logic_vector(1 downto 0)                    := (others => '0');
-  signal axi_arready           : std_logic                                       := '0';
   signal axi_arwrap_en         : std_logic                                       := '0';
   signal axi_arwrap            : unsigned(axi_addr_width_g - 1 downto 0)         := (others => '0');
   -- Read data channel
@@ -143,7 +141,6 @@ architecture behavioral of psi_common_axi_slave_ipif64 is
   signal axi_awlen             : unsigned(7 downto 0)                            := (others => '0');
   signal axi_awsize            : unsigned(axi_addr_width_g - 1 downto 0)         := (others => '0');
   signal axi_awburst           : std_logic_vector(1 downto 0)                    := (others => '0');
-  signal axi_awready           : std_logic                                       := '0';
   signal axi_awwrap_en         : std_logic                                       := '0';
   signal axi_awwrap            : unsigned(axi_addr_width_g - 1 downto 0)         := (others => '0');
   -- Write data channel
@@ -168,8 +165,6 @@ architecture behavioral of psi_common_axi_slave_ipif64 is
   signal rpl_rlast             : std_logic;
 
 begin
-  rst <= not s_axi_aresetn;
-
   -----------------------------------------------------------------------------
   -- Assertions
   -----------------------------------------------------------------------------
@@ -646,9 +641,9 @@ begin
   mem_rvalid <= '1' when ((axi_raddr_sel = '1') and (axi_fsm = axi_fsm_rd_data) and (axi_rready = '1') and (rpl_rready = '1')) else '0';
   g_mem : if use_mem_g generate
     o_mem_addr  <= std_logic_vector(axi_awaddr - MEM_ADDR_START) when (axi_waddr_sel = '1') else std_logic_vector(axi_araddr - MEM_ADDR_START);
-    o_mem_wr_gen : for reg_byte_index in 0 to axi_byte_width_g - 1 generate
+    g_o_mem_wr : for reg_byte_index in 0 to axi_byte_width_g - 1 generate
       o_mem_wr(reg_byte_index) <= '1' when ((axi_waddr_sel = '1') and (axi_fsm = axi_fsm_wr_data) and (s_axi_wvalid = '1') and (s_axi_wstrb(reg_byte_index) = '1')) else '0';
-    end generate o_mem_wr_gen;
+    end generate;
     o_mem_wdata <= s_axi_wdata;
   end generate;
   g_nmem : if not use_mem_g generate
@@ -673,12 +668,13 @@ begin
 
     i_rplstage : entity work.psi_common_pl_stage
       generic map(
-        width_g   => axi_id_width_g + axi_data_width_g + 3,
-        use_rdy_g => true
+        width_g => axi_id_width_g + axi_data_width_g + 3,
+        use_rdy_g => true,
+        rst_pol_g => '0'
       )
       port map(
         clk_i => s_axi_aclk,
-        rst_i => rst,
+        rst_i => s_axi_aresetn,
         vld_i => rpl_rvalid,
         rdy_o => rpl_rready,
         dat_i => pl_in_data,

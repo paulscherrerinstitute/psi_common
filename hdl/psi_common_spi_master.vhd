@@ -28,7 +28,8 @@ entity psi_common_spi_master is
     spi_cpha_g        : natural range 0 to 1;         -- $$ export=true $$
     slave_cnt_g       : positive  := 1;               -- $$ constant=2 $$
     lsb_first_g       : boolean   := false;           -- $$ export=true $$
-    mosi_idle_state_g : std_logic := '0'
+    mosi_idle_state_g : std_logic := '0';
+    rst_pol_g         : std_logic:= '1'
   );
   port(
     -- Control Signals
@@ -222,7 +223,7 @@ begin
   begin
     if rising_edge(clk_i) then
       r <= r_next;
-      if rst_i = '1' then
+      if rst_i = rst_pol_g then
         r.State      <= Idle_s;
         r.spi_cs_n_o <= (others => '1');
         r.spi_le_o   <= (others => '0');

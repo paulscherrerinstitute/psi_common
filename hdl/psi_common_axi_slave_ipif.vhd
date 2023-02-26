@@ -21,9 +21,7 @@ use work.psi_common_array_pkg.all;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 --@fomratter:off
-------------------------------------------------------------------------------
--- Entity
-------------------------------------------------------------------------------
+
 -- $$ processes=axi,ip $$
 -- $$ tbpkg=work.psi_tb_txt_util,work.psi_tb_compare_pkg,work.psi_tb_activity_pkg $$
 entity psi_common_axi_slave_ipif is
@@ -93,7 +91,7 @@ entity psi_common_axi_slave_ipif is
   );
 end entity;
 --@fomratter:on
-architecture behavioral of psi_common_axi_slave_ipif is
+architecture behav of psi_common_axi_slave_ipif is
   -----------------------------------------------------------------------------
   -- AXI slave bus interface
   -----------------------------------------------------------------------------
@@ -102,9 +100,7 @@ architecture behavioral of psi_common_axi_slave_ipif is
     axi_fsm_rd_data,
     axi_fsm_wr_data,
     axi_fsm_wr_resp_delay,
-    axi_fsm_wr_done
-  );
-  signal rst                   : std_logic;
+    axi_fsm_wr_done);
   signal axi_fsm_comb          : axi_fsm_type;
   signal axi_fsm               : axi_fsm_type;
   -- ADDR_INDEX_LOW is used for addressing 32/64 bit registers/memories
@@ -125,7 +121,6 @@ architecture behavioral of psi_common_axi_slave_ipif is
   signal axi_arlen             : unsigned(7 downto 0)                          := (others => '0');
   signal axi_arsize            : unsigned(axi_addr_width_g - 1 downto 0)       := (others => '0');
   signal axi_arburst           : std_logic_vector(1 downto 0)                  := (others => '0');
-  signal axi_arready           : std_logic                                     := '0';
   signal axi_arwrap_en         : std_logic                                     := '0';
   signal axi_arwrap            : unsigned(axi_addr_width_g - 1 downto 0)       := (others => '0');
   -- Read data channel
@@ -139,7 +134,6 @@ architecture behavioral of psi_common_axi_slave_ipif is
   signal axi_awlen             : unsigned(7 downto 0)                          := (others => '0');
   signal axi_awsize            : unsigned(axi_addr_width_g - 1 downto 0)       := (others => '0');
   signal axi_awburst           : std_logic_vector(1 downto 0)                  := (others => '0');
-  signal axi_awready           : std_logic                                     := '0';
   signal axi_awwrap_en         : std_logic                                     := '0';
   signal axi_awwrap            : unsigned(axi_addr_width_g - 1 downto 0)       := (others => '0');
   -- Write data channel
@@ -164,8 +158,7 @@ architecture behavioral of psi_common_axi_slave_ipif is
   signal rpl_rlast             : std_logic;
 
 begin
-  rst <= not s_axi_aresetn;
-
+    
   -----------------------------------------------------------------------------
   -- Assertions
   -----------------------------------------------------------------------------
@@ -649,21 +642,17 @@ begin
     pl_in_data(axi_id_width_g + 34 downto 35) <= rpl_rid;
 
     i_rplstage : entity work.psi_common_pl_stage
-      generic map(
-        width_g   => 35 + axi_id_width_g,
-        use_rdy_g => true
-      )
-      port map(
-        clk_i => s_axi_aclk,
-        rst_i => rst,
-        vld_i => rpl_rvalid,
-        rdy_o => rpl_rready,
-        dat_i => pl_in_data,
-        -- Output
-        vld_o => s_axi_rvalid,
-        rdy_i => s_axi_rready,
-        dat_o => pl_out_data
-      );
+      generic map( width_g  => 35 + axi_id_width_g,
+                  use_rdy_g => true,
+                  rst_pol_g => '0')
+      port map(   clk_i     => s_axi_aclk,
+                  rst_i     => s_axi_aresetn,
+                  vld_i     => rpl_rvalid,
+                  rdy_o     => rpl_rready,
+                  dat_i     => pl_in_data,
+                  vld_o     => s_axi_rvalid,
+                  rdy_i     => s_axi_rready,
+                  dat_o     => pl_out_data);
 
     s_axi_rdata <= pl_out_data(31 downto 0);
     s_axi_rresp <= pl_out_data(33 downto 32);

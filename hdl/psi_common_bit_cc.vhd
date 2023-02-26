@@ -48,7 +48,7 @@ architecture rtl of psi_common_bit_cc is
 
 begin
 
-  p : process(clk_i)
+  p_dff : process(clk_i)
   begin
     if rising_edge(clk_i) then
       Reg0 <= dat_i;

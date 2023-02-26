@@ -27,7 +27,8 @@ entity psi_common_async_fifo is
     aempty_level_g  : natural   := 4;
     ram_style_g     : string    := "auto";
     ram_behavior_g  : string    := "RBW"; -- "RBW" = read-before-write, "WBR" = write-before-read
-    rdy_rst_state_g : std_logic := '1'   -- Use '1' for minimal logic on Rdy path
+    rdy_rst_state_g : std_logic := '1';   -- Use '1' for minimal logic on Rdy path
+    rst_pol_g       : std_logic := '1'
   );
   port(
     -- Control Ports
@@ -110,14 +111,9 @@ architecture rtl of psi_common_async_fifo is
   attribute ASYNC_REG of ro : signal is "TRUE";
 
 begin
-  --------------------------------------------------------------------------
-  -- Assertions
-  --------------------------------------------------------------------------
+
   assert log2(depth_g) = log2ceil(depth_g) report "###ERROR###: psi_common_async_fifo: only power of two depth_g is allowed" severity error;
 
-  --------------------------------------------------------------------------
-  -- Combinatorial Process
-  --------------------------------------------------------------------------
   p_comb : process(in_vld_i, out_rdy_o, ri, ro, RstInInt)
     variable vi        : two_process_in_r;
     variable vo        : two_process_out_r;
@@ -230,14 +226,11 @@ begin
 
   end process;
 
-  --------------------------------------------------------------------------
-  -- Sequential
-  --------------------------------------------------------------------------
   p_seq_in : process(in_clk_i)
   begin
     if rising_edge(in_clk_i) then
       ri <= ri_next;
-      if RstInInt = '1' then
+      if RstInInt = rst_pol_g then
         ri.WrAddr         <= (others => '0');
         ri.WrAddrGray     <= (others => '0');
         ri.RdAddrGraySync <= (others => '0');
@@ -251,7 +244,7 @@ begin
   begin
     if rising_edge(out_clk_i) then
       ro <= ro_next;
-      if RstOutInt = '1' then
+      if RstOutInt = rst_pol_g then
         ro.RdAddr         <= (others => '0');
         ro.RdAddrGray     <= (others => '0');
         ro.WrAddrGraySync <= (others => '0');
@@ -262,9 +255,6 @@ begin
     end if;
   end process;
 
-  --------------------------------------------------------------------------
-  -- Component Instantiations
-  --------------------------------------------------------------------------
   RamWrAddr <= std_logic_vector(ri.WrAddr(log2ceil(depth_g) - 1 downto 0));
   i_ram : entity work.psi_common_sdp_ram
     generic map(

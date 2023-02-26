@@ -17,7 +17,9 @@ use ieee.numeric_std.all;
 
 entity psi_common_simple_cc is
   generic(
-    data_width_g : positive := 16
+    data_width_g : positive := 16;
+    a_rst_pol_g  : std_logic:='1';
+    b_rst_pol_g  : std_logic:='1'
   );
   port(
     -- Clock Domain A
@@ -47,7 +49,9 @@ begin
 
   i_pulse_cc : entity work.psi_common_pulse_cc
     generic map(
-      num_pulses_g => 1
+      num_pulses_g => 1,
+      a_rst_pol_g => a_rst_pol_g,
+      b_rst_pol_g => b_rst_pol_g
     )
     port map(
       a_clk_i    => a_clk_i,
@@ -66,7 +70,7 @@ begin
   DataA_p : process(a_clk_i)
   begin
     if rising_edge(a_clk_i) then
-      if RstAI = '1' then
+      if RstAI = a_rst_pol_g then
         DataLatchA <= (others => '0');
       else
         if a_vld_i = '1' then
@@ -80,7 +84,7 @@ begin
   DataB_p : process(b_clk_i)
   begin
     if rising_edge(b_clk_i) then
-      if RstBI = '1' then
+      if RstBI = b_rst_pol_g then
         b_dat_o <= (others => '0');
         b_vld_o <= '0';
       else

@@ -20,7 +20,9 @@ use ieee.numeric_std.all;
 
 entity psi_common_status_cc is
   generic(
-    data_width_g : positive := 16
+    data_width_g : positive := 16;
+    a_rst_pol_g  : std_logic:= '1';
+    b_rst_pol_g  : std_logic:= '1'
   );
   port(
     -- Clock Domain A
@@ -64,10 +66,10 @@ architecture rtl of psi_common_status_cc is
 begin
 
   -- Valid pulse generation
-  i_vldgen : process(a_clk_i)
+  p_vldgen : process(a_clk_i)
   begin
     if rising_edge(a_clk_i) then
-      if RstIntA = '1' then
+      if RstIntA = a_rst_pol_g then
         RstIntBSync   <= (others => '1');
         Started       <= '0';
         VldA          <= '0';
@@ -92,10 +94,10 @@ begin
   end process;
 
   -- Reception detection
-  i_recdet : process(b_clk_i)
+  p_recdet : process(b_clk_i)
   begin
     if rising_edge(b_clk_i) then
-      if RstIntB = '1' then
+      if RstIntB = b_rst_pol_g then
         RecToggle <= '0';
       else
         if VldB = '1' then
@@ -108,7 +110,9 @@ begin
   -- instantiation of simple CC
   i_scc : entity work.psi_common_simple_cc
     generic map(
-      data_width_g => data_width_g
+      data_width_g => data_width_g,
+      a_rst_pol_g => a_rst_pol_g,
+      b_rst_pol_g => b_rst_pol_g
     )
     port map(
       a_clk_i => a_clk_i,
@@ -126,4 +130,3 @@ begin
   b_rst_o <= RstIntB;
 
 end architecture;
-

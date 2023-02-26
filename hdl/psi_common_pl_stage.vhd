@@ -21,19 +21,16 @@ use ieee.math_real.all;
 -- $$ processes=stim,check $$
 entity psi_common_pl_stage is
   generic(
-    width_g   : integer := 8;
-    use_rdy_g : boolean := true
-  );
+    width_g   : integer   := 8;
+    use_rdy_g : boolean   := true;
+    rst_pol_g : std_logic := '1');
   port(
     -- Control Signals
     clk_i : in  std_logic;              -- $$ type=clk; freq=100e6 $$
     rst_i : in  std_logic;              -- $$ type=rst; clk=Clk $$
-
-    -- Input
     vld_i : in  std_logic;
     rdy_o : out std_logic;
     dat_i : in  std_logic_vector(width_g - 1 downto 0);
-    -- Output
     vld_o : out std_logic;
     rdy_i : in  std_logic := '1';
     dat_o : out std_logic_vector(width_g - 1 downto 0)
@@ -105,7 +102,7 @@ begin
     begin
       if rising_edge(clk_i) then
         r <= r_next;
-        if rst_i = '1' then
+        if rst_i = rst_pol_g then
           r.DataMainVld <= '0';
           r.DataShadVld <= '0';
           r.rdy_o       <= '1';
@@ -123,7 +120,7 @@ begin
       if rising_edge(clk_i) then
         dat_o <= dat_i;
         vld_o <= vld_i;
-        if rst_i = '1' then
+        if rst_i = rst_pol_g then
           vld_o <= '0';
         end if;
       end if;
@@ -131,4 +128,3 @@ begin
   end generate;
 
 end architecture;
-

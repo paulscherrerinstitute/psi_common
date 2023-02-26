@@ -14,7 +14,6 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
@@ -47,7 +46,8 @@ entity psi_common_i2c_master is
     bus_busy_timeout_g   : real    := 1.0e-3;   -- in sec		$$ constant=100.0e-6 $$
     cmd_timeout_g        : real    := 100.0e-6; -- in sec		$$ constant=10.0e-6 $$
     internal_tri_state_g : boolean := true;     -- 				$$ constant=true $$
-    disable_asserts_g    : boolean := false
+    disable_asserts_g    : boolean := false;
+    rst_pol_g            : std_logic:= '1'
   );
   port(
     -- Control Signals
@@ -571,7 +571,7 @@ begin
   begin
     if rising_edge(clk_i) then
       r <= r_next;
-      if rst_i = '1' then
+      if rst_i = rst_pol_g then
         r.bus_busy_o   <= '0';
         r.cmd_rdy_o    <= '0';
         r.SclLast      <= '1';

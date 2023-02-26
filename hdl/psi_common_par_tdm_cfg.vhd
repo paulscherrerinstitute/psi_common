@@ -24,7 +24,8 @@ use work.psi_common_logic_pkg.all;
 entity psi_common_par_tdm_cfg is
   generic(
     channel_count_g : natural := 8;     -- $$ constant=3 $$
-    channel_width_g : natural := 16     -- $$ constant=8 $$
+    channel_width_g : natural := 16;     -- $$ constant=8 $$
+    rst_pol_g       : std_logic:='1'
   );
   port(
     clk_i              : in  std_logic; -- $$ type=clk; freq=100e6 $$
@@ -85,7 +86,7 @@ begin
   begin
     if rising_edge(clk_i) then
       r <= r_next;
-      if rst_i = '1' then
+      if rst_i = rst_pol_g then
         r.ChCnt <= 0;
       end if;
     end if;

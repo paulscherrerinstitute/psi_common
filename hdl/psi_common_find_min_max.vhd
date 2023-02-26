@@ -16,7 +16,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 --@formatter:off
 entity psi_common_find_min_max is
-  generic(rst_pol_g : std_logic := '0';                            --rst pol select
+  generic(rst_pol_g : std_logic := '1';                            --rst pol select
           length_g  : natural   := 16;                             --data lenght
           signed_g  : boolean   := true;                           --signed/unsigned
           mode_g    : string    := "MIN");                         --mode select

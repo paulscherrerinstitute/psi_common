@@ -22,7 +22,8 @@ use work.psi_common_logic_pkg.all;
 entity psi_common_wconv_n2xn is
   generic(
     width_in_g  : natural;              -- $$ constant=4 $$
-    width_out_g : natural               -- $$ constant=16 $$
+    width_out_g : natural;               -- $$ constant=16 $$
+    rst_pol_g   : std_logic := '1'
   );
   port(
     -- Control Signals
@@ -123,7 +124,7 @@ begin
   begin
     if rising_edge(clk_i) then
       r <= r_next;
-      if rst_i = '1' then
+      if rst_i = rst_pol_g then
         r.DataVld  <= (others => '0');
         r.vld_o    <= '0';
         r.Cnt      <= 0;

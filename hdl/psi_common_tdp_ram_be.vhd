@@ -28,14 +28,14 @@ entity psi_common_tdp_ram_be is
     a_be_i   : in  std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '1');
     a_wr_i   : in  std_logic                                        := '0';
     a_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-    a_dat_o : out std_logic_vector(width_g - 1 downto 0);
+    a_dat_o  : out std_logic_vector(width_g - 1 downto 0);
     -- Port B
     b_clk_i  : in  std_logic                                        := '0'; -- $$ type=clk; freq=25e6 $$
     b_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
     b_be_i   : in  std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '1');
     b_wr_i   : in  std_logic                                        := '0';
     b_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-    b_dat_o : out std_logic_vector(width_g - 1 downto 0)
+    b_dat_o  : out std_logic_vector(width_g - 1 downto 0)
   );
 end entity;
 
@@ -92,6 +92,6 @@ begin
       end if;
     end if;
   end process;
-  
+
 end architecture;
 

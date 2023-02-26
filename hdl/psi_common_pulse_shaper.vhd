@@ -21,13 +21,14 @@ entity psi_common_pulse_shaper is
   generic(
     duration_g : positive := 3;         -- Output pulse duration in clock cycles
     hold_in_g  : boolean  := false;     -- Hold input pulse to the output
-    hold_off_g : natural  := 0          -- Minimum number of clock cycles between input pulses, if pulses arrive faster, they are ignored	$$ constant=20 $$
+    hold_off_g : natural  := 0;         -- Minimum number of clock cycles between input pulses, if pulses arrive faster, they are ignored	$$ constant=20 $$
+    rst_pol_g  : std_logic:= '1'        -- reset polarity select
   );
   port(
-    clk_i : in  std_logic;              -- $$ type=clk; freq=100e6 $$
-    rst_i : in  std_logic;              -- $$ type=rst; clk=Clk $$
-    dat_i : in  std_logic;
-    dat_o : out std_logic
+    clk_i : in  std_logic;              -- system clock $$ type=clk; freq=100e6 $$
+    rst_i : in  std_logic;              -- system reset $$ type=rst; clk=Clk $$
+    dat_i : in  std_logic;              -- data in
+    dat_o : out std_logic               -- data out
   );
 end entity;
 
@@ -81,7 +82,7 @@ begin
   begin
     if rising_edge(clk_i) then
       r <= r_next;
-      if rst_i = '1' then
+      if rst_i = rst_pol_g then
         r.dat_o <= '0';
         r.HoCnt <= 0;
       end if;

@@ -102,12 +102,12 @@ begin
       dat_i          => dat_i,
       vld_i       => vld_i,
       rdy_o       => rdy_o,
-      TdmLast      => TdmLast,
+      tdm_last_i      => TdmLast,
       dat_o     => dat_o,
       vld_o  => vld_o,
       rdy_i  => rdy_i,
-      ParallelKeep => ParallelKeep,
-      ParallelLast => ParallelLast
+      par_keep_o => ParallelKeep,
+      par_last_o => ParallelLast
     );
 
   ------------------------------------------------------------
