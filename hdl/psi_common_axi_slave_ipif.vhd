@@ -21,73 +21,71 @@ use work.psi_common_array_pkg.all;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 --@fomratter:off
-
--- $$ processes=axi,ip $$
--- $$ tbpkg=work.psi_tb_txt_util,work.psi_tb_compare_pkg,work.psi_tb_activity_pkg $$
 entity psi_common_axi_slave_ipif is
   generic(
     -- IP Interface Config
-    num_reg_g        : integer  := 32;  -- $$ export=true $$
-    rst_val_g        : t_aslv32 := (0 => (others => '0')); -- $$ constant=(X"0001ABCD", X"00021234") $$
-    use_mem_g        : boolean  := true; -- $$ export=true $$
+    num_reg_g        : integer  := 32;                      -- Number of registers to implement
+    rst_val_g        : t_aslv32 := (0 => (others => '0'));  -- Reset values for registers. The size of the array passed does not have to match NumReg_g, if it does not, the reset values are applied to the first N registers and the other registers are reset to zero.
+    use_mem_g        : boolean  := true;                    -- **True** = use memory interface, **False** = use registers only
     -- AXI Config
-    axi_id_width_g   : integer  := 1;
-    axi_addr_width_g : integer  := 8
+    axi_id_width_g   : integer  := 1;                       -- Number of bits used for the AXI ID signals
+    axi_addr_width_g : integer  := 8                        -- Number of AXI address bits supported
   );
   port(
     -- System
-    s_axi_aclk    : in  std_logic;                                        -- $$ type=clk; freq=100e6 $$
-    s_axi_aresetn : in  std_logic;                                        -- $$ type=rst; clk=s_axi_aclk; lowactive=true $$
+    s_axi_aclk    : in  std_logic;                                        -- system clock
+    s_axi_aresetn : in  std_logic;                                        -- system reset active low
     -- Read address channel
-    s_axi_arid    : in  std_logic_vector(axi_id_width_g - 1 downto 0);    -- $$ proc=axi $$
-    s_axi_araddr  : in  std_logic_vector(axi_addr_width_g - 1 downto 0);  -- $$ proc=axi $$
-    s_axi_arlen   : in  std_logic_vector(7 downto 0);                     -- $$ proc=axi $$
-    s_axi_arsize  : in  std_logic_vector(2 downto 0);                     -- $$ proc=axi $$
-    s_axi_arburst : in  std_logic_vector(1 downto 0);                     -- $$ proc=axi $$
-    s_axi_arlock  : in  std_logic;                                        -- $$ proc=axi $$
-    s_axi_arcache : in  std_logic_vector(3 downto 0);                     -- $$ proc=axi $$
-    s_axi_arprot  : in  std_logic_vector(2 downto 0);                     -- $$ proc=axi $$
-    s_axi_arvalid : in  std_logic;                                        -- $$ proc=axi $$
-    s_axi_arready : out std_logic;                                        -- $$ proc=axi $$
+    s_axi_arid    : in  std_logic_vector(axi_id_width_g - 1 downto 0);
+    s_axi_araddr  : in  std_logic_vector(axi_addr_width_g - 1 downto 0);
+    s_axi_arlen   : in  std_logic_vector(7 downto 0);
+    s_axi_arsize  : in  std_logic_vector(2 downto 0);
+    s_axi_arburst : in  std_logic_vector(1 downto 0);
+    s_axi_arlock  : in  std_logic;
+    s_axi_arcache : in  std_logic_vector(3 downto 0);
+    s_axi_arprot  : in  std_logic_vector(2 downto 0);
+    s_axi_arvalid : in  std_logic;
+    s_axi_arready : out std_logic;
     -- Read data channel
-    s_axi_rid     : out std_logic_vector(axi_id_width_g - 1 downto 0);    -- $$ proc=axi $$
-    s_axi_rdata   : out std_logic_vector(31 downto 0);                    -- $$ proc=axi $$
-    s_axi_rresp   : out std_logic_vector(1 downto 0);                     -- $$ proc=axi $$
-    s_axi_rlast   : out std_logic;                                        -- $$ proc=axi $$
-    s_axi_rvalid  : out std_logic;                                        -- $$ proc=axi $$
-    s_axi_rready  : in  std_logic;                                        -- $$ proc=axi $$
+    s_axi_rid     : out std_logic_vector(axi_id_width_g - 1 downto 0);
+    s_axi_rdata   : out std_logic_vector(31 downto 0);
+    s_axi_rresp   : out std_logic_vector(1 downto 0);
+    s_axi_rlast   : out std_logic;
+    s_axi_rvalid  : out std_logic;
+    s_axi_rready  : in  std_logic;
     -- Write address channel
-    s_axi_awid    : in  std_logic_vector(axi_id_width_g - 1 downto 0);    -- $$ proc=axi $$
-    s_axi_awaddr  : in  std_logic_vector(axi_addr_width_g - 1 downto 0);  -- $$ proc=axi $$
-    s_axi_awlen   : in  std_logic_vector(7 downto 0);                     -- $$ proc=axi $$
-    s_axi_awsize  : in  std_logic_vector(2 downto 0);                     -- $$ proc=axi $$
-    s_axi_awburst : in  std_logic_vector(1 downto 0);                     -- $$ proc=axi $$
-    s_axi_awlock  : in  std_logic;                                        -- $$ proc=axi $$
-    s_axi_awcache : in  std_logic_vector(3 downto 0);                     -- $$ proc=axi $$
-    s_axi_awprot  : in  std_logic_vector(2 downto 0);                     -- $$ proc=axi $$
-    s_axi_awvalid : in  std_logic;                                        -- $$ proc=axi $$
-    s_axi_awready : out std_logic;                                        -- $$ proc=axi $$
+    s_axi_awid    : in  std_logic_vector(axi_id_width_g - 1 downto 0);
+    s_axi_awaddr  : in  std_logic_vector(axi_addr_width_g - 1 downto 0);
+    s_axi_awlen   : in  std_logic_vector(7 downto 0);
+    s_axi_awsize  : in  std_logic_vector(2 downto 0);
+    s_axi_awburst : in  std_logic_vector(1 downto 0);
+    s_axi_awlock  : in  std_logic;
+    s_axi_awcache : in  std_logic_vector(3 downto 0);
+    s_axi_awprot  : in  std_logic_vector(2 downto 0);
+    s_axi_awvalid : in  std_logic;
+    s_axi_awready : out std_logic;
     -- Write data channel
-    s_axi_wdata   : in  std_logic_vector(31 downto 0);                    -- $$ proc=axi $$
-    s_axi_wstrb   : in  std_logic_vector(3 downto 0);                     -- $$ proc=axi $$
-    s_axi_wlast   : in  std_logic;                                        -- $$ proc=axi $$
-    s_axi_wvalid  : in  std_logic;                                        -- $$ proc=axi $$
-    s_axi_wready  : out std_logic;                                        -- $$ proc=axi $$
+    s_axi_wdata   : in  std_logic_vector(31 downto 0);
+    s_axi_wstrb   : in  std_logic_vector(3 downto 0);
+    s_axi_wlast   : in  std_logic;
+    s_axi_wvalid  : in  std_logic;
+    s_axi_wready  : out std_logic;
     -- Write response channel
-    s_axi_bid     : out std_logic_vector(axi_id_width_g - 1 downto 0);    -- $$ proc=axi $$
-    s_axi_bresp   : out std_logic_vector(1 downto 0);                     -- $$ proc=axi $$
-    s_axi_bvalid  : out std_logic;                                        -- $$ proc=axi $$
-    s_axi_bready  : in  std_logic;                                        -- $$ proc=axi $$
+    s_axi_bid     : out std_logic_vector(axi_id_width_g - 1 downto 0);
+    s_axi_bresp   : out std_logic_vector(1 downto 0);
+    s_axi_bvalid  : out std_logic;
+    s_axi_bready  : in  std_logic;
     -- Register Interface
-    o_reg_rd      : out std_logic_vector(num_reg_g - 1 downto 0);         -- $$ proc=ip $$
-    i_reg_rdata   : in  t_aslv32(0 to num_reg_g - 1)  := (others => (others => '0')); -- $$ proc=ip $$
-    o_reg_wr      : out std_logic_vector(num_reg_g - 1 downto 0);         -- $$ proc=ip $$
-    o_reg_wdata   : out t_aslv32(0 to num_reg_g - 1);                     -- $$ proc=ip $$
+    o_reg_rd      : out std_logic_vector(num_reg_g - 1 downto 0);                     -- Read-pulse for each register
+    i_reg_rdata   : in  t_aslv32(0 to num_reg_g - 1)  := (others => (others => '0')); -- Register read values
+    o_reg_wr      : out std_logic_vector(num_reg_g - 1 downto 0);                     -- Write-pulse for each register
+    o_reg_wdata   : out t_aslv32(0 to num_reg_g - 1);                                 -- Register write values
     -- Memory Interface
-    o_mem_addr    : out std_logic_vector(axi_addr_width_g - 1 downto 0);  -- $$ proc=ip $$
-    o_mem_wr      : out std_logic_vector(3 downto 0);                     -- $$ proc=ip $$
-    o_mem_wdata   : out std_logic_vector(31 downto 0);                    -- $$ proc=ip $$
-    i_mem_rdata   : in  std_logic_vector(31 downto 0) := (others => '0')  -- $$ proc=ip $$
+    o_mem_addr    : out std_logic_vector(axi_addr_width_g - 1 downto 0);  -- Memory address
+    o_mem_wr      : out std_logic_vector(3 downto 0);                     -- Memory byte write enables (one signal per byte)
+    o_mem_wdata   : out std_logic_vector(31 downto 0);                    -- Memory write data
+    i_mem_rdata   : in  std_logic_vector(31 downto 0) := (others => '0')  -- Memory read data must be valid one clock cycle after o_mem_addr
+
   );
 end entity;
 --@fomratter:on
@@ -158,7 +156,7 @@ architecture behav of psi_common_axi_slave_ipif is
   signal rpl_rlast             : std_logic;
 
 begin
-    
+
   -----------------------------------------------------------------------------
   -- Assertions
   -----------------------------------------------------------------------------

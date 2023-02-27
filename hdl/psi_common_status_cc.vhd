@@ -19,23 +19,21 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity psi_common_status_cc is
-  generic(
-    data_width_g : positive := 16;
-    a_rst_pol_g  : std_logic:= '1';
-    b_rst_pol_g  : std_logic:= '1'
-  );
-  port(
-    -- Clock Domain A
-    a_clk_i : in  std_logic;
-    a_rst_i : in  std_logic;
-    a_rst_o : out std_logic;
-    a_dat_i : in  std_logic_vector(data_width_g - 1 downto 0);
-    -- Clock Domain B
-    b_clk_i : in  std_logic;
-    b_rst_i : in  std_logic;
-    b_rst_o : out std_logic;
-    b_dat_o : out std_logic_vector(data_width_g - 1 downto 0)
-  );
+  generic(data_width_g : positive := 16;
+          a_rst_pol_g  : std_logic:= '1';
+          b_rst_pol_g  : std_logic:= '1'
+          );
+  port(   -- Clock Domain A
+          a_clk_i : in  std_logic;
+          a_rst_i : in  std_logic;
+          a_rst_o : out std_logic;
+          a_dat_i : in  std_logic_vector(data_width_g - 1 downto 0);
+          -- Clock Domain B
+          b_clk_i : in  std_logic;
+          b_rst_i : in  std_logic;
+          b_rst_o : out std_logic;
+          b_dat_o : out std_logic_vector(data_width_g - 1 downto 0)
+      );
 end entity;
 
 architecture rtl of psi_common_status_cc is
@@ -49,15 +47,13 @@ architecture rtl of psi_common_status_cc is
   signal RecToggleSync : std_logic_vector(2 downto 0);
 
   attribute syn_srlstyle : string;
-  attribute syn_srlstyle of RstIntBSync : signal is "registers";
-  attribute syn_srlstyle of RecToggle : signal is "registers";
+  attribute syn_srlstyle of RstIntBSync   : signal is "registers";
+  attribute syn_srlstyle of RecToggle     : signal is "registers";
   attribute syn_srlstyle of RecToggleSync : signal is "registers";
-
   attribute shreg_extract : string;
-  attribute shreg_extract of RstIntBSync : signal is "no";
-  attribute shreg_extract of RecToggle : signal is "no";
-  attribute shreg_extract of RecToggleSync : signal is "no";
-
+  attribute shreg_extract of RstIntBSync    : signal is "no";
+  attribute shreg_extract of RecToggle      : signal is "no";
+  attribute shreg_extract of RecToggleSync  : signal is "no";
   attribute ASYNC_REG : string;
   attribute ASYNC_REG of RstIntBSync : signal is "TRUE";
   attribute ASYNC_REG of RecToggle : signal is "TRUE";
@@ -111,8 +107,8 @@ begin
   i_scc : entity work.psi_common_simple_cc
     generic map(
       data_width_g => data_width_g,
-      a_rst_pol_g => a_rst_pol_g,
-      b_rst_pol_g => b_rst_pol_g
+      a_rst_pol_g  => a_rst_pol_g,
+      b_rst_pol_g  => b_rst_pol_g
     )
     port map(
       a_clk_i => a_clk_i,

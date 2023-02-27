@@ -8,6 +8,7 @@
 **Quick syntax rules to push into the library:**
 
  - **snake_case**
+ - remove **tab to white space**
  - use of suffix for entity's signal following simple rules: **_i, _o and _io** respectively for input, output and inout
  - entity, architecture, package, procedure, function, etc... ends as such: **end entity; end architecture,** etc...
  - use of prefix to gather signal corresponding to same interface like: **adc**_clk_i, **adc**_data_i, **adc**_vld_i...
@@ -138,7 +139,7 @@ PRBS  						  		  	| [psi_common_prbs.vhd](../hdl/psi_common_prbs.vhd)   | [link
 
 Package    					| 									Source                                    |
 --------------------|-------------------------------------------------------------|
-Math  							| [psi_common_math_pkg.vhd](../hdl/psi_common_math_pkg.vhd)	 	| 
+Math  							| [psi_common_math_pkg.vhd](../hdl/psi_common_math_pkg.vhd)	 	|
 array 							| [psi_common_array_pkg.vhd](../hdl/psi_common_array_pkg.vhd) |
 logic								| [psi_common_logic_pkg.vhd](../hdl/psi_common_logic_pkg.vhd)	|
 AXI 							  | [psi_common_axi_pkg.vhd](../hdl/psi_common_axi_pkg.vhd)			|

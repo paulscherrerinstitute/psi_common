@@ -21,90 +21,89 @@ use ieee.numeric_std.all;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
--- $$ testcases=simple_tf,axi_hs,user_hs,all_shifts$$
--- $$ processes=user_cmd,user_data,user_resp,axi $$
--- $$ tbpkg=work.psi_tb_txt_util,work.psi_tb_compare_pkg,work.psi_tb_activity_pkg $$
+--@formatter:off
 entity psi_common_axi_master_full is
   generic(
-    axi_addr_width_g             : natural range 12 to 64  := 32; -- $$ constant=32 $$
-    axi_data_width_g             : natural range 8 to 1024 := 32; -- $$ export=true $$
-    axi_max_beats_g              : natural range 1 to 256  := 256; -- $$ constant=16 $$
-    axi_max_open_trasactions_g   : natural range 1 to 8    := 8; -- $$ constant=3 $$
-    user_transaction_size_bits_g : natural                 := 32; -- $$ constant=10 $$
-    data_fifo_depth_g            : natural                 := 1024; -- $$ constant=10 $$
-    axi_fifo_depth_g             : natural                 := 512; -- $$ constant=32 $$
-    data_width_g                 : natural                 := 32; -- $$ constant=16 $$
-    impl_read_g                  : boolean                 := true; -- $$ export=true $$
-    impl_write_g                 : boolean                 := true; -- $$ export=true $$
-    ram_behavior_g               : string                  := "RBW" -- $$ constant="RBW" $$
+    axi_addr_width_g             : natural range 12 to 64  := 32;   -- Width of the AXI address bus
+    axi_data_width_g             : natural range 8 to 1024 := 32;   -- Width of the AXI data bus
+    axi_max_beats_g              : natural range 1 to 256  := 256;  -- Maximum number of beats in one AXI transaction. Values given by the AXI specification are 16 for AXI-3 and 256 for AXI-4. However, the user may choose any other number for scheduling reasons.
+    axi_max_open_trasactions_g   : natural range 1 to 8    := 8;    -- Maximum number of AXI commands (AW/AR-channel) to send before the first command is completed (outstanding transactions).
+    user_transaction_size_bits_g : natural                 := 32;   -- Number of bits used to specify the number of bytes to transfer on the user command interface. This is the only limiting factor for the transfer size requested.
+    data_fifo_depth_g            : natural                 := 1024; -- Number of entries in the read/write data FIFOs (user side)
+    axi_fifo_depth_g             : natural                 := 512;  -- Number of entries in the FIFOs inside the AXI interface
+    data_width_g                 : natural                 := 32;   -- Width of the user data interface
+    impl_read_g                  : boolean                 := true; -- Implement read functionality (can be disabled to save resources)
+    impl_write_g                 : boolean                 := true; -- Implement write functionality (can be disabled to save resources)
+    ram_behavior_g               : string                  := "RBW" --  Block-RAM style (must match FPGA architecture),**"RBW"** Read before write,**"WBR"** Write
   );
   port(
     -- Control Signals
-    m_axi_aclk       : in  std_logic;   -- $$ type=clk; freq=100e6; proc=user_cmd,user_data,user_resp,axi $$
-    m_axi_aresetn    : in  std_logic;   -- $$ type=rst; clk=M_Axi_Aclk; lowactive=true $$
+    m_axi_aclk       : in  std_logic;                                                                       -- AXI clock
+    m_axi_aresetn    : in  std_logic;                                                                       -- AXI resetn
     -- User Command Interface
-    cmd_wr_addr_i    : in  std_logic_vector(axi_addr_width_g - 1 downto 0)             := (others => '0'); -- $$ proc=user_cmd $$
-    cmd_wr_size_i    : in  std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0'); -- $$ proc=user_cmd $$
-    cmd_wr_low_lat_i : in  std_logic                                                   := '0'; -- $$ proc=user_cmd $$
-    cmd_wr_vld_i     : in  std_logic                                                   := '0'; -- $$ proc=user_cmd $$
-    cmd_wr_rdy_o     : out std_logic;   -- $$ proc=user_cmd $$
+    cmd_wr_addr_i    : in  std_logic_vector(axi_addr_width_g - 1 downto 0)             := (others => '0');  -- Address to start writing at (must be aligned)
+    cmd_wr_size_i    : in  std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0');  -- Number of bytes in the transfer
+    cmd_wr_low_lat_i : in  std_logic                                                   := '0';              -- **'1'** \--\> Low latency mode, **'0'** \--\> High latency mode
+    cmd_wr_vld_i     : in  std_logic                                                   := '0';              -- AXI-S handshaking signal
+    cmd_wr_rdy_o     : out std_logic;                                                                       -- AXI-S handshaking signal
     -- User Command Interface
-    cmd_rd_addr_i    : in  std_logic_vector(axi_addr_width_g - 1 downto 0)             := (others => '0'); -- $$ proc=user_cmd $$
-    cmd_rd_size_o    : in  std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0'); -- $$ proc=user_cmd $$
-    cmd_rd_low_lat_i : in  std_logic                                                   := '0'; -- $$ proc=user_cmd $$
-    cmd_rd_vld_i     : in  std_logic                                                   := '0'; -- $$ proc=user_cmd $$
-    cmd_rd_rdy_o     : out std_logic;   -- $$ proc=user_cmd $$
+    cmd_rd_addr_i    : in  std_logic_vector(axi_addr_width_g - 1 downto 0)             := (others => '0');  -- Address to start reading at (must be aligned)
+    cmd_rd_size_o    : in  std_logic_vector(user_transaction_size_bits_g - 1 downto 0) := (others => '0');  -- Number of bytes in the transfer
+    cmd_rd_low_lat_i : in  std_logic                                                   := '0';              -- **'1'** \--\> Low latency mode, **'0'** \--\> High latency mode
+    cmd_rd_vld_i     : in  std_logic                                                   := '0';              -- AXI-S handshaking signal
+    cmd_rd_rdy_o     : out std_logic;                                                                       -- AXI-S handshaking signal
     -- Write Data
-    wr_dat_i         : in  std_logic_vector(data_width_g - 1 downto 0)                 := (others => '0'); -- $$ proc=user_data $$
-    wr_vld_i         : in  std_logic                                                   := '0'; -- $$ proc=user_data $$
-    wr_rdy_o         : out std_logic;   -- $$ proc=user_data $$
+    wr_dat_i         : in  std_logic_vector(data_width_g - 1 downto 0)                 := (others => '0');  -- Write data (right-aligned)
+    wr_vld_i         : in  std_logic                                                   := '0';              -- AXI-S handshaking signal
+    wr_rdy_o         : out std_logic;                                                                       -- AXI-S handshaking signal
     -- Read Data
-    rd_dat_o         : out std_logic_vector(data_width_g - 1 downto 0); -- $$ proc=user_data $$
-    rd_vld_o         : out std_logic;   -- $$ proc=user_data $$
-    rd_rdy_i         : in  std_logic                                                   := '0'; -- $$ proc=user_data $$
+    rd_dat_o         : out std_logic_vector(data_width_g - 1 downto 0);                                     -- Read data (right-aligned)
+    rd_vld_o         : out std_logic;                                                                       -- AXI-S handshaking signal
+    rd_rdy_i         : in  std_logic                                                   := '0';              -- AXI-S handshaking signal
     -- Response
-    wr_done_o        : out std_logic;   -- $$ proc=user_resp $$
-    wr_error_o       : out std_logic;   -- $$ proc=user_resp $$
-    rd_done_o        : out std_logic;   -- $$ proc=user_resp $$
-    rd_error_o       : out std_logic;   -- $$ proc=user_resp $$
+    wr_done_o        : out std_logic;                                                                       -- Write command was completed successfully
+    wr_error_o       : out std_logic;                                                                       -- Write command was completed but at least one transaction failed (AXI response from slave indicated an error)
+    rd_done_o        : out std_logic;                                                                       -- Read command was completed successfully
+    rd_error_o       : out std_logic;                                                                       -- Read command was completed but at least one transaction failed
     -- AXI Address Write Channel
-    m_axi_awaddr     : out std_logic_vector(axi_addr_width_g - 1 downto 0); -- $$ proc=axi $$
-    m_axi_awlen      : out std_logic_vector(7 downto 0); -- $$ proc=axi $$
-    m_axi_awsize     : out std_logic_vector(2 downto 0); -- $$ proc=axi $$
-    m_axi_awburst    : out std_logic_vector(1 downto 0); -- $$ proc=axi $$
-    m_axi_awlock     : out std_logic;   -- $$ proc=axi $$
-    m_axi_awcache    : out std_logic_vector(3 downto 0); -- $$ proc=axi $$
-    m_axi_awprot     : out std_logic_vector(2 downto 0); -- $$ proc=axi $$
-    m_axi_awvalid    : out std_logic;   -- $$ proc=axi $$
-    m_axi_awready    : in  std_logic                                                   := '0'; -- $$ proc=axi $$
-    -- AXI Write Data Channel                                                           					-- $$ proc=axi $$
-    m_axi_wdata      : out std_logic_vector(axi_data_width_g - 1 downto 0); -- $$ proc=axi $$
-    m_axi_wstrb      : out std_logic_vector(axi_data_width_g / 8 - 1 downto 0); -- $$ proc=axi $$
-    m_axi_wlast      : out std_logic;   -- $$ proc=axi $$
-    m_axi_wvalid     : out std_logic;   -- $$ proc=axi $$
-    m_axi_wready     : in  std_logic                                                   := '0'; -- $$ proc=axi $$
+    m_axi_awaddr     : out std_logic_vector(axi_addr_width_g - 1 downto 0); 
+    m_axi_awlen      : out std_logic_vector(7 downto 0); 
+    m_axi_awsize     : out std_logic_vector(2 downto 0); 
+    m_axi_awburst    : out std_logic_vector(1 downto 0); 
+    m_axi_awlock     : out std_logic;
+    m_axi_awcache    : out std_logic_vector(3 downto 0); 
+    m_axi_awprot     : out std_logic_vector(2 downto 0); 
+    m_axi_awvalid    : out std_logic;
+    m_axi_awready    : in  std_logic                                                   := '0'; 
+    -- AXI Write Data Channel                                                           				
+    m_axi_wdata      : out std_logic_vector(axi_data_width_g - 1 downto 0);
+    m_axi_wstrb      : out std_logic_vector(axi_data_width_g / 8 - 1 downto 0);
+    m_axi_wlast      : out std_logic;
+    m_axi_wvalid     : out std_logic;
+    m_axi_wready     : in  std_logic                                                   := '0'; 
     -- AXI Write Response Channel
-    m_axi_bresp      : in  std_logic_vector(1 downto 0)                                := (others => '0'); -- $$ proc=axi $$
-    m_axi_bvalid     : in  std_logic                                                   := '0'; -- $$ proc=axi $$
-    m_axi_bready     : out std_logic;   -- $$ proc=axi $$
+    m_axi_bresp      : in  std_logic_vector(1 downto 0)                                := (others => '0'); 
+    m_axi_bvalid     : in  std_logic                                                   := '0'; 
+    m_axi_bready     : out std_logic;  
     -- AXI Read Address Channel
-    m_axi_araddr     : out std_logic_vector(axi_addr_width_g - 1 downto 0); -- $$ proc=axi $$
-    m_axi_arlen      : out std_logic_vector(7 downto 0); -- $$ proc=axi $$
-    m_axi_arsize     : out std_logic_vector(2 downto 0); -- $$ proc=axi $$
-    m_axi_arburst    : out std_logic_vector(1 downto 0); -- $$ proc=axi $$
-    m_axi_arlock     : out std_logic;   -- $$ proc=axi $$
-    m_axi_arcache    : out std_logic_vector(3 downto 0); -- $$ proc=axi $$
-    m_axi_arprot     : out std_logic_vector(2 downto 0); -- $$ proc=axi $$
-    m_axi_arvalid    : out std_logic;   -- $$ proc=axi $$
-    m_axi_arready    : in  std_logic                                                   := '0'; -- $$ proc=axi $$
+    m_axi_araddr     : out std_logic_vector(axi_addr_width_g - 1 downto 0); 
+    m_axi_arlen      : out std_logic_vector(7 downto 0); 
+    m_axi_arsize     : out std_logic_vector(2 downto 0); 
+    m_axi_arburst    : out std_logic_vector(1 downto 0);
+    m_axi_arlock     : out std_logic; 
+    m_axi_arcache    : out std_logic_vector(3 downto 0); 
+    m_axi_arprot     : out std_logic_vector(2 downto 0); 
+    m_axi_arvalid    : out std_logic;
+    m_axi_arready    : in  std_logic                                                   := '0'; 
     -- AXI Read Data Channel
-    m_axi_rdata      : in  std_logic_vector(axi_data_width_g - 1 downto 0)             := (others => '0'); -- $$ proc=axi $$
-    m_axi_rresp      : in  std_logic_vector(1 downto 0)                                := (others => '0'); -- $$ proc=axi $$
-    m_axi_rlast      : in  std_logic                                                   := '0'; -- $$ proc=axi $$
-    m_axi_rvalid     : in  std_logic                                                   := '0'; -- $$ proc=axi $$
-    m_axi_rready     : out std_logic    -- $$ proc=axi $$
+    m_axi_rdata      : in  std_logic_vector(axi_data_width_g - 1 downto 0)             := (others => '0'); 
+    m_axi_rresp      : in  std_logic_vector(1 downto 0)                                := (others => '0'); 
+    m_axi_rlast      : in  std_logic                                                   := '0'; 
+    m_axi_rvalid     : in  std_logic                                                   := '0'; 
+    m_axi_rready     : out std_logic
   );
 end entity;
+--@formatter:on
 
 architecture rtl of psi_common_axi_master_full is
 

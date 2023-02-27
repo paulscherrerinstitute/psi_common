@@ -20,12 +20,6 @@ use ieee.numeric_std.all;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 --@fomratter:off
-------------------------------------------------------------------------------
--- Entity
-------------------------------------------------------------------------------
--- $$ testcases=simple_tf,max_transact,axi_hs,split,internals,highlat$$
--- $$ processes=user_cmd,user_data,user_resp,axi $$
--- $$ tbpkg=work.psi_tb_txt_util,work.psi_tb_compare_pkg,work.psi_tb_activity_pkg $$
 entity psi_common_axi_master_simple is
   generic(
     axi_addr_width_g             : natural range 12 to 64  := 32;   -- $$ constant=32 $$

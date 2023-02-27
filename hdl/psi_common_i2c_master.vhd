@@ -133,17 +133,17 @@ begin
   --------------------------------------------------------------------------
   -- Combinatorial Proccess
   --------------------------------------------------------------------------
-  p_comb : process(clk_i, r, I2cScl_Sync, I2cSda_Sync, cmd_vld_i, cmd_type_i, cmd_dat_i, cmd_ack_i)
+  p_comb : process(r, I2cScl_Sync, I2cSda_Sync, cmd_vld_i, cmd_type_i, cmd_dat_i, cmd_ack_i)
     variable v                                  : two_process_r;
-    variable SclRe_v, SclFe_v, SdaRe_v, SdaFe_v : std_logic;
+    variable   SdaRe_v, SdaFe_v : std_logic;
     variable I2cStart_v, I2cStop_v              : std_logic;
   begin
     -- *** hold variables stable ***
     v := r;
 
     -- *** Edge Detection ***
-    SclRe_v   := not r.SclLast and I2cScl_Sync;
-    SclFe_v   := r.SclLast and not I2cScl_Sync;
+    --SclRe_v   := not r.SclLast and I2cScl_Sync;
+    --SclFe_v   := r.SclLast and not I2cScl_Sync;
     SdaRe_v   := not r.SdaLast and I2cSda_Sync;
     SdaFe_v   := r.SdaLast and not I2cSda_Sync;
     v.SclLast := I2cScl_Sync;

@@ -23,21 +23,19 @@ use work.psi_common_logic_pkg.all;
 -- $$ tbpkg=work.psi_tb_compare_pkg,work.psi_tb_activity_pkg,work.psi_tb_txt_util $$
 entity psi_common_spi_master_cfg is
   generic(
-    clock_divider_g   : natural range 4 to 1_000_000 := 4; -- Must be a multiple of two	$$ constant=8 $$
-    max_trans_width_g : positive                     := 16; -- SPI Transaction width		$$ constant=8 $$
-    cs_high_cycles_g  : positive                     := 2; -- $$ constant=2 $$
-    spi_cpol_g        : natural range 0 to 1         := 1; -- $$ export=true $$
-    spi_cpha_g        : natural range 0 to 1         := 1; -- $$ export=true $$
-    slave_cnt_g       : positive                     := 1; -- $$ constant=2 $$
-    lsb_first_g       : boolean                      := false; -- $$ export=true $$
+    clock_divider_g   : natural range 4 to 1_000_000 := 4; -- Must be a multiple of two	
+    max_trans_width_g : positive                     := 16; -- SPI Transaction width		
+    cs_high_cycles_g  : positive                     := 2; 
+    spi_cpol_g        : natural range 0 to 1         := 1; 
+    spi_cpha_g        : natural range 0 to 1         := 1; 
+    slave_cnt_g       : positive                     := 1; 
+    lsb_first_g       : boolean                      := false; 
     mosi_idle_state_g : std_logic                    := '0';
-    rst_pol_g         : std_logic                    := '1'
-  );
+    rst_pol_g         : std_logic                    := '1');
   port(
     -- Control Signals
-    clk_i         : in  std_logic;      -- $$ type=clk; freq=100e6 $$
-    rst_i         : in  std_logic;      -- $$ type=rst; clk=Clk $$
-
+    clk_i         : in  std_logic;      
+    rst_i         : in  std_logic;      
     -- Parallel Interface
     start_i       : in  std_logic;
     slave_i       : in  std_logic_vector(log2ceil(slave_cnt_g) - 1 downto 0);
@@ -47,7 +45,6 @@ entity psi_common_spi_master_cfg is
     rd_dat_o      : out std_logic_vector(max_trans_width_g - 1 downto 0);
     trans_width_i : in  std_logic_vector(log2ceil(max_trans_width_g) downto 0);
     -- SPI
-
     spi_sck_o     : out std_logic;
     spi_mosi_o    : out std_logic;
     spi_miso_i    : in  std_logic;

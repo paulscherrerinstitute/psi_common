@@ -17,25 +17,21 @@ use ieee.math_real.all;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
--- $$ processes=stim,spi $$
--- $$ tbpkg=work.psi_tb_compare_pkg,work.psi_tb_activity_pkg,work.psi_tb_txt_util $$
 entity psi_common_spi_master is
   generic(
     clk_div_g         : natural range 4 to 1_000_000; -- Must be a multiple of two	$$ constant=8 $$
     trans_width_g     : positive;                     -- SPI Transaction width		$$ constant=8 $$
-    cs_high_cycles_g  : positive;                     -- $$ constant=2 $$
-    spi_cpol_g        : natural range 0 to 1;         -- $$ export=true $$
-    spi_cpha_g        : natural range 0 to 1;         -- $$ export=true $$
-    slave_cnt_g       : positive  := 1;               -- $$ constant=2 $$
-    lsb_first_g       : boolean   := false;           -- $$ export=true $$
+    cs_high_cycles_g  : positive;                     -- 
+    spi_cpol_g        : natural range 0 to 1;         -- 
+    spi_cpha_g        : natural range 0 to 1;         -- 
+    slave_cnt_g       : positive  := 1;               -- 
+    lsb_first_g       : boolean   := false;           -- 
     mosi_idle_state_g : std_logic := '0';
-    rst_pol_g         : std_logic:= '1'
-  );
+    rst_pol_g         : std_logic:= '1');
   port(
     -- Control Signals
-    clk_i      : in  std_logic;         -- $$ type=clk; freq=100e6 $$
-    rst_i      : in  std_logic;         -- $$ type=rst; clk=Clk $$
-
+    clk_i      : in  std_logic;         -- 
+    rst_i      : in  std_logic;         -- 
     -- Parallel Interface
     start_i    : in  std_logic;
     slave_i    : in  std_logic_vector(log2ceil(slave_cnt_g) - 1 downto 0);

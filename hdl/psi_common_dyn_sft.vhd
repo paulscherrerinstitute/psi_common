@@ -66,7 +66,6 @@ begin
   p_comb : process(r, vld_i, dat_i, shift_i)
     variable v          : two_process_r;
     variable StepSize_v : natural;
-    variable Fill_v     : std_logic;
     variable Select_v   : natural range 0 to 2**sel_bit_per_stage_g - 1;
     variable TempData_v : std_logic_vector(width_g * 2 - 1 downto 0);
   begin

@@ -22,14 +22,12 @@ use work.psi_common_array_pkg.all;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
--- $$ processes=axi,ip $$
--- $$ tbpkg=work.psi_tb_txt_util,work.psi_tb_compare_pkg,work.psi_tb_activity_pkg $$
 entity psi_common_axi_slave_ipif64 is
   generic(
     -- IP Interface Config
-    num_reg_g        : integer  := 32;  -- $$ export=true $$
-    rst_val_g        : t_aslv64 := (0 => (others => '0')); -- $$ constant=(X"0001A123B123C123", X"0002123456789ABC") $$
-    use_mem_g        : boolean  := true; -- $$ export=true $$
+    num_reg_g        : integer  := 32;                      -- $$ export=true $$
+    rst_val_g        : t_aslv64 := (0 => (others => '0'));  -- $$ constant=(X"0001A123B123C123", X"0002123456789ABC") $$
+    use_mem_g        : boolean  := true;                    -- $$ export=true $$
     -- AXI Config
     axi_id_width_g   : integer  := 1;
     axi_addr_width_g : integer  := 9;
