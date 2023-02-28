@@ -37,49 +37,51 @@ use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 use work.psi_common_i2c_master_pkg.all;
 
--- $$ processes=stim,i2c $$
--- $$ tbpkg=work.psi_tb_compare_pkg,work.psi_tb_activity_pkg,work.psi_tb_txt_util,work.psi_tb_i2c_pkg $$
 entity psi_common_i2c_master is
   generic(
-    clock_frequency_g    : real    := 125.0e6;  -- in Hz		$$ constant=125.0e6 $$
-    i2c_frequency_g      : real    := 100.0e3;  -- in Hz		$$ constant=1.0e6 $$
-    bus_busy_timeout_g   : real    := 1.0e-3;   -- in sec		$$ constant=100.0e-6 $$
-    cmd_timeout_g        : real    := 100.0e-6; -- in sec		$$ constant=10.0e-6 $$
-    internal_tri_state_g : boolean := true;     -- 				$$ constant=true $$
-    disable_asserts_g    : boolean := false;
-    rst_pol_g            : std_logic:= '1'
-  );
-  port(
-    -- Control Signals
-    clk_i          : in    std_logic;   -- $$ type=clk; freq=125e6 $$
-    rst_i          : in    std_logic;   -- $$ type=rst; clk=Clk $$
-    -- Command Interface
-    cmd_rdy_o      : out   std_logic;
-    cmd_vld_i      : in    std_logic;
-    cmd_type_i     : in    std_logic_vector(2 downto 0);
-    cmd_dat_i      : in    std_logic_vector(7 downto 0);
-    cmd_ack_i      : in    std_logic;
-    -- Response Interface
-    rsp_vld_o      : out   std_logic;
-    rsp_type_o     : out   std_logic_vector(2 downto 0);
-    rsp_dat_o      : out   std_logic_vector(7 downto 0);
-    rsp_ack_o      : out   std_logic;
-    rsp_arb_lost_o : out   std_logic;
-    rsp_seq_o      : out   std_logic;
-    -- Status Interface
-    bus_busy_o     : out   std_logic;
-    timeout_cmd_o  : out   std_logic;
-    -- I2c Interface with internal Tri-State (InternalTriState_g = true)
-    i2c_scl_io     : inout std_logic := 'Z';
-    i2c_sda_io     : inout std_logic := 'Z';
-    -- I2c Interface with external Tri-State (InternalTriState_g = false)
-    i2c_scl_i      : in    std_logic := '0';
-    i2c_scl_o      : out   std_logic;
-    i2c_scl_t      : out   std_logic;
-    i2c_sda_i      : in    std_logic := '0';
-    i2c_sda_o      : out   std_logic;
-    i2c_sda_t      : out   std_logic
-  );
+          clock_frequency_g    : real    := 125.0e6;          -- in Hz, frequency system clock		
+          i2c_frequency_g      : real    := 100.0e3;          -- in Hz, frequency I2C clock		
+          bus_busy_timeout_g   : real    := 1.0e-3;           -- in sec	If *I2cScl* = '1' and *I2cSda* = '1' for this time in sec., the bus is regarded as free.
+                                                              -- If the user does not provide any command for this time, the block automatically generates a stop-condition to release the bus.	
+          cmd_timeout_g        : real    := 100.0e-6;         -- in sec		When the block is ready for the next command but the user does not provide a new command,
+                                                              -- after this timeout the bus is releases (and TimeoutCmd is pulsed to inform the user).
+          internal_tri_state_g : boolean := true;             -- True  => Use internal tri-state buffer i2c_scl and i2c_sda are used.
+                                                              -- False => Use external tri-state buffer i2c_scl_x and i2c_sda_x are used.				
+          disable_asserts_g    : boolean := false;            -- If true, the block does not print any messages during simulations
+          rst_pol_g            : std_logic:= '1');            -- '1' active high, '0' active low
+  port(   -- Control Signals
+          clk_i          : in    std_logic;                   -- system clock
+          rst_i          : in    std_logic;                   -- system reset
+          -- Command Interface
+          cmd_rdy_o      : out   std_logic;                   -- AXI-S handshaking signal for commande interface
+          cmd_vld_i      : in    std_logic;                   -- AXI-S handshaking signal for command   interface  
+          cmd_type_i     : in    std_logic_vector(2 downto 0);-- cst: "000" => Send start condition CMD_START 
+                                                              --      "001" => Send stop condition CMD_STOP
+                                                              --      "010" => Send repeated start condition  CMD_REPSTART
+                                                              --      "011" => Send data  byte CMD_SEND 
+                                                              --      "100" => Receive data byte  CMD_RECEIVE  
+          cmd_dat_i      : in    std_logic_vector(7 downto 0);-- Input data to send only for CMD_SEND  resp. CmdType="011".
+          cmd_ack_i      : in    std_logic;                   -- Acknowledge to send only for CMD_RECEIVE* resp. *CmdType="100"
+          -- Response Interface
+          rsp_vld_o      : out   std_logic;                   -- AXI-S handshaking signal for response interface  
+          rsp_type_o     : out   std_logic_vector(2 downto 0);-- Type of the command that completed. See *CmdType* for details.
+          rsp_dat_o      : out   std_logic_vector(7 downto 0);-- Received data (only for *CMD\_RECEIVE* resp.  *CmdType="100"*).
+          rsp_ack_o      : out   std_logic;                   -- 1 => ACK received, 0 => NACK received 
+          rsp_arb_lost_o : out   std_logic;                   -- The command failed because arbitration was lost
+          rsp_seq_o      : out   std_logic;                   -- The command failed because of wrong command sequence(e.g. attempt to do a CMD_START in the middle of an ongoing transfer
+          -- Status Interface
+          bus_busy_o     : out   std_logic;                   -- I2C bus is busy (used by this master or another master)  
+          timeout_cmd_o  : out   std_logic;                   -- Pulsed if the bus is released due to a timeout.
+          -- I2c Interface with internal Tri-State 
+          i2c_scl_io     : inout std_logic := 'Z';            -- SCL signal 
+          i2c_sda_io     : inout std_logic := 'Z';            -- SDA signal
+          -- I2c Interface with external Tri-State
+          i2c_scl_i      : in    std_logic := '0';            -- SCL input signal 
+          i2c_scl_o      : out   std_logic;                   -- SCL output signal 
+          i2c_scl_t      : out   std_logic;                   -- SCL Tri-State signal (1 = tristated, 0 drive) 
+          i2c_sda_i      : in    std_logic := '0';            -- SDA input signal 
+          i2c_sda_o      : out   std_logic;                   -- SDA output signal
+          i2c_sda_t      : out   std_logic);                  -- SDA Tri-State signal (1 = tristated, 0 drive)
 end entity;
 
 architecture rtl of psi_common_i2c_master is
@@ -593,7 +595,7 @@ begin
 
   i_sync : entity work.psi_common_bit_cc
     generic map(
-      num_bits_g => 2
+      width_g => 2
     )
     port map(
       dat_i(0) => I2cScl_Input,

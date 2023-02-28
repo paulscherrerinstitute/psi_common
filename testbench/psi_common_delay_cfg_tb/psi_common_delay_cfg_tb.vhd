@@ -84,7 +84,7 @@ begin
 
   --*** DUT***
   inst_dut : entity work.psi_common_delay_cfg
-    generic map(Width_g       => Width_g,
+    generic map(width_g       => Width_g,
                 max_delay_g    => max_delay_g,
                 rst_pol_g      => '1',
                 ram_behavior_g => ram_behavior_g,
@@ -92,7 +92,7 @@ begin
     port map(clk_i => clk_sti,
              rst_i => rst_sti,
              dat_i => dat_sti,
-             str_i => str_sti,
+             vld_i => str_sti,
              del_i => del_sti,
              dat_o => dat_obs);
 

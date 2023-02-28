@@ -63,7 +63,7 @@ begin
   -------------------------------------------------------------------------
   i_dut : entity work.psi_common_simple_cc
     generic map(
-      data_width_g => DataWidth_c
+      width_g => DataWidth_c
     )
     port map(
       -- Clock Domain A

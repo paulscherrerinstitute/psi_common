@@ -13,23 +13,22 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
--- $$ processes=ctrl,countout $$
+
+-- @formatter:off
 entity psi_common_strobe_divider is
-  generic(
-    length_g  : natural   := 4;         -- ratio division bit width $$ constant=4 $$
-    rst_pol_g : std_logic := '0'        -- reset polarity
-  );
-  port(
-    clk_i   : in  std_logic;            -- clk in                   $$ type=clk; freq=100e6; $$
-    rst_i   : in  std_logic;            -- synchornous reset        $$ type=rst; clk=clk_i; lowactive=true $$
-    vld_i   : in  std_logic;            -- strobe in (if not strobe an edge detection is done)
-    ratio_i : in  std_logic_vector(length_g - 1 downto 0); -- parameter ratio for division
-    vld_o   : out std_logic);           -- strobe output
+  generic(width_g  : natural   := 4;                             -- ratio division bit width $$ constant=4 $$
+          rst_pol_g : std_logic := '0');                         -- reset polarity
+  port(   clk_i   : in  std_logic;                               -- clk in
+          rst_i   : in  std_logic;                               -- synchornous reset
+          vld_i   : in  std_logic;                               -- strobe in (if not strobe an edge detection is done)
+          ratio_i : in  std_logic_vector(width_g - 1 downto 0);  -- parameter ratio for division
+          vld_o   : out std_logic);                              -- strobe output
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_strobe_divider is
   signal str_dff_s : std_logic;
-  signal counter_s : integer range 0 to 2**length_g - 1 := 0;
+  signal counter_s : integer range 0 to 2**width_g - 1 := 0;
 begin
 
   -- *** Implementation ***

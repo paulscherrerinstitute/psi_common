@@ -18,51 +18,51 @@
 -- dat:--|---|---|xxx|xxx|xxx|---|---|---|xxx|xxx|xxx|---|---|---|xxx|xxx|xxx|
 --       Ping        Pong        Ping        Pong        Ping        Pong
 -- irq:          |           |           |           |           |           |
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.psi_common_math_pkg.all;
 
+-- @formatter:off
 entity psi_common_ping_pong is
-  generic(ch_nb_g        : natural   := 16;     -- Channel number -> master 8
-          sample_nb_g    : natural   := 1012;   -- sample number per memory space
-          dat_length_g   : positive  := 16;     -- data width in bits
-          tdm_g          : boolean   := false;  -- TDM* behavior if false PAR
-          ram_behavior_g : string    := "RBW";  -- ram behavior "RBW"|"WBR" -> cf RAM
-          rst_pol_g      : std_logic := '1');   -- reset polarity
-  port(clk_i          : in  std_logic;          -- clock data
-       rst_i          : in  std_logic;          -- rst data
-       dat_i          : in  std_logic_vector(choose(tdm_g, dat_length_g - 1, ch_nb_g * dat_length_g - 1) downto 0); -- data input
-       str_i          : in  std_logic;          -- strobe input (ie valid)
+  generic(ch_nb_g        : natural   := 16;                                                                  -- Channel number -> master 8
+          depth_g        : natural   := 1012;                                                                -- sample number per memory space
+          width_g        : positive  := 16;                                                                  -- data width in bits
+          tdm_g          : boolean   := false;                                                               -- TDM* behavior if false PAR
+          ram_behavior_g : string    := "RBW";                                                               -- ram behavior "RBW"|"WBR" -> cf RAM
+          rst_pol_g      : std_logic := '1');                                                                -- reset polarity
+  port(clk_i             : in  std_logic;                                                                    -- clock data
+       rst_i             : in  std_logic;                                                                    -- rst data
+       dat_i             : in  std_logic_vector(choose(tdm_g, width_g - 1, ch_nb_g * width_g - 1) downto 0); -- data input
+       vld_i             : in  std_logic;                                                                    -- strobe input (ie valid)
        --*** mem read interface ***
-       mem_irq_o      : out std_logic;          -- indicate when a set of buffer has been filled
-       mem_clk_i      : in  std_logic;          -- clock mem
-       mem_addr_ch_i  : in  std_logic_vector(log2ceil(ch_nb_g) - 1 downto 0);     -- Channel selection for mem read
-       mem_addr_spl_i : in  std_logic_vector(log2ceil(sample_nb_g) - 1 downto 0); -- Sample selection for mem read
-       mem_dat_o      : out std_logic_vector(dat_length_g - 1 downto 0)           -- data mem read
+       mem_irq_o         : out std_logic;                                                                    -- indicate when a set of buffer has been filled
+       mem_clk_i         : in  std_logic;                                                                    -- clock mem
+       mem_addr_ch_i     : in  std_logic_vector(log2ceil(ch_nb_g) - 1 downto 0);                             -- Channel selection for mem read
+       mem_addr_spl_i    : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0);                             -- Sample selection for mem read
+       mem_dat_o         : out std_logic_vector(width_g - 1 downto 0)                                        -- data mem read
       );
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_ping_pong is
   -- internals
-  constant ram_depth_c : integer := 2 * 2**log2ceil(ch_nb_g) * 2**(log2ceil(sample_nb_g)); -- cst to define the ram depth
+  constant ram_depth_c : integer := 2 * 2**log2ceil(ch_nb_g) * 2**(log2ceil(depth_g)); -- cst to define the ram depth
 
   signal str_s, str_dff_s   : std_logic; -- pipe entry stage for strobe
-  signal dpram_data_write_s : std_logic_vector(dat_length_g - 1 downto 0); -- data to write within RAMs
+  signal dpram_data_write_s : std_logic_vector(width_g - 1 downto 0); -- data to write within RAMs
   signal ch_offs_count_s    : unsigned(log2ceil(ch_nb_g) - 1 downto 0); -- channel counter <=> helper
-  signal sample_s           : unsigned(log2ceil(sample_nb_g) - 1 downto 0); -- sample counter  <=> base 	RAM address (LSB)
+  signal sample_s           : unsigned(log2ceil(depth_g) - 1 downto 0); -- sample counter  <=> base 	RAM address (LSB)
   signal dpram_add_s        : std_logic_vector(log2ceil(ram_depth_c) - 1 downto 0); -- RAMs address
   signal toggle_s           : std_logic; -- toggle bit for ping & pong
   signal cdc_toggle_s       : std_logic_vector(2 downto 0); -- select
   signal dpram_wren_s       : std_logic; -- write enable RAM1
   signal dpram_read_add_s   : std_logic_vector(log2ceil(ram_depth_c) - 1 downto 0) := (others => '0');
-  signal dat_s              : std_logic_vector(dat_length_g - 1 downto 0);
+  signal dat_s              : std_logic_vector(width_g - 1 downto 0);
   --
-  type data_array_t is array (0 to ch_nb_g - 1) of std_logic_vector(dat_length_g - 1 downto 0);
+  type data_array_t is array (0 to ch_nb_g - 1) of std_logic_vector(width_g - 1 downto 0);
   signal data_array_s       : data_array_t;
 
 begin
@@ -77,7 +77,7 @@ begin
     if rising_edge(clk_i) then
       if rst_i = rst_pol_g then
         --*** init ***
-        sample_s        <= choose(tdm_g, to_unsigned(0, sample_s'length), to_unsigned(sample_nb_g - 1, sample_s'length));
+        sample_s        <= choose(tdm_g, to_unsigned(0, sample_s'length), to_unsigned(depth_g - 1, sample_s'length));
         toggle_s        <= '0';
         str_s           <= '0';
         str_dff_s       <= '0';
@@ -87,12 +87,12 @@ begin
 
       else
 
-        str_s <= str_i;
+        str_s <= vld_i;
         --*** 1 pipe Entry gates PAR ***
         if not tdm_g then
           if ch_nb_g > 1 then
             for i in 0 to ch_nb_g - 1 loop
-              data_array_s(i) <= dat_i(i * dat_length_g + dat_length_g - 1 downto i * dat_length_g);
+              data_array_s(i) <= dat_i(i * width_g + width_g - 1 downto i * width_g);
             end loop;
           else
             dat_s <= dat_i;
@@ -130,7 +130,7 @@ begin
 
         --*** sample counter PAR ***
         if not tdm_g then
-          if sample_s = sample_nb_g - 1 and str_s = '1' then
+          if sample_s = depth_g - 1 and str_s = '1' then
             sample_s <= (others => '0');
             toggle_s <= not toggle_s;
           else
@@ -140,7 +140,7 @@ begin
           end if;
         else
           if ch_offs_count_s = ch_nb_g - 1 and str_s = '1' then
-            if sample_s = sample_nb_g - 1 then
+            if sample_s = depth_g - 1 then
               sample_s <= (others => '0');
               toggle_s <= not toggle_s;
             else
@@ -186,7 +186,7 @@ begin
   --*** TAG PING PONG Buffer ***
   inst_dpram_pp : entity work.psi_common_tdp_ram
     generic map(depth_g    => ram_depth_c,
-                width_g    => dat_length_g,
+                width_g    => width_g,
                 behavior_g => ram_behavior_g)
     port map(a_clk_i  => clk_i,
              a_addr_i => dpram_add_s,

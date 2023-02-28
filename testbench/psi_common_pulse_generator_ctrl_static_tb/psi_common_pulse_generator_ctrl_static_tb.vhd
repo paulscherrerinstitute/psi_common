@@ -88,7 +88,7 @@ begin
   inst_dut : entity work.psi_common_pulse_generator_ctrl_static
     generic map(
       rst_pol_g     => '1',
-      length_g      => length_g,
+      width_g      => length_g,
       clk_freq_g    => real(freq_clk_g),
       str_freq_g    => real(str_freq_g),
       nb_step_up_g  => step_up_g,
@@ -103,7 +103,7 @@ begin
       stop_i => stop_sti,
       busy_o => busy_obs,
       dat_o  => dat_obs,
-      str_o  => str_obs,
+      vld_o  => str_obs,
       dbg_o  => status_pulse_s
     );
 

@@ -18,46 +18,41 @@ use work.psi_common_logic_pkg.all;
 use work.psi_common_math_pkg.all;
 --@formatter:off
 entity psi_common_async_fifo is
-  generic(
-    width_g         : positive  := 16;
-    depth_g         : positive  := 32;
-    afull_on_g      : boolean   := false;
-    afull_lvl_g     : natural   := 28;
-    aempty_on_g     : boolean   := false;
-    aempty_level_g  : natural   := 4;
-    ram_style_g     : string    := "auto";
-    ram_behavior_g  : string    := "RBW"; -- "RBW" = read-before-write, "WBR" = write-before-read
-    rdy_rst_state_g : std_logic := '1';   -- Use '1' for minimal logic on Rdy path
-    rst_pol_g       : std_logic := '1'
-  );
-  port(
-    -- Control Ports
-    in_clk_i     : in  std_logic;
-    in_rst_i     : in  std_logic;
-    out_clk_i    : in  std_logic;
-    out_rst_i    : in  std_logic;
-    -- Input Data
-    in_dat_i     : in  std_logic_vector(width_g - 1 downto 0);
-    in_vld_i     : in  std_logic;
-    in_rdy_o     : out std_logic;       -- not full
-
-    -- Output Data
-    out_dat_o    : out std_logic_vector(width_g - 1 downto 0);
-    out_vld_o    : out std_logic;       -- not empty
-    out_rdy_o    : in  std_logic;
-    -- Input Status
-    in_full_o    : out std_logic;
-    in_empty_o   : out std_logic;
-    in_afull_o   : out std_logic;
-    in_aempty_o  : out std_logic;
-    in_lvl_o     : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0);
-    -- Output Status
-    out_full_o   : out std_logic;
-    out_empty_o  : out std_logic;
-    out_afull_o  : out std_logic;
-    out_aempty_o : out std_logic;
-    out_lvl_o    : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0)
-  );
+  generic(width_g         : positive  := 16;
+          depth_g         : positive  := 32;
+          afull_on_g      : boolean   := false;
+          afull_lvl_g     : natural   := 28;
+          aempty_on_g     : boolean   := false;
+          aempty_level_g  : natural   := 4;
+          ram_style_g     : string    := "auto";
+          ram_behavior_g  : string    := "RBW"; -- "RBW" = read-before-write, "WBR" = write-before-read
+          rdy_rst_state_g : std_logic := '1';   -- Use '1' for minimal logic on Rdy path
+          rst_pol_g       : std_logic := '1');
+  port(   -- Control Ports
+          in_clk_i     : in  std_logic;
+          in_rst_i     : in  std_logic;
+          out_clk_i    : in  std_logic;
+          out_rst_i    : in  std_logic;
+          -- Input Data
+          in_dat_i     : in  std_logic_vector(width_g - 1 downto 0);
+          in_vld_i     : in  std_logic;
+          in_rdy_o     : out std_logic;       -- not full
+          -- Output Data
+          out_dat_o    : out std_logic_vector(width_g - 1 downto 0);
+          out_vld_o    : out std_logic;       -- not empty
+          out_rdy_o    : in  std_logic;
+          -- Input Status
+          in_full_o    : out std_logic;
+          in_empty_o   : out std_logic;
+          in_afull_o   : out std_logic;
+          in_aempty_o  : out std_logic;
+          in_lvl_o     : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0);
+          -- Output Status
+          out_full_o   : out std_logic;
+          out_empty_o  : out std_logic;
+          out_afull_o  : out std_logic;
+          out_aempty_o : out std_logic;
+          out_lvl_o    : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0));
 end entity;
 --@formatter:on
 

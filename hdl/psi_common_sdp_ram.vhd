@@ -16,26 +16,19 @@ use ieee.numeric_std.all;
 use work.psi_common_math_pkg.all;
 
 entity psi_common_sdp_ram is
-  generic(
-    depth_g        : positive := 1024;
-    width_g        : positive := 16;
-    is_async_g     : boolean  := false;   -- True = Separate Rd clock is used (clk is WrClk in this case)
-    ram_style_g    : string   := "auto";  -- "auto", "distributed" or "block"
-    ram_behavior_g : string   := "RBW"    -- "RBW" = read-before-write, "WBR" = write-before-read
-  );
-  port(
-    -- Control Signals
-    wr_clk_i  : in  std_logic                                        := '0';
-    rd_clk_i  : in  std_logic                                        := '0';
-    -- Write Port
-    wr_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
-    wr_i      : in  std_logic                                        := '0';
-    wr_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-    -- Read Port
-    rd_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
-    rd_i      : in  std_logic                                        := '1';
-    rd_dat_o  : out std_logic_vector(width_g - 1 downto 0)
-  );
+  generic(depth_g        : positive := 1024;                                                         -- memory depthg, samples
+          width_g        : positive := 16;                                                           -- data length
+          is_async_g     : boolean  := false;                                                        -- True = Separate Rd clock is used (clk is WrClk in this case)
+          ram_style_g    : string   := "auto";                                                       -- "auto", "distributed" or "block"
+          ram_behavior_g : string   := "RBW");                                                       -- "RBW" = read-before-write, "WBR" = write-before-read
+  port(   wr_clk_i       : in  std_logic                                        := '0';              -- write clock
+          wr_addr_i      : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');  -- write address
+          wr_i           : in  std_logic                                        := '0';              -- write enable
+          wr_dat_i       : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');  -- write data input
+          rd_clk_i       : in  std_logic                                        := '0';              -- read clock
+          rd_addr_i      : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');  -- read address
+          rd_i           : in  std_logic                                        := '1';              -- read enable
+          rd_dat_o       : out std_logic_vector(width_g - 1 downto 0));                              -- read data output
 end entity;
 
 architecture rtl of psi_common_sdp_ram is

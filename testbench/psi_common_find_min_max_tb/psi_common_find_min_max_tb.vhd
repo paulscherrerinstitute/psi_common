@@ -68,15 +68,15 @@ begin
   --*** DUT***
   inst_dut : entity work.psi_common_find_min_max
     generic map(rst_pol_g => '1',
-                length_g  => length_g,
+                width_g  => length_g,
                 signed_g  => signed_g,
                 mode_g    => mode_g)
     port map(clk_i     => clk_sti,
              rst_i     => rst_sti,
-             str_i     => '1',
+             vld_i     => '1',
              raz_i     => raz_sti,
              dat_i    => data_sti,
-             str_o     => str_obs,
+             vld_o     => str_obs,
              dat_o    => data_obs,
              run_dat_o => run_dat_obs,
              run_str_o => run_str_obs

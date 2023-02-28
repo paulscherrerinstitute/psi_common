@@ -16,26 +16,23 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
--- $$ processes=stim,check $$
+-- @formatter:off
 entity psi_common_sync_cc_xn2n is
-  generic(width_g       : integer   := 8;
-          in_rst_pol_g  : std_logic := '1';
-          out_rst_pol_g : std_logic := '1'
-         );
-  port(
-    -- Input
-    in_clk_i  : in  std_logic;          -- $$ type=clk; freq=200e6 $$
-    in_rst_i  : in  std_logic;          -- $$ type=rst; clk=InClk $$
-    vld_i     : in  std_logic;
-    in_rdy_o  : out std_logic;
-    dat_i     : in  std_logic_vector(width_g - 1 downto 0);
-    -- Output
-    out_clk_i : in  std_logic;          -- $$ type=clk; freq=100e6 $$
-    out_rst_i : in  std_logic := '0';   -- $$ type=rst; clk=OutClk $$
-    vld_o     : out std_logic;
-    out_rdy_i : in  std_logic := '1';
-    dat_o     : out std_logic_vector(width_g - 1 downto 0));
+  generic(width_g       : integer   := 8;                               -- input vector length
+          in_rst_pol_g  : std_logic := '1';                             -- reset polarity for reset input
+          out_rst_pol_g : std_logic := '1');                            -- reset polaraity for reset ouput
+  port(   clk_in_i      : in  std_logic;                                -- clk input
+          rst_in_i      : in  std_logic;                                -- rst input
+          vld_i         : in  std_logic;                                -- valid signal input
+          rdy_o         : out std_logic;                                -- ready signal push back
+          dat_i         : in  std_logic_vector(width_g - 1 downto 0);   -- data input
+          clk_out_i     : in  std_logic;                                -- clk output
+          rst_out_i     : in  std_logic := '0';                         -- reset output
+          vld_o         : out std_logic;                                -- valid output
+          rdy_i         : in  std_logic := '1';                         -- ready input signal push back from next block
+          dat_o         : out std_logic_vector(width_g - 1 downto 0));  -- data output
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_sync_cc_xn2n is
 
@@ -50,12 +47,12 @@ architecture rtl of psi_common_sync_cc_xn2n is
 
 begin
 
-  in_rdy_o <= '1' when InCnt - OutCnt /= 2 else '0';
+  rdy_o <= '1' when InCnt - OutCnt /= 2 else '0';
 
-  p_input : process(in_clk_i)
+  p_input : process(clk_in_i)
   begin
-    if rising_edge(in_clk_i) then
-      if (in_rst_i = in_rst_pol_g) or (out_rst_i = out_rst_pol_g) then
+    if rising_edge(clk_in_i) then
+      if (rst_in_i = in_rst_pol_g) or (rst_out_i = out_rst_pol_g) then
         InCnt <= (others => '0');
       else
         if vld_i = '1' and InCnt - OutCnt /= 2 then
@@ -67,19 +64,19 @@ begin
     end if;
   end process;
 
-  p_output : process(out_clk_i)
+  p_output : process(clk_out_i)
   begin
-    if rising_edge(out_clk_i) then
-      if (in_rst_i = in_rst_pol_g) or (out_rst_i = out_rst_pol_g) then
+    if rising_edge(clk_out_i) then
+      if (rst_in_i = in_rst_pol_g) or (rst_out_i = out_rst_pol_g) then
         OutCnt   <= (others => '0');
         OutVld_I <= '0';
       else
         -- New sample was acknowledged
-        if OutVld_I = '1' and out_rdy_i = '1' then
+        if OutVld_I = '1' and rdy_i = '1' then
           OutVld_I <= '0';
         end if;
         -- Forward new sample to output if ready
-        if InCnt /= OutCnt and (OutVld_I = '0' or out_rdy_i = '1') then
+        if InCnt /= OutCnt and (OutVld_I = '0' or rdy_i = '1') then
           if InCnt - OutCnt = 1 then
             dat_o <= InDataReg;
           else

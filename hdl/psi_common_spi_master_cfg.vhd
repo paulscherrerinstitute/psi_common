@@ -19,38 +19,35 @@ use ieee.math_real.all;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
--- $$ processes=stim,spi $$
--- $$ tbpkg=work.psi_tb_compare_pkg,work.psi_tb_activity_pkg,work.psi_tb_txt_util $$
+-- @formatter:off
 entity psi_common_spi_master_cfg is
-  generic(
-    clock_divider_g   : natural range 4 to 1_000_000 := 4; -- Must be a multiple of two	
-    max_trans_width_g : positive                     := 16; -- SPI Transaction width		
-    cs_high_cycles_g  : positive                     := 2; 
-    spi_cpol_g        : natural range 0 to 1         := 1; 
-    spi_cpha_g        : natural range 0 to 1         := 1; 
-    slave_cnt_g       : positive                     := 1; 
-    lsb_first_g       : boolean                      := false; 
-    mosi_idle_state_g : std_logic                    := '0';
-    rst_pol_g         : std_logic                    := '1');
-  port(
-    -- Control Signals
-    clk_i         : in  std_logic;      
-    rst_i         : in  std_logic;      
-    -- Parallel Interface
-    start_i       : in  std_logic;
-    slave_i       : in  std_logic_vector(log2ceil(slave_cnt_g) - 1 downto 0);
-    busy_o        : out std_logic;
-    done_o        : out std_logic;
-    wr_dat_i      : in  std_logic_vector(max_trans_width_g - 1 downto 0);
-    rd_dat_o      : out std_logic_vector(max_trans_width_g - 1 downto 0);
-    trans_width_i : in  std_logic_vector(log2ceil(max_trans_width_g) downto 0);
-    -- SPI
-    spi_sck_o     : out std_logic;
-    spi_mosi_o    : out std_logic;
-    spi_miso_i    : in  std_logic;
-    spi_cs_n_o    : out std_logic_vector(slave_cnt_g - 1 downto 0)
-  );
+  generic(clock_divider_g   : natural range 4 to 1_000_000 := 4;                          -- Must be a multiple of two, Ratio between *clk_i* and the *spi_sck_o* frequency
+          max_trans_width_g : positive                     := 16;                         -- Maximum SPI Transfer width (bits per transfer)
+          cs_high_cycles_g  : positive                     := 2;                          -- Minimal number of spi_cs_n_o high cycles between two transfers
+          spi_cpol_g        : natural range 0 to 1         := 1;                          -- SPI clock polarity 
+          spi_cpha_g        : natural range 0 to 1         := 1;                          -- SPI sampling edge configuration 
+          slave_cnt_g       : positive                     := 1;                          -- Number of slaves to support (number of spi_cs_n_o* lines)
+          lsb_first_g       : boolean                      := false;                      -- False => MSB first transmission, True => LSB first transmission
+          mosi_idle_state_g : std_logic                    := '0';                        -- Idle state of the MOSI line
+          rst_pol_g         : std_logic                    := '1');                       -- reset polarity, '1' active high
+  port(    -- Control Signals
+          clk_i             : in  std_logic;                                              -- system clock
+          rst_i             : in  std_logic;                                              -- system reset
+          -- Parallel Interface
+          start_i           : in  std_logic;                                              -- starts the transfer. Note that starting a transaction is  only possible when busy_o is low.
+          slave_i           : in  std_logic_vector(log2ceil(slave_cnt_g) - 1 downto 0);   -- Slave number to access  
+          busy_o            : out std_logic;                                              -- High during a transaction 
+          done_o            : out std_logic;                                              -- Goes high for a clock cycle after transaction is done and *rd_dat_o* is valid  
+          wr_dat_i          : in  std_logic_vector(max_trans_width_g - 1 downto 0);       -- Data to send to slave. Sampled  during start_i = '1'
+          rd_dat_o          : out std_logic_vector(max_trans_width_g - 1 downto 0);       -- Data received from slave. Must be sampled during done = '1' or busy = '0'.   
+          trans_width_i     : in  std_logic_vector(log2ceil(max_trans_width_g) downto 0); -- indicate the actual vector length to forward/receive
+          -- SPI
+          spi_sck_o         : out std_logic;                                              -- SPI clock  
+          spi_mosi_o        : out std_logic;                                              -- SPI master to slave data signal 
+          spi_miso_i        : in  std_logic;                                              -- SPI slave to master data signal  
+          spi_cs_n_o        : out std_logic_vector(slave_cnt_g - 1 downto 0));            -- SPI slave select signal (low active)
 end entity;
+-- @formatter:on
 
 ------------------------------------------------------------------------------
 -- Architecture Declaration
@@ -208,8 +205,6 @@ begin
         else
           v.CsHighCnt := r.CsHighCnt + 1;
         end if;
-
-      when others => null;
     end case;
 
     -- *** assign signal ***

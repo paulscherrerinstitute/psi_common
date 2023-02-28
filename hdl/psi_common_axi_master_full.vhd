@@ -689,11 +689,11 @@ begin
       port map(    clk_i     => m_axi_aclk,
                    rst_i     => m_axi_aresetn,
                    vld_i     => WrWconv_Vld,
-                   rdy_in_i  => WrWconv_Rdy,
+                   rdy_o  => WrWconv_Rdy,
                    dat_i     => WrFifo_Data,
                    last_i    => WrWconv_Last,
                    vld_o     => WrData_Vld,
-                   rdy_out_i => WrData_Rdy,
+                   rdy_i => WrData_Rdy,
                    dat_o     => WrData_Data,
                    last_o    => WrData_Last,
                    we_o      => WrData_We);

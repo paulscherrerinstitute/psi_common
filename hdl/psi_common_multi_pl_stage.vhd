@@ -11,33 +11,28 @@
 -- RDY/VLD). The pipeline stage ensures all signals are registered in both
 -- directions (including RDY). This is important to break long logic chains
 -- that can occur in the RDY paths because Rdy is often forwarded asynchronously.
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
--- $$ processes=stim,check $$
+-- @formatter:off
 entity psi_common_multi_pl_stage is
-  generic(
-    width_g   : positive := 8;
-    use_rdy_g : boolean  := true;
-    stages_g  : natural  := 1;
-    rst_pol_g : std_logic:='1');
-  port(
-    clk_i     : in  std_logic;          -- $$ type=clk; freq=100e6 $$
-    rst_i     : in  std_logic;          -- $$ type=rst; clk=Clk $$
-    vld_i     : in  std_logic;
-    rdy_in_i  : out std_logic;
-    dat_i     : in  std_logic_vector(width_g - 1 downto 0);
-    vld_o     : out std_logic;
-    rdy_out_i : in  std_logic := '1';
-    dat_o     : out std_logic_vector(width_g - 1 downto 0));
+  generic(width_g   : positive := 8;                              -- vector length
+          use_rdy_g : boolean  := true;                           -- use ready signal to push back
+          stages_g  : natural  := 1;                              -- number of pipe
+          rst_pol_g : std_logic:='1');                            -- '1' active high, '0' active low
+  port(   clk_i     : in  std_logic;                              -- system clock
+          rst_i     : in  std_logic;                              -- system reset 
+          vld_i     : in  std_logic;                              -- valid input signal
+          rdy_in_o  : out std_logic;                              -- ready signal output
+          dat_i     : in  std_logic_vector(width_g - 1 downto 0); -- data input
+          vld_o     : out std_logic;                              -- valid output signal
+          rdy_out_i : in  std_logic := '1';                       -- ready signal input
+          dat_o     : out std_logic_vector(width_g - 1 downto 0));-- data output
 end entity;
+-- @formatter:on
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_multi_pl_stage is
 
   type Data_t is array (natural range <>) of std_logic_vector(width_g - 1 downto 0);
@@ -49,7 +44,7 @@ begin
 
   g_nonzero : if stages_g > 0 generate
     vld_s(0)   <= vld_i;
-    rdy_in_i <= rdy_s(0);
+    rdy_in_o <= rdy_s(0);
     data_s(0)  <= dat_i;
 
     g_stages : for i in 0 to stages_g - 1 generate
@@ -79,7 +74,7 @@ begin
   g_zero : if stages_g = 0 generate
     vld_o    <= vld_i;
     dat_o    <= dat_i;
-    rdy_in_i <= rdy_out_i;
+    rdy_in_o <= rdy_out_i;
   end generate;
 
 end architecture;

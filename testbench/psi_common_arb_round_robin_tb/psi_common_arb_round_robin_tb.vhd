@@ -58,7 +58,7 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_arb_round_robin
     generic map(
-      size_g => size_g
+      width_g => size_g
     )
     port map(
       clk_i       => clk_i,

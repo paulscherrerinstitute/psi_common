@@ -14,43 +14,39 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_math_pkg.all;
+
 --@formatter:off
 entity psi_common_sync_fifo is
-  generic(
-    width_g           : positive  := 16; -- width
-    depth_g           : positive  := 32; -- depth
-    alm_full_on_g     : boolean   := false; -- almost full signal active
-    alm_full_level_g  : natural   := 28; -- almost full level threshold val
-    alm_empty_on_g    : boolean   := false; -- almost empty signal active
-    alm_empty_level_g : natural   := 4; -- almost empty level threshold val
-    ram_style_g       : string    := "auto"; -- RAM style selected -> "Auto" choose depedning size block-RAM or dist-RAM | "distributed" | "block"
-    ram_behavior_g    : string    := "RBW"; -- "RBW" = read-before-write, "WBR" = write-before-read
-    rdy_rst_state_g   : std_logic := '1'; -- Use '1' for minimal logic on Rdy path
-    rst_pol_g         : std_logic := '1'
-  );
-  port(
-    -- Control Ports
-    clk_i       : in  std_logic;        -- clock in
-    rst_i       : in  std_logic;        -- system reset
-    -- Input Data
-    dat_i       : in  std_logic_vector(width_g - 1 downto 0); -- data input
-    vld_i       : in  std_logic;        -- AXI-S handshaking signal | strobe in
-    rdy_o       : out std_logic;        -- AXI-S handshaking signal | not full
-    -- Output Data
-    dat_o       : out std_logic_vector(width_g - 1 downto 0); -- Read Data
-    vld_o       : out std_logic;        -- AXI-S handshaking signal | strobe out
-    rdy_i       : in  std_logic;        -- AXI-S handshaking signal | not empty
-    -- Input Status
-    full_o      : out std_logic;        -- FIFO full
-    alm_full_o  : out std_logic;        -- FIFO Almost full
-    in_level_o  : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0); -- FIFO in level
-    -- Output Status
-    empty_o     : out std_logic;        -- FIFO Empty
-    alm_empty_o : out std_logic;        -- FIFO Almost empty
-    out_level_o : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0) -- FIFO out leve
-  );
+  generic( width_g          : positive  := 16;                      -- width
+          depth_g           : positive  := 32;                      -- depth
+          alm_full_on_g     : boolean   := false;                   -- almost full signal active
+          alm_full_level_g  : natural   := 28;                      -- almost full level threshold val
+          alm_empty_on_g    : boolean   := false;                   -- almost empty signal active
+          alm_empty_level_g : natural   := 4;                       -- almost empty level threshold val
+          ram_style_g       : string    := "auto";                  -- RAM style selected -> "Auto" choose depedning size block-RAM or dist-RAM | "distributed" | "block"
+          ram_behavior_g    : string    := "RBW";                   -- "RBW" = read-before-write, "WBR" = write-before-read
+          rdy_rst_state_g   : std_logic := '1';                     -- Use '1' for minimal logic on Rdy path
+          rst_pol_g         : std_logic := '1');
+  port(    -- Control Ports
+          clk_i       : in  std_logic;                              -- clock in
+          rst_i       : in  std_logic;                              -- system reset
+          -- Input Data
+          dat_i       : in  std_logic_vector(width_g - 1 downto 0); -- data input
+          vld_i       : in  std_logic;                              -- AXI-S handshaking signal | strobe in
+          rdy_o       : out std_logic;                              -- AXI-S handshaking signal | not full
+          -- Output Data
+          dat_o       : out std_logic_vector(width_g - 1 downto 0); -- Read Data
+          vld_o       : out std_logic;                              -- AXI-S handshaking signal | strobe out
+          rdy_i       : in  std_logic;                              -- AXI-S handshaking signal | not empty
+          -- Input Status
+          full_o      : out std_logic;                              -- FIFO full
+          alm_full_o  : out std_logic;                              -- FIFO Almost full
+          in_level_o  : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0); -- FIFO in level
+          -- Output Status
+          empty_o     : out std_logic;                              -- FIFO Empty
+          alm_empty_o : out std_logic;                              -- FIFO Almost empty
+          out_level_o : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0)); -- FIFO out leve );
 end entity;
 --@formatter:on
 

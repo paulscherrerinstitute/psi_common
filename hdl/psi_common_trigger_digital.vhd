@@ -20,27 +20,22 @@ use ieee.math_real.all;
 use work.psi_common_array_pkg.all;
 use work.psi_common_math_pkg.all;
 
+-- @formatter:off
 entity psi_common_trigger_digital is
-  generic(
-    digital_input_number_g : integer   := 1; -- number of digital trigger inputs
-    rst_pol_g              : std_logic := '1' -- reset polarity
-  );
-  port(
-    clk_i                    : in  std_logic; --clk in    $$ type=clk; freq=100.0 $$
-    rst_i                    : in  std_logic; --rst in    $$ type=rst; clk=clk_i $$
-    --InDelay : real := 0.0; -- -- delay in us
-    trg_mode_cfg_i           : in  std_logic_vector(0 downto 0); -- Trigger mode (0:Continuous,1:Single) configuration register
-    trg_arm_cfg_i            : in  std_logic; -- Arm/dis--arm the trigger, rising edge sensitive
-    trg_edge_cfg_i           : in  std_logic_vector(1 downto 0); -- Trigger edge direction configuration register (bit0:falling edge sensitive, bit1: rising edge sensitive)
-
-    trg_digital_source_cfg_i : in  std_logic_vector(choose(digital_input_number_g > 1, log2ceil(digital_input_number_g) - 1, 0) downto 0); -- Trigger source configuration  register
-    digital_trg_i            : in  std_logic_vector(digital_input_number_g - 1 downto 0); -- digital trigger input
-    ext_disarm_i             : in  std_logic; -- if different trigger causes are armed at the same time for a single trigger all the other cause must be disarmed once a trigger is generated
-
-    trg_is_armed_o           : out std_logic;
-    trigger_o                : out std_logic -- trigger output
-  );
+  generic(trig_nb_g                 : integer   := 1;                   -- number of digital trigger inputs
+          rst_pol_g                 : std_logic := '1');                -- reset polarity
+  port(   clk_i                     : in  std_logic;                    -- clk in
+          rst_i                     : in  std_logic;                    -- rst in
+          trg_mode_cfg_i            : in  std_logic_vector(0 downto 0); -- Trigger mode (0:Continuous,1:Single) configuration register
+          trg_arm_cfg_i             : in  std_logic;                    -- Arm/dis--arm the trigger, rising edge sensitive
+          trg_edge_cfg_i            : in  std_logic_vector(1 downto 0); -- Trigger edge direction configuration register (bit0:falling edge sensitive, bit1: rising edge sensitive)
+          trg_digital_source_cfg_i  : in  std_logic_vector(choose(trig_nb_g > 1, log2ceil(trig_nb_g) - 1, 0) downto 0); -- Trigger source configuration  register
+          digital_trg_i             : in  std_logic_vector(trig_nb_g - 1 downto 0); -- digital trigger input
+          ext_disarm_i              : in  std_logic;                    -- if different trigger causes are armed at the same time for a single trigger all the other cause must be disarmed once a trigger is generated
+          trg_is_armed_o            : out std_logic;                    -- 
+          trigger_o                 : out std_logic);                   -- trigger output
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_trigger_digital is
 

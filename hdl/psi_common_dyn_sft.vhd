@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---  Copyright (c) 2020 by Oliver BrÃÂÃÂ¼ndler
+--  Copyright (c) 2020 by Oliver Bruendler
 --  All rights reserved.
 --  Authors: Oliver Bruendler
 ------------------------------------------------------------------------------
@@ -18,41 +18,37 @@ use ieee.math_real.all;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
--- $$ processes=inp,outp $$
+--@formatter:off
 entity psi_common_dyn_sft is
-  generic(
-    direction_g         : string   := "LEFT"; -- $$ export=true $$ 	LEFT or RIGHT
-    sel_bit_per_stage_g : positive := 4;      -- $$ export=true $$
-    max_shift_g         : positive := 16;     -- $$ constant=20 $$
-    width_g             : positive := 32;     -- $$ constant=32 $$
-    sign_extend_g       : boolean  := true;   -- $$ export=true $$
-    rst_pol_g           : std_logic:= '1'
-  );
-  port(
-    clk_i   : in  std_logic;                  -- $$ type=clk; freq=100e6 $$
-    rst_i   : in  std_logic;                  -- $$ type=rst; clk=Clk $$
-    vld_i   : in  std_logic;
-    shift_i : in  std_logic_vector(log2ceil(max_shift_g + 1) - 1 downto 0);
-    dat_i   : in  std_logic_vector(width_g - 1 downto 0);
-    vld_o   : out std_logic;
-    dat_o   : out std_logic_vector(width_g - 1 downto 0)
-  );
+  generic(direction_g         : string   := "LEFT";                                           -- left or right 
+          sel_bit_per_stage_g : positive := 4;                                                -- shift size 1, 2..n bits 
+          max_shift_g         : positive := 16;                                               -- number of maximum shift 
+          width_g             : positive := 32;                                               -- length of data input 
+          sign_extend_g       : boolean  := true;                                             -- extend sign or not
+          rst_pol_g           : std_logic:= '1');                                             -- reset polarity 
+  port(   clk_i               : in  std_logic;                                                -- system clock
+          rst_i               : in  std_logic;                                                -- system reset
+          vld_i               : in  std_logic;                                                -- strobe input
+          shift_i             : in  std_logic_vector(log2ceil(max_shift_g + 1) - 1 downto 0); -- param shift
+          dat_i               : in  std_logic_vector(width_g - 1 downto 0);                   -- data input
+          vld_o               : out std_logic;                                                -- strobe output
+          dat_o               : out std_logic_vector(width_g - 1 downto 0)  );                -- data output
 end entity;
+--@formatter:on
 
 architecture rtl of psi_common_dyn_sft is
-
   -- Constants
   constant Stages_c : integer := integer(ceil(real(shift_i'length) / real(sel_bit_per_stage_g)));
 
   -- Types
-  type Data_a is array (natural range <>) of std_logic_vector(dat_i'range);
-  type Shift_a is array (natural range <>) of std_logic_vector(shift_i'range);
+  type Data_t is array (natural range <>) of std_logic_vector(dat_i'range);
+  type Shift_t is array (natural range <>) of std_logic_vector(shift_i'range);
 
   -- Two Process Method
   type two_process_r is record
     Vld   : std_logic_vector(0 to Stages_c);
-    Data  : Data_a(0 to Stages_c);
-    Shift : Shift_a(0 to Stages_c);
+    Data  : Data_t(0 to Stages_c);
+    Shift : Shift_t(0 to Stages_c);
   end record;
   signal r, r_next : two_process_r;
 begin
@@ -120,7 +116,8 @@ begin
     if rising_edge(clk_i) then
       r <= r_next;
       if rst_i = rst_pol_g then
-        r.Vld <= (others => '0');
+        r.Vld  <= (others => '0');
+        r.Data <= (others=>(others=>'0'));
       end if;
     end if;
   end process;

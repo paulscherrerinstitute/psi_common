@@ -15,23 +15,19 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.psi_common_math_pkg.all;
-
+-- @formatter:off
 entity psi_common_sp_ram_be is
-  generic(
-    depth_g        : positive := 1024;
-    width_g        : positive := 32;
-    ram_behavior_g : string   := "RBW"  -- "RBW" = read-before-write, "WBR" = write-before-read
-  );
-  port(
-    -- Port A
-    clk_i  : in  std_logic                                        := '0';
-    addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
-    be_i   : in  std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '1');
-    wr_i   : in  std_logic                                        := '0';
-    dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-    dat_o  : out std_logic_vector(width_g - 1 downto 0)
-  );
+  generic(depth_g        : positive := 1024;                                                        -- memory depth in sample
+          width_g        : positive := 32;                                                          -- data width in bit
+          ram_behavior_g : string   := "RBW");                                                      -- "RBW" = read-before-write, "WBR" = write-before-read
+  port(   clk_i          : in  std_logic                                        := '0';             -- system clock
+          addr_i         : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0'); -- address 
+          be_i           : in  std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '1'); -- byte enable
+          wr_i           : in  std_logic                                        := '0';             -- write enable
+          dat_i          : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0'); -- data input
+          dat_o          : out std_logic_vector(width_g - 1 downto 0));                             -- data output
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_sp_ram_be is
 

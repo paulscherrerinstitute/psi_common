@@ -76,9 +76,9 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_trigger_analog
     generic map(
-      anl_input_number_g => anl_input_number_g,
-      anl_input_width_g     => anl_input_width_g,
-      anl_trg_signed_g    => anl_trg_signed_g,
+      trig_nb_g => anl_input_number_g,
+      width_g     => anl_input_width_g,
+      is_signed_g    => anl_trg_signed_g,
       rst_pol_g              => rst_pol_g
     )
     port map(

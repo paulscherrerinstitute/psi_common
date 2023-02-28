@@ -138,10 +138,10 @@ begin
                )
     port map(rst_i  => rst,
              clk_i  => clk,
-             strb_i => istrb,
+             vld_i => istrb,
              seed_i => seed,
-             strb_o => ostrb,
-             data_o => data);
+             vld_o => ostrb,
+             dat_o => data);
              
   -----------------------------------------------------------
   -- TAG : check with doulos 10 bit lfsr version & seed FF

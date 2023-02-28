@@ -18,24 +18,21 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
--- $$ processes=stim,check $$
+-- @formatter:off
 entity psi_common_pl_stage is
-  generic(
-    width_g   : integer   := 8;
-    use_rdy_g : boolean   := true;
-    rst_pol_g : std_logic := '1');
-  port(
-    -- Control Signals
-    clk_i : in  std_logic;              -- $$ type=clk; freq=100e6 $$
-    rst_i : in  std_logic;              -- $$ type=rst; clk=Clk $$
-    vld_i : in  std_logic;
-    rdy_o : out std_logic;
-    dat_i : in  std_logic_vector(width_g - 1 downto 0);
-    vld_o : out std_logic;
-    rdy_i : in  std_logic := '1';
-    dat_o : out std_logic_vector(width_g - 1 downto 0)
-  );
+  generic(width_g   : integer   := 8;                             -- data vector length
+          use_rdy_g : boolean   := true;                          -- use ready push back signals
+          rst_pol_g : std_logic := '1');                          -- '1' active high, '0' active low
+  port(   clk_i     : in  std_logic;                              -- system clock
+          rst_i     : in  std_logic;                              -- system reset
+          vld_i     : in  std_logic;                              -- valid input
+          rdy_o     : out std_logic;                              -- rdy output - push back
+          dat_i     : in  std_logic_vector(width_g - 1 downto 0); -- datra input
+          vld_o     : out std_logic;                              -- valid output
+          rdy_i     : in  std_logic := '1';                       -- rdy input - push back
+          dat_o     : out std_logic_vector(width_g - 1 downto 0));-- data output
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_pl_stage is
   -- two process method

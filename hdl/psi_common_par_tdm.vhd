@@ -18,32 +18,30 @@ use ieee.numeric_std.all;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
--- $$ processes=inp,outp $$
+-- @formatter:off
 entity psi_common_par_tdm is
-  generic(
-    channel_count_g : natural := 8;     -- $$ constant=3 $$
-    channel_width_g : natural := 16;     -- $$ constant=8 $$
-    rst_pol_g       : std_logic:='1');
-  port(
-    clk_i  : in  std_logic;             -- $$ type=clk; freq=100e6 $$
-    rst_i  : in  std_logic;             -- $$ type=rst; clk=Clk $$
-    dat_i  : in  std_logic_vector(channel_count_g * channel_width_g - 1 downto 0);
-    vld_i  : in  std_logic;
-    rdy_o  : out std_logic;
-    last_i : in  std_logic := '1';
-    dat_o  : out std_logic_vector(channel_width_g - 1 downto 0);
-    vld_o  : out std_logic;
-    rdy_i  : in  std_logic := '1';
-    last_o : out std_logic
-  );
+  generic(ch_nb_g    : natural := 8;                                              -- maximum number of channel
+          ch_width_g : natural := 16;                                             -- vector length per channel
+          rst_pol_g  : std_logic:='1');                                           -- '1' active high, '0' active low
+  port(   clk_i      : in  std_logic;                                             -- system clock
+          rst_i      : in  std_logic;                                             -- system reset
+          dat_i      : in  std_logic_vector(ch_nb_g * ch_width_g - 1 downto 0);   -- DATA big vector interpreted as // input
+          vld_i      : in  std_logic;                                             -- valid input
+          rdy_o      : out std_logic;                                             -- rdy output - push back
+          last_i     : in  std_logic := '1';                                      -- AXI-S TLAST signal, set for the last transfer in a packet
+          dat_o      : out std_logic_vector(ch_width_g - 1 downto 0);             -- DATA output in TDM fashion
+          vld_o      : out std_logic;                                             -- AXI-S handshaking signal
+          rdy_i      : in  std_logic := '1';                                      -- rdy input - push back
+          last_o     : out std_logic);                                            -- AXI-S TLAST signal, set for the last transfer in a packet
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_par_tdm is
   -- Two Process Method
   type two_process_r is record
     ShiftReg : std_logic_vector(dat_i'range);
-    LastSr   : std_logic_vector(channel_count_g - 1 downto 0);
-    VldSr    : std_logic_vector(channel_count_g - 1 downto 0);
+    LastSr   : std_logic_vector(ch_nb_g - 1 downto 0);
+    VldSr    : std_logic_vector(ch_nb_g - 1 downto 0);
   end record;
   signal r, r_next : two_process_r;
 begin
@@ -70,15 +68,15 @@ begin
       v.ShiftReg                    := dat_i;
       v.VldSr                       := (others => '1');
       v.LastSr                      := (others => '0');
-      v.LastSr(channel_count_g - 1) := last_i;
+      v.LastSr(ch_nb_g - 1) := last_i;
     elsif rdy_i = '1' then
-      v.ShiftReg := shift_right(r.ShiftReg, channel_width_g);
+      v.ShiftReg := shift_right(r.ShiftReg, ch_width_g);
       v.LastSr   := shift_right(r.LastSr, 1);
       v.VldSr    := shift_right(r.VldSr, 1);
     end if;
 
     -- *** Outputs ***
-    dat_o  <= r.ShiftReg(channel_width_g - 1 downto 0);
+    dat_o  <= r.ShiftReg(ch_width_g - 1 downto 0);
     vld_o  <= r.VldSr(0);
     last_o <= r.LastSr(0);
     rdy_o  <= ParallelRdy_v;

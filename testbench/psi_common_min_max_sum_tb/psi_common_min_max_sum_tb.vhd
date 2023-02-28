@@ -88,15 +88,15 @@ begin
   inst_dut : entity work.psi_common_min_max_sum
     generic map(clock_cycle_g => clock_cycle_g,
                 signed_data_g => signed_data_g,
-                data_length_g => data_length_g,
-                accu_length_g => accu_length_g,
+                data_width_g => data_length_g,
+                accu_width_g => accu_length_g,
                 rst_pol_g     => '1')
     port map(clk_i  => clk_sti,
              rst_i  => rst_sti,
-             str_i  => str_sti,
+             vld_i  => str_sti,
              sync_i => sync_dff_s,
              dat_i  => dat_sti,
-             str_o  => str_obs,
+             vld_o  => str_obs,
              min_o  => min_obs,
              max_o  => max_obs,
              sum_o => mean_obs);

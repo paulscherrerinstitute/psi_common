@@ -147,13 +147,13 @@ begin
     port map(
       clk_i      => clk_i,
       rst_i      => rst_i,
-      str_i      => InStr,
+      vld_i      => InStr,
       tgt_lvl_i  => TgtLevel,
       ramp_inc_i => RampInc,
       ramp_cmd_i => RampCmd,
       init_cmd_i => InInitCmd,
       sts_o      => OutSts,
-      str_o      => OutStr,
+      vld_o      => OutStr,
       puls_o     => OutPuls);
 
   i_dut_sign : entity work.psi_common_ramp_gene
@@ -163,13 +163,13 @@ begin
     port map(
       clk_i      => clk_i,
       rst_i      => rst_i,
-      str_i      => InStr,
+      vld_i      => InStr,
       tgt_lvl_i  => TgtLevel2,
       ramp_inc_i => RampInc,
       ramp_cmd_i => RampCmd,
       init_cmd_i => InInitCmd,
       sts_o      => sOutSts,
-      str_o      => sOutStr,
+      vld_o      => sOutStr,
       puls_o     => sOutPuls);
 
   --*** stimuli process ***

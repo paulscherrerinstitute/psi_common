@@ -13,19 +13,18 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
+-- @formatter:off
 entity psi_common_prbs is
-  generic(width_g   : natural range 2 to 32 := 8; -- I/O data width
-          rst_pol_g : std_logic             := '1' -- Reset polarity
-         );
-  port(rst_i  : in  std_logic;          -- Input reset
-       clk_i  : in  std_logic;          -- Input clock
-       strb_i : in  std_logic;          -- Input strobe
-       seed_i : in  std_logic_vector((width_g - 1) downto 0); -- Input seed
-       strb_o : out std_logic;          -- Output strobe
-       data_o : out std_logic_vector((width_g - 1) downto 0) -- Output data
-      );
-end psi_common_prbs;
+  generic(width_g   : natural range 2 to 32 := 8;                 -- I/O data width
+          rst_pol_g : std_logic             := '1');              -- Reset polarity
+  port(   rst_i   : in  std_logic;                                -- Input reset
+          clk_i   : in  std_logic;                                -- Input clock
+          vld_i   : in  std_logic;                                -- Input strobe
+          seed_i  : in  std_logic_vector((width_g - 1) downto 0); -- Input seed
+          vld_o   : out std_logic;                                -- Output strobe
+          dat_o   : out std_logic_vector((width_g - 1) downto 0));-- Output data
+end entity;
+-- @formatter:on
 
 architecture behav of psi_common_prbs is
   type poly_t is array (2 to 32) of std_logic_vector(31 downto 0);
@@ -71,7 +70,7 @@ architecture behav of psi_common_prbs is
   signal q_masked_s : std_logic_vector((width_g - 1) downto 0) := (others => '0');
 begin
 
-  data_o <= q_s;
+  dat_o <= q_s;
 
   q_masked_s <= mask_c and q_s;
   d0_s       <= xor q_masked_s;         -- 2008 syntax
@@ -81,12 +80,12 @@ begin
     if (rising_edge(clk_i)) then
       if (rst_i = rst_pol_g) then
         q_s    <= seed_i;
-        strb_o <= '0';
+        vld_o <= '0';
       else
-        if (strb_i = '1') then
+        if (vld_i = '1') then
           q_s <= q_s((width_g - 2) downto 0) & d0_s;
         end if;
-        strb_o <= strb_i;
+        vld_o <= vld_i;
       end if;
     end if;
   end process;

@@ -18,40 +18,33 @@ use ieee.math_real.all;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
--- $$ processes=stim,check $$
+-- @formatter:off
 entity psi_common_wconv_xn2n is
-  generic(
-    in_width_g  : natural;              -- $$ constant=16 $$
-    out_width_g : natural               -- $$ constant=4 $$
-  );
-  port(
-    -- Control Signals
-    clk_i  : in  std_logic;             -- $$ type=clk; freq=100e6 $$
-    rst_i  : in  std_logic;             -- $$ type=rst; clk=Clk $$
-
-    -- Input
-    vld_i  : in  std_logic;
-    rdy_o  : out std_logic;
-    dat_i  : in  std_logic_vector(in_width_g - 1 downto 0);
-    last_i : in  std_logic                                               := '0';
-    we_i   : in  std_logic_vector(in_width_g / out_width_g - 1 downto 0) := (others => '1');
-    -- Output
-    vld_o  : out std_logic;
-    rdy_i  : in  std_logic                                               := '1';
-    dat_o  : out std_logic_vector(out_width_g - 1 downto 0);
-    last_o : out std_logic
-  );
+  generic(width_in_g  : natural;                                                             -- input length vector
+          width_out_g : natural);                                                            -- output length vector
+  port(   clk_i       : in  std_logic;                                                       -- system clock
+          rst_i       : in  std_logic;                                                       -- system reset
+          vld_i       : in  std_logic;                                                       -- AXI-S handshaking valid signal
+          rdy_o       : out std_logic;                                                       -- AXI-S handshaking ready signal output to push back stream
+          dat_i       : in  std_logic_vector(width_in_g - 1 downto 0);                       -- data input 
+          last_i      : in  std_logic                                               := '0';  -- AXI-S handshaking last signal
+          we_i        : in  std_logic_vector(width_in_g / width_out_g - 1 downto 0) := (others => '1'); -- Input word-enable. Works like byte-enable but with one bit per input-word. At least one word must be enabled together with the assertion of last_i 
+          vld_o       : out std_logic;                                                       -- AXI-S handshaking valid signal output
+          rdy_i       : in  std_logic                                               := '1';  -- AXI-S handshaking ready signal input from next block
+          dat_o       : out std_logic_vector(width_out_g - 1 downto 0);                      -- data output
+          last_o      : out std_logic);                                                      -- AXI-S handshaking last signal output
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_wconv_xn2n is
 
   -- *** Constants ***
-  constant RatioReal_c : real    := real(in_width_g) / real(out_width_g);
+  constant RatioReal_c : real    := real(width_in_g) / real(width_out_g);
   constant RatioInt_c  : integer := integer(RatioReal_c);
 
   -- *** Two Process Method ***
   type two_process_r is record
-    Data     : std_logic_vector(in_width_g - 1 downto 0);
+    Data     : std_logic_vector(width_in_g - 1 downto 0);
     DataVld  : std_logic_vector(RatioInt_c - 1 downto 0);
     DataLast : std_logic_vector(RatioInt_c - 1 downto 0);
   end record;
@@ -85,13 +78,13 @@ begin
       end loop;
       v.DataLast(RatioInt_c - 1) := we_i(RatioInt_c - 1) and last_i;
     elsif (rdy_i = '1') and (unsigned(r.DataVld) /= 0) then
-      v.Data     := zeros_vector(out_width_g) & r.Data(r.Data'left downto out_width_g);
+      v.Data     := zeros_vector(width_out_g) & r.Data(r.Data'left downto width_out_g);
       v.DataVld  := '0' & r.DataVld(r.DataVld'left downto 1);
       v.DataLast := '0' & r.DataLast(r.DataLast'left downto 1);
     end if;
 
     -- Outputs
-    dat_o  <= r.Data(out_width_g - 1 downto 0);
+    dat_o  <= r.Data(width_out_g - 1 downto 0);
     rdy_o  <= IsReady_v;
     vld_o  <= r.DataVld(0);
     last_o <= r.DataLast(0);

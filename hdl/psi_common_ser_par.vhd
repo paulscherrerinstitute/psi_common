@@ -21,27 +21,27 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.psi_common_math_pkg.all;
-
+-- @formatter:off
 entity psi_common_ser_par is
-  generic(rst_pol_g : std_logic := '1';                     -- reset polarity
-          length_g  : natural   := 16;                      -- vector width
-          msb_g     : boolean   := false);                  -- MSB first = true
-  port(clk_i : in  std_logic;                               -- clock system
-       rst_i : in  std_logic;                               -- reset system
-       dat_i : in  std_logic;                               -- data in
-       ld_i  : in  std_logic;                               -- load in
-       vld_i : in  std_logic;                               -- valid/strobe 
-       dat_o : out std_logic_vector(length_g - 1 downto 0); -- data out
-       err_o : out std_logic;                               -- error out when input too fast
-       vld_o : out std_logic);                              -- valid/strobe
+  generic(rst_pol_g : std_logic := '1';                            -- reset polarity
+          width_g   : natural   := 16;                             -- vector width
+          msb_g     : boolean   := false);                         -- MSB first = true
+  port(   clk_i     : in  std_logic;                               -- clock system
+          rst_i     : in  std_logic;                               -- reset system
+          dat_i     : in  std_logic;                               -- data in
+          ld_i      : in  std_logic;                               -- load in
+          vld_i     : in  std_logic;                               -- valid/strobe 
+          dat_o     : out std_logic_vector(width_g - 1 downto 0);  -- data out
+          err_o     : out std_logic;                               -- error out when input too fast
+          vld_o     : out std_logic);                              -- valid/strobe
 end entity;
-
+-- @formatter:on
 architecture RTL of psi_common_ser_par is
 
   type two_process_t is record
-    cnt : unsigned(log2ceil(length_g) - 1 downto 0);
-    dat : std_logic_vector(length_g - 1 downto 0);
-    reg : std_logic_vector(length_g - 1 downto 0);
+    cnt : unsigned(log2ceil(width_g) - 1 downto 0);
+    dat : std_logic_vector(width_g - 1 downto 0);
+    reg : std_logic_vector(width_g - 1 downto 0);
     vld : std_logic;
     err : std_logic;
     --
@@ -66,11 +66,11 @@ begin
     v.i_ld  := ld_i;
     
     --*** deserialize statement & MSB/LSB first mngt ***
-    if r.i_ld='1' or (r.cnt = length_g - 1 and r.i_vld = '1') then
+    if r.i_ld='1' or (r.cnt = width_g - 1 and r.i_vld = '1') then
       v.cnt := (others => '0');
       v.reg := r.dat;
       v.vld := '1';
-    elsif r.cnt < length_g - 1 then
+    elsif r.cnt < width_g - 1 then
       if r.i_vld = '1' then
         v.cnt := r.cnt + 1;
       end if;
@@ -80,14 +80,14 @@ begin
     --*** shifter ***
     if r.i_vld = '1' then
       if msb_g then
-        v.dat := r.dat(length_g - 2 downto 0) & r.i_dat;
+        v.dat := r.dat(width_g - 2 downto 0) & r.i_dat;
       else
-        v.dat := r.i_dat & r.dat(length_g - 1 downto 1);
+        v.dat := r.i_dat & r.dat(width_g - 1 downto 1);
       end if;
     end if;
 
     --*** error when deserialize process isn't complete ***
-    if r.i_ld = '1' and r.cnt /= length_g - 1 then
+    if r.i_ld = '1' and r.cnt /= width_g - 1 then
       v.err := '1';
       v.vld := '0';
       v.reg := r.reg;

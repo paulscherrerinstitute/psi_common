@@ -100,8 +100,8 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_wconv_xn2n
     generic map(
-      in_width_g  => in_width_g,
-      out_width_g => out_width_g
+      width_in_g  => in_width_g,
+      width_out_g => out_width_g
     )
     port map(
       clk_i     => clk_i,

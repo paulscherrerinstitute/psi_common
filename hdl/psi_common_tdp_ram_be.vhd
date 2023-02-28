@@ -15,29 +15,25 @@ use ieee.numeric_std.all;
 
 use work.psi_common_math_pkg.all;
 
+-- @formatter:off
 entity psi_common_tdp_ram_be is
-  generic(
-    depth_g    : positive := 1024;
-    width_g    : positive := 32;
-    behavior_g : string   := "RBW"      -- "RBW" = read-before-write, "WBR" = write-before-read
-  );
-  port(
-    -- Port A
-    a_clk_i  : in  std_logic                                        := '0'; -- $$ type=clk; freq=180e6 $$
-    a_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
-    a_be_i   : in  std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '1');
-    a_wr_i   : in  std_logic                                        := '0';
-    a_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-    a_dat_o  : out std_logic_vector(width_g - 1 downto 0);
-    -- Port B
-    b_clk_i  : in  std_logic                                        := '0'; -- $$ type=clk; freq=25e6 $$
-    b_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
-    b_be_i   : in  std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '1');
-    b_wr_i   : in  std_logic                                        := '0';
-    b_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-    b_dat_o  : out std_logic_vector(width_g - 1 downto 0)
-  );
+  generic( depth_g    : positive := 1024;                                                        -- memory depth in count
+           width_g    : positive := 32;                                                          -- data width in bit
+           behavior_g : string   := "RBW");                                                      -- "RBW" = read-before-write, "WBR" = write-before-read
+  port(   a_clk_i     : in  std_logic                                        := '0';             -- port a clock
+          a_addr_i    : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0'); -- port a address
+          a_be_i      : in  std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '1'); -- port a byte enble
+          a_wr_i      : in  std_logic                                        := '0';             -- port a write enable
+          a_dat_i     : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0'); -- port a data in
+          a_dat_o     : out std_logic_vector(width_g - 1 downto 0);                              -- port a data outt
+          b_clk_i     : in  std_logic                                        := '0';             -- port b clock
+          b_addr_i    : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0'); -- port b address
+          b_be_i      : in  std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '1'); -- port b byte enble
+          b_wr_i      : in  std_logic                                        := '0';             -- port b write enable
+          b_dat_i     : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0'); -- port b data in
+          b_dat_o     : out std_logic_vector(width_g - 1 downto 0));                             -- port b data outt
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_tdp_ram_be is
 

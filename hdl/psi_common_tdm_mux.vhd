@@ -18,29 +18,29 @@ use work.psi_common_math_pkg.all;
 
 -- @formatter:off
 entity psi_common_tdm_mux is
-	generic(rst_pol_g     : std_logic := '1';  -- reset polarity select
-	        num_channel_g : natural   := 8;    -- number of channel
-	        data_length_g : natural   := 16);  -- data vector width
-	port(InClk     	: in  std_logic;           -- clk in
-	     rst_i     	: in  std_logic;           -- sync reset
-	     ch_sel_i  	: in  std_logic_vector(log2ceil(num_channel_g) - 1 downto 0); -- mux select
-	     tdm_vld_i 	: in  std_logic;           -- tdm strobe
-	     tdm_dat_i 	: in  std_logic_vector(data_length_g - 1 downto 0);            -- tdm data
-	     tdm_vld_o 	: out std_logic;           -- strobe output
-	     tdm_dat_o 	: out std_logic_vector(data_length_g - 1 downto 0));           -- selected data out
+	generic(rst_pol_g   : std_logic := '1';                                      -- reset polarity select
+	        ch_nb_g     : natural   := 8;                                        -- number of channel
+	        width_g     : natural   := 16);                                      -- data vector width
+	port(   clk_i     	: in  std_logic;                                         -- clk in
+	        rst_i     	: in  std_logic;                                         -- sync reset
+	        ch_sel_i  	: in  std_logic_vector(log2ceil(ch_nb_g) - 1 downto 0);  -- mux select
+	        tdm_vld_i 	: in  std_logic;                                         -- tdm strobe
+	        tdm_dat_i 	: in  std_logic_vector(width_g - 1 downto 0);            -- tdm data
+	        tdm_vld_o 	: out std_logic;                                         -- strobe output
+	        tdm_dat_o 	: out std_logic_vector(width_g - 1 downto 0));           -- selected data out
 end entity;
 -- @formatter:on
 architecture RTL of psi_common_tdm_mux is
-  signal tdm_dat_s : std_logic_vector(data_length_g - 1 downto 0);
+  signal tdm_dat_s : std_logic_vector(width_g - 1 downto 0);
   signal tdm_str_s : std_logic;
-  signal count_s   : integer range 0 to num_channel_g - 1 := 0;
+  signal count_s   : integer range 0 to ch_nb_g - 1 := 0;
 begin
 
   -- TAG <=> info: decoder output process
 
-  proc_decod : process(InClk)
+  proc_decod : process(clk_i)
   begin
-    if rising_edge(InClk) then
+    if rising_edge(clk_i) then
       if rst_i = rst_pol_g then
         count_s   <= 0;
         tdm_vld_o <= '0';
@@ -49,7 +49,7 @@ begin
 
         --variable counter increment
         if tdm_vld_i = '1' then
-          if count_s = num_channel_g - 1 then
+          if count_s = ch_nb_g - 1 then
             count_s <= 0;
           else
             count_s <= count_s + 1;

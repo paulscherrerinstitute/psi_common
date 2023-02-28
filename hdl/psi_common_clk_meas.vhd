@@ -12,22 +12,18 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-
+--@fromatter:off
 entity psi_common_clk_meas is
-  generic(  master_frequency_g   : positive := 125000000; -- $$ constant=125e6 $$
-           max_meas_frequency_g  : positive := 250000000 -- $$ constant=250e6 $$
-  );
-  port(
-    -- Control Signals
-    clk_master_i   : in  std_logic;     -- $$ type=clk; freq=125e6 $$
-    rst_i          : in  std_logic;     -- $$ type=rst; clk=ClkMaster $$
-    -- Test
-    frequency_hz_o : out std_logic_vector(31 downto 0); -- Synchronous to ClkMaster
-    vld_o          : out std_logic;     -- Pulse when frequency is valid
-    clk_test_i     : in  std_logic      -- $$ type=clk; freq=101.35e6 $$
-  );
-end;
-
+  generic( master_frequency_g    : positive := 125000000;       -- clock frequency in Hz for system clock
+           max_meas_frequency_g  : positive := 250000000;       -- clock frequency in Hz for system clock
+           rst_pol_g             : std_logic:= '1');            -- reset polarity
+  port(   clk_master_i   : in  std_logic;                       -- system clock
+          rst_i          : in  std_logic;                       -- system reset
+          frequency_hz_o : out std_logic_vector(31 downto 0);   -- Synchronous to ClkMaster
+          vld_o          : out std_logic;                       -- Pulse when frequency is valid
+          clk_test_i     : in  std_logic);                      -- clock to be tested
+end entity;
+--@fromatter:on
 architecture rtl of psi_common_clk_meas is
 
   ----------------------------------------
@@ -94,7 +90,7 @@ begin
   p_meas : process(clk_test_i)
   begin
     if rising_edge(clk_test_i) then
-      if rst_i = '1' then
+      if rst_i = rst_pol_g then
         Toggle1HzSync_T <= (others => '0');
         ResultToggle_T  <= '0';
         Result_T        <= 0;

@@ -15,27 +15,25 @@ use ieee.numeric_std.all;
 
 use work.psi_common_math_pkg.all;
 
+-- @formatter:off
 entity psi_common_tdp_ram is
-  generic(
-    depth_g    : positive := 1024;
-    width_g    : positive := 32;
-    behavior_g : string   := "RBW"      -- "RBW" = read-before-write, "WBR" = write-before-read
-  );
-  port(
-    -- Port A
-    a_clk_i  : in  std_logic                                        := '0';
-    a_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
-    a_wr_i   : in  std_logic                                        := '0';
-    a_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-    a_dat_o  : out std_logic_vector(width_g - 1 downto 0);
-    -- Port B
-    b_clk_i  : in  std_logic                                        := '0';
-    b_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
-    b_wr_i   : in  std_logic                                        := '0';
-    b_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-    b_dat_o  : out std_logic_vector(width_g - 1 downto 0)
-  );
+  generic(depth_g    : positive := 1024;
+          width_g    : positive := 32;
+          behavior_g : string   := "RBW");      -- "RBW" = read-before-write, "WBR" = write-before-read
+  port(   -- Port A
+          a_clk_i  : in  std_logic                                        := '0';
+          a_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
+          a_wr_i   : in  std_logic                                        := '0';
+          a_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
+          a_dat_o  : out std_logic_vector(width_g - 1 downto 0);
+          -- Port B
+          b_clk_i  : in  std_logic                                        := '0';
+          b_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
+          b_wr_i   : in  std_logic                                        := '0';
+          b_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
+          b_dat_o  : out std_logic_vector(width_g - 1 downto 0));
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_tdp_ram is
 

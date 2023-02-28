@@ -20,40 +20,35 @@ use ieee.math_real.all;
 use work.psi_common_array_pkg.all;
 use work.psi_common_math_pkg.all;
 
+-- @formatter:off
 entity psi_common_trigger_analog is
-  generic(
-    anl_input_number_g : integer   := 32; -- number of analog trigger inputs
-    anl_input_width_g  : integer   := 16; -- analog trigger input signals width
-    anl_trg_signed_g   : boolean   := true; -- analog trigger input signals are signed
-    rst_pol_g          : std_logic := '1' -- reset polarity
-  );
-  port(
-    clk_i              : in  std_logic; --clk in    $$ type=clk; freq=100.0 $$
-    rst_i              : in  std_logic; --rst in    $$ type=rst; clk=clk_i $$
-
-    trg_mode_cfg_i     : in  std_logic_vector(0 downto 0); -- Trigger mode (0:Continuous,1:Single) configuration register
-    trg_arm_cfg_i      : in  std_logic; -- Arm/dis--arm the trigger, rising edge sensitive
-    trg_edge_cfg_i     : in  std_logic_vector(1 downto 0); -- Trigger edge direction configuration register (bit0:falling edge sensitive, bit1: rising edge sensitive)
-
-    trg_anlg_src_cfg_i : in  std_logic_vector(log2ceil(anl_input_number_g) - 1 downto 0); -- Trigger source configuration  register
-    anl_th_trig_i      : in  std_logic_vector(anl_input_width_g - 1 downto 0); -- analog trigger threshold value
-    anl_trig_i         : in  std_logic_vector(anl_input_number_g * anl_input_width_g - 1 downto 0); -- Analog input values
-    ext_disarm_i       : in  std_logic; -- if different trigger causes are armed at the same time for a single trigger all the other cause must be disarmed once a trigger is generated
-
-    trg_is_armed_i     : out std_logic;
-    trig_o             : out std_logic  -- trigger output
-  );
+  generic(trig_nb_g          : integer   := 32;                                        -- number of analog trigger inputs
+          width_g            : integer   := 16;                                        -- analog trigger input signals width
+          is_signed_g        : boolean   := true;                                      -- analog trigger input signals are signed
+          rst_pol_g          : std_logic := '1');                                      -- reset polarity
+  port(   clk_i              : in  std_logic;                                          -- clk in    $$ type=clk; freq=100.0 $$
+          rst_i              : in  std_logic;                                          -- rst in    $$ type=rst; clk=clk_i $$
+          trg_mode_cfg_i     : in  std_logic_vector(0 downto 0);                       -- Trigger mode (0:Continuous,1:Single) configuration register
+          trg_arm_cfg_i      : in  std_logic;                                          -- Arm/dis--arm the trigger, rising edge sensitive
+          trg_edge_cfg_i     : in  std_logic_vector(1 downto 0);                       -- Trigger edge direction configuration register (bit0:falling edge sensitive, bit1: rising edge sensitive)
+          trg_anlg_src_cfg_i : in  std_logic_vector(log2ceil(trig_nb_g) - 1 downto 0); -- Trigger source configuration  register
+          anl_th_trig_i      : in  std_logic_vector(width_g - 1 downto 0);             -- analog trigger threshold value
+          anl_trig_i         : in  std_logic_vector(trig_nb_g * width_g - 1 downto 0); -- Analog input values
+          ext_disarm_i       : in  std_logic;                                          -- if different trigger causes are armed at the same time for a single trigger all the other cause must be disarmed once a trigger is generated
+          trg_is_armed_i     : out std_logic;                                          -- trigger is armed and ready to be released
+          trig_o             : out std_logic);                                         -- trigger output
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_trigger_analog is
 
   type two_process_r is record
-    RegAnalogValueSigned       : signed(anl_input_width_g - 1 downto 0);
-    RegAnalogValueSigned_dff   : signed(anl_input_width_g - 1 downto 0);
-    RegAnalogValueUnsigned     : unsigned(anl_input_width_g - 1 downto 0);
-    RegAnalogValueUnsigned_dff : unsigned(anl_input_width_g - 1 downto 0);
-    RegAnalogThSigned          : signed(anl_input_width_g - 1 downto 0);
-    RegAnalogThUnsigned        : unsigned(anl_input_width_g - 1 downto 0);
+    RegAnalogValueSigned       : signed(width_g - 1 downto 0);
+    RegAnalogValueSigned_dff   : signed(width_g - 1 downto 0);
+    RegAnalogValueUnsigned     : unsigned(width_g - 1 downto 0);
+    RegAnalogValueUnsigned_dff : unsigned(width_g - 1 downto 0);
+    RegAnalogThSigned          : signed(width_g - 1 downto 0);
+    RegAnalogThUnsigned        : unsigned(width_g - 1 downto 0);
     OTrg                       : std_logic;
     TrgArmed                   : std_logic;
     InTrgArmCfg_dff            : std_logic;
@@ -84,9 +79,9 @@ begin
     -- Analog trigger
     v.OTrg := '0';
 
-    if anl_trg_signed_g = true then     -- the analog value is signed
+    if is_signed_g = true then     -- the analog value is signed
 
-      v.RegAnalogValueSigned := signed(anl_trig_i((anl_input_width_g * to_integer(unsigned(trg_anlg_src_cfg_i))) + (anl_input_width_g - 1) downto anl_input_width_g * to_integer(unsigned(trg_anlg_src_cfg_i))));
+      v.RegAnalogValueSigned := signed(anl_trig_i((width_g * to_integer(unsigned(trg_anlg_src_cfg_i))) + (width_g - 1) downto width_g * to_integer(unsigned(trg_anlg_src_cfg_i))));
 
       v.RegAnalogValueSigned_dff := r.RegAnalogValueSigned;
       v.RegAnalogThSigned        := signed(anl_th_trig_i);
@@ -100,9 +95,9 @@ begin
       end if;
     end if;
 
-    if anl_trg_signed_g = false then    -- the analog value is unsigned
+    if is_signed_g = false then    -- the analog value is unsigned
 
-      v.RegAnalogValueUnsigned := unsigned(anl_trig_i((anl_input_width_g * to_integer(unsigned(trg_anlg_src_cfg_i))) + (anl_input_width_g - 1) downto anl_input_width_g * to_integer(unsigned(trg_anlg_src_cfg_i))));
+      v.RegAnalogValueUnsigned := unsigned(anl_trig_i((width_g * to_integer(unsigned(trg_anlg_src_cfg_i))) + (width_g - 1) downto width_g * to_integer(unsigned(trg_anlg_src_cfg_i))));
 
       v.RegAnalogValueUnsigned_dff := r.RegAnalogValueUnsigned;
       v.RegAnalogThUnsigned        := unsigned(anl_th_trig_i);

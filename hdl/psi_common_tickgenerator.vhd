@@ -13,19 +13,17 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+-- @formatter:off
 entity psi_common_tickgenerator is
-  generic(
-    clk_in_mhz_g             : integer := 8;
-    tick_width_g             : integer := 1;
-    sim_sec_speedup_factor_g : integer := 1 -- Set to 1 for implementation!!! speedup factor for simulation, does only apply to sec, not to us/ms
-  );
-  port(
-    clock_i    : in  std_logic;
-    tick1us_o  : out std_logic;
-    tick1ms_o  : out std_logic;
-    tick1sec_o : out std_logic
-  );
+  generic( clk_in_mhz_g             : integer := 8;
+           tick_width_g             : integer := 1;
+           sim_sec_speedup_factor_g : integer := 1); -- Set to 1 for implementation!!! speedup factor for simulation, does only apply to sec, not to us/ms
+  port( clock_i    : in  std_logic;
+        tick1us_o  : out std_logic;
+        tick1ms_o  : out std_logic;
+        tick1sec_o : out std_logic);
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_tickgenerator is
 

@@ -20,33 +20,33 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.psi_common_math_pkg.all;
-
+--@formatter:off
 entity psi_common_delay_cfg is
-  generic(Width_g        : positive  := 16;     --data vector width
-          max_delay_g    : positive  := 256;    -- maximum delay wanted
-          rst_pol_g      : std_logic := '1';    -- reset polarity
-          ram_behavior_g : string    := "RBW";  -- "RBW" = read-before-write, "WBR" = write-before-read
-          hold_g         : boolean   := true    -- Holding value at output when delay increase is performed 
-         );
-  port(clk_i : in  std_logic;                               -- system clock
-       rst_i : in  std_logic;                               -- system reset
-       dat_i : in  std_logic_vector(Width_g - 1 downto 0);  -- data input
-       str_i : in  std_logic;                               -- valid/strobe signal input
-       del_i : in  std_logic_vector(log2ceil(max_delay_g) - 1 downto 0);  -- delay parameter input
-       dat_o : out std_logic_vector((Width_g - 1) downto 0));             -- data output
+  generic(width_g        : positive  := 16;                                          -- data vector width
+          max_delay_g    : positive  := 256;                                         -- maximum delay wanted
+          rst_pol_g      : std_logic := '1';                                         -- reset polarity
+          ram_behavior_g : string    := "RBW";                                       -- "RBW" = read-before-write, "WBR" = write-before-read
+          hold_g         : boolean   := true);                                       -- Holding value at output when delay increase is performed 
+  port(   clk_i          : in  std_logic;                                            -- system clock
+          rst_i          : in  std_logic;                                            -- system reset
+          dat_i          : in  std_logic_vector(width_g - 1 downto 0);               -- data input
+          vld_i          : in  std_logic;                                            -- valid/strobe signal input
+          del_i          : in  std_logic_vector(log2ceil(max_delay_g) - 1 downto 0); -- delay parameter input
+          dat_o          : out std_logic_vector((width_g - 1) downto 0);             -- data output
+          vld_o          : out std_logic);
 end entity;
-
+--formatter:on
 architecture rtl of psi_common_delay_cfg is
-  type srl_t is array (0 to 2) of std_logic_vector(Width_g - 1 downto 0);
+  type srl_t is array (0 to 2) of std_logic_vector(width_g - 1 downto 0);
   signal srl_s                : srl_t                                                := (others => (others => '0'));
-  signal mem_out_s            : std_logic_vector(Width_g - 1 downto 0);
+  signal mem_out_s            : std_logic_vector(width_g - 1 downto 0);
   signal rd_addr_s, wr_addr_s : std_logic_vector(log2ceil(max_delay_g) - 1 downto 0) := (others => '0');
-  signal mem_out2_s           : std_logic_vector(Width_g - 1 downto 0);
+  signal mem_out2_s           : std_logic_vector(width_g - 1 downto 0);
   signal del_dff_s            : std_logic_vector(del_i'range);
   signal latch_count_s        : unsigned(del_i'range)                                := (others => '0');
   signal diff_s               : unsigned(del_i'range)                                := (others => '0');
   signal rs_s                 : std_logic;
-
+  constant ground_c           : std_logic := '0';
 begin
 
   --*** address control process ***
@@ -59,7 +59,7 @@ begin
         del_dff_s     <= (others => '0');
         latch_count_s <= (others => '0');
         rs_s          <= '0';
-      elsif str_i = '1' then
+      elsif vld_i = '1' then
         del_dff_s <= del_i;
         if from_uslv(del_i) <= 3 then
           wr_addr_s <= (others => '0');
@@ -95,24 +95,27 @@ begin
 
   --*** memory instantiation ***
   i_bram : entity work.psi_common_sdp_ram
-    generic map(                        -- @suppress "Generic map uses default values. Missing optional actuals: IsAsync_g, RamStyle_g" 
+    generic map(                       
       depth_g        => 2**log2ceil(max_delay_g),
-      width_g        => Width_g,
+      width_g        => width_g,
+      is_async_g     => false,
+      ram_style_g    => "auto",
       ram_behavior_g => ram_behavior_g)
-    port map(                           -- @suppress "Port map uses default values. Missing optional actuals: RdClk"
+    port map(-- @suppress "Port map uses default values. Missing optional actuals: RdClk"
       wr_clk_i  => clk_i,
       wr_addr_i => wr_addr_s,
-      wr_i      => str_i,
+      wr_i      => vld_i,
       wr_dat_i  => dat_i,
+      rd_clk_i  => ground_c,
       rd_addr_i => rd_addr_s,
-      rd_i      => str_i,
+      rd_i      => vld_i,
       rd_dat_o  => mem_out2_s);
 
   --*** case where the delay change below 3 -> using SRL on the fly ***
   p_srl : process(clk_i)
   begin
     if rising_edge(clk_i) then
-      if str_i = '1' then
+      if vld_i = '1' then
         srl_s(0)               <= dat_i;
         srl_s(1 to srl_s'high) <= srl_s(0 to srl_s'high - 1);
       end if;
@@ -137,8 +140,10 @@ begin
     if rising_edge(clk_i) then
       if rst_i = rst_pol_g then
         dat_o <= (others => '0');
-      elsif str_i = '1' then
-        dat_o <= mem_out_s;
+        vld_o <= '0';
+      elsif vld_i = '1' then
+        dat_o  <= mem_out_s;
+         vld_o <= '1';
       end if;
     end if;
   end process;

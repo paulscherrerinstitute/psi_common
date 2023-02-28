@@ -54,7 +54,7 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_arb_priority
     generic map(
-      size_g           => size_g,
+      width_g           => size_g,
       out_reg_g => out_reg_g
     )
     port map(

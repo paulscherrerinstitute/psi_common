@@ -17,22 +17,16 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity psi_common_bit_cc is
-  generic(
-    num_bits_g : positive := 1
-  );
-  port(
-    -- Clock Domain A
-    dat_i : in  std_logic_vector(num_bits_g - 1 downto 0);
-    -- Clock Domain B
-    clk_i : in  std_logic;
-    dat_o : out std_logic_vector(num_bits_g - 1 downto 0)
-  );
+  generic(width_g : positive := 1);
+  port(   dat_i : in  std_logic_vector(width_g - 1 downto 0);  -- Clock Domain A
+          clk_i : in  std_logic;                               -- Clock Domain B
+          dat_o : out std_logic_vector(width_g - 1 downto 0)); -- Clock Domain B
 end entity;
 
 architecture rtl of psi_common_bit_cc is
 
-  signal Reg0 : std_logic_vector(num_bits_g - 1 downto 0) := (others => '0');
-  signal Reg1 : std_logic_vector(num_bits_g - 1 downto 0) := (others => '0');
+  signal Reg0 : std_logic_vector(width_g - 1 downto 0) := (others => '0');
+  signal Reg1 : std_logic_vector(width_g - 1 downto 0) := (others => '0');
 
   attribute syn_srlstyle : string;
   attribute syn_srlstyle of Reg0 : signal is "registers";

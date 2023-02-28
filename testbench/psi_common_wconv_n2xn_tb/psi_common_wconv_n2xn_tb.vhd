@@ -88,11 +88,11 @@ begin
       clk_i     => clk_i,
       rst_i     => rst_i,
       vld_i   => vld_i,
-      rdy_in_i   => rdy_in_i,
+      rdy_o   => rdy_in_i,
       dat_i  => dat_i,
       last_i  => last_i,
       vld_o  => vld_o,
-      rdy_out_i  => rdy_out_i,
+      rdy_i  => rdy_out_i,
       dat_o => dat_o,
       last_o => last_o,
       we_o   => we_o

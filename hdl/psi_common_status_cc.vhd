@@ -18,23 +18,21 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+-- @formatter:off
 entity psi_common_status_cc is
-  generic(data_width_g : positive := 16;
-          a_rst_pol_g  : std_logic:= '1';
-          b_rst_pol_g  : std_logic:= '1'
-          );
-  port(   -- Clock Domain A
-          a_clk_i : in  std_logic;
-          a_rst_i : in  std_logic;
-          a_rst_o : out std_logic;
-          a_dat_i : in  std_logic_vector(data_width_g - 1 downto 0);
-          -- Clock Domain B
-          b_clk_i : in  std_logic;
-          b_rst_i : in  std_logic;
-          b_rst_o : out std_logic;
-          b_dat_o : out std_logic_vector(data_width_g - 1 downto 0)
-      );
+  generic(width_g      : positive := 16;                                -- data width in bits
+          a_rst_pol_g  : std_logic:= '1';                               -- reset pol port a, '1' active high
+          b_rst_pol_g  : std_logic:= '1');                              -- reset pol port b, '1' active high
+  port(   a_clk_i      : in  std_logic;                                 -- Clock A
+          a_rst_i      : in  std_logic;                                 -- Clock domain A sync reset
+          a_rst_o      : out std_logic;                                 -- Clock domain A reset output, active if a_rst_i or b_rst_i is asserted, de-asserted synchronously to clk A
+          a_dat_i      : in  std_logic_vector(width_g - 1 downto 0);    -- Clock domain A data input
+          b_clk_i      : in  std_logic;                                 -- Clock B
+          b_rst_i      : in  std_logic;                                 -- Clock domain B sync reset
+          b_rst_o      : out std_logic;                                 -- Clock domain A reset output, active if a_rst_i or b_rst_i is asserted, de-asserted synchronously to clk A
+          b_dat_o      : out std_logic_vector(width_g - 1 downto 0));   -- Clock domain B data output
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_status_cc is
   signal RstIntA       : std_logic;
@@ -106,7 +104,7 @@ begin
   -- instantiation of simple CC
   i_scc : entity work.psi_common_simple_cc
     generic map(
-      data_width_g => data_width_g,
+      width_g => width_g,
       a_rst_pol_g  => a_rst_pol_g,
       b_rst_pol_g  => b_rst_pol_g
     )

@@ -85,13 +85,13 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_tdm_par_cfg
     generic map(
-      channel_count_g => channel_count_g,
-      channel_width_g => channel_width_g
+      ch_nb_g => channel_count_g,
+      width_g => channel_width_g
     )
     port map(
       clk_i             => clk_i,
       rst_i             => rst_i,
-      enabled_channels_i => enabled_channels_i,
+      enabled_ch_i => enabled_channels_i,
       dat_i             => dat_i,
       vld_i          => vld_i,
       last_i         => last_i,

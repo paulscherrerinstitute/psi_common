@@ -58,7 +58,7 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_strobe_divider
     generic map(
-      length_g => length_g
+      width_g => length_g
     )
     port map(
       clk_i   => InClk_sti,

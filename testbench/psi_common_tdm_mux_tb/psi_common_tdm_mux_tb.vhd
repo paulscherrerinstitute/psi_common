@@ -189,9 +189,9 @@ begin
   ------------------------------------------------------------
   inst_dut : entity work.psi_common_tdm_mux
     generic map(rst_pol_g     => rst_pol_g,
-                num_channel_g => num_channel_g,
-                data_length_g => data_length_g)
-    port map(InClk     => InClk_sti,
+                ch_nb_g => num_channel_g,
+                width_g => data_length_g)
+    port map(clk_i     => InClk_sti,
              rst_i     => InRst_sti,
              ch_sel_i   => InChSel_sti,
              tdm_vld_i  => InTdmVld_sti,

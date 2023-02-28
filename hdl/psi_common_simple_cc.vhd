@@ -15,32 +15,28 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+-- @formatter:off
 entity psi_common_simple_cc is
-  generic(
-    data_width_g : positive := 16;
-    a_rst_pol_g  : std_logic:='1';
-    b_rst_pol_g  : std_logic:='1'
-  );
-  port(
-    -- Clock Domain A
-    a_clk_i : in  std_logic;
-    a_rst_i : in  std_logic;
-    a_rst_o : out std_logic;
-    a_dat_i : in  std_logic_vector(data_width_g - 1 downto 0);
-    a_vld_i : in  std_logic;
-    -- Clock Domain B
-    b_clk_i : in  std_logic;
-    b_rst_i : in  std_logic;
-    b_rst_o : out std_logic;
-    b_dat_o : out std_logic_vector(data_width_g - 1 downto 0);
-    b_vld_o : out std_logic
-  );
+  generic(width_g      : positive := 16;
+          a_rst_pol_g  : std_logic:='1';
+          b_rst_pol_g  : std_logic:='1');
+  port(   a_clk_i      : in  std_logic;
+          a_rst_i      : in  std_logic;
+          a_rst_o      : out std_logic;
+          a_dat_i      : in  std_logic_vector(width_g - 1 downto 0);
+          a_vld_i      : in  std_logic;
+          b_clk_i      : in  std_logic;
+          b_rst_i      : in  std_logic;
+          b_rst_o      : out std_logic;
+          b_dat_o      : out std_logic_vector(width_g - 1 downto 0);
+          b_vld_o      : out std_logic);
 end entity;
+-- @formatter:on
 
 architecture rtl of psi_common_simple_cc is
   -- Domain A signals
   signal RstAI      : std_logic;
-  signal DataLatchA : std_logic_vector(data_width_g - 1 downto 0);
+  signal DataLatchA : std_logic_vector(width_g - 1 downto 0);
   -- Domain B signals
   signal RstBI      : std_logic;
   signal VldBI      : std_logic;

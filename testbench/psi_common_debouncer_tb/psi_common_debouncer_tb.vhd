@@ -60,7 +60,7 @@ begin
     generic map(dbnc_per_g => dbnc_per_g,
                 freq_clk_g => freq_clk_g,
                 rst_pol_g  => rst_pol_g,
-                len_g      => len_g,
+                width_g      => len_g,
                 in_pol_g   => in_pol_c,
                 out_pol_g  => out_pol_c,
                 sync_g     => sync_g)

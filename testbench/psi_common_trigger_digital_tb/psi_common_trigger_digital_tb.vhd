@@ -71,7 +71,7 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_trigger_digital
     generic map(
-      digital_input_number_g => digital_input_number_g,
+      trig_nb_g => digital_input_number_g,
       rst_pol_g               => rst_pol_g
     )
     port map(

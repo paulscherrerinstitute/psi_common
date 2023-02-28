@@ -13,7 +13,6 @@
 -- that have more I/Os available than any real chip.
 
 --
---
 --       4 Pins       CLK
 --          |          |
 --          |          |
@@ -29,25 +28,18 @@
 --+-------------------------+               |           |
 --                             N-inputs     |           |
 --                             N-outputs    +-----------+
---
---
---
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity psi_common_dont_opt is
-  generic(
-    from_dut_width_g : positive := 8;
-    to_dut_width_g   : positive := 16
-  );
-  port(
-    clk_i  : in    std_logic;           -- && type=clk; freq=100e6 &&
-    pin_io : inout std_logic_vector(3 downto 0);
-    dat_o  : out   std_logic_vector(to_dut_width_g - 1 downto 0);
-    dat_i  : in    std_logic_vector(from_dut_width_g - 1 downto 0)
-  );
+  generic( from_dut_width_g : positive := 8;                                         -- Number of device under test output bits (going to psi_common_dont_opt)
+           to_dut_width_g   : positive := 16);                                       -- Number of device under test input bits (connected to psi_common_dont_opt*)
+  port(   clk_i             : in    std_logic;                                       -- system clock
+          pin_io            : inout std_logic_vector(3 downto 0);                    -- I/O pins required to prevent optimization
+          dat_o             : out   std_logic_vector(to_dut_width_g - 1 downto 0);   -- signal from DUT
+          dat_i             : in    std_logic_vector(from_dut_width_g - 1 downto 0));-- signal to DUT
 end entity;
 
 architecture rtl of psi_common_dont_opt is
