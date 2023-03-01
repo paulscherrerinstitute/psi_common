@@ -17,14 +17,14 @@ use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
 entity psi_common_arb_round_robin is
-  generic( width_g    : natural := 8;                                -- Size of the arbiter (number of input/output bits)
+  generic( width_g    : natural := 8;                                 -- Size of the arbiter (number of input/output bits)
           rst_pol_g   : std_logic := '1');                            -- reset polarity
-  port(   clk_i       : in  std_logic;                              -- system clock
-          rst_i       : in  std_logic;                              -- system reset (sync)
-          request_i   : in  std_logic_vector(width_g - 1 downto 0);  -- Request input signals, The highest(left-most) bit has highest priority  
-          grant_o     : out std_logic_vector(width_g - 1 downto 0);  -- Grant output signal 
-          grant_rdy_o : in  std_logic;                              -- AXI-S handshaking signal, Asserted whenever Grant != 0
-          grant_vld_o : out std_logic);                             -- AXI-S handshaking signal The state of the  arbiter is updated  upon*Grant_Rdy =   '1'*
+  port(   clk_i       : in  std_logic;                                -- system clock
+          rst_i       : in  std_logic;                                -- system reset (sync)
+          request_i   : in  std_logic_vector(width_g - 1 downto 0);   -- Request input signals, The highest(left-most) bit has highest priority  
+          grant_o     : out std_logic_vector(width_g - 1 downto 0);   -- Grant output signal 
+          grant_rdy_o : in  std_logic;                                -- AXI-S handshaking signal, Asserted whenever Grant != 0
+          grant_vld_o : out std_logic);                               -- AXI-S handshaking signal The state of the  arbiter is updated  upon*Grant_Rdy =   '1'*
 end entity;
 
 architecture rtl of psi_common_arb_round_robin is

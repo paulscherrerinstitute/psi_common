@@ -41,7 +41,7 @@ entity psi_common_pulse_generator_ctrl_static is
           trig_i: in  std_logic;                             -- Trigger a new pulse
           stop_i: in  std_logic;                             -- Abort pulse
           busy_o: out std_logic;                             -- pulse in action
-          dat_o : out std_logic_vector(width_g-1 downto 0); -- pulse output
+          dat_o : out std_logic_vector(width_g-1 downto 0);  -- pulse output
           vld_o : out std_logic;                             -- pulse strobe
           dbg_o : out std_logic_vector(1 downto 0));         -- use for tb purpose and avoid using externalname GHDL
 end entity;

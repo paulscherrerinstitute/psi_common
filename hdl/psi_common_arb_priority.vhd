@@ -20,10 +20,10 @@ use work.psi_common_logic_pkg.all;
 -- @formatter:off
 entity psi_common_arb_priority is
   generic(width_g    : natural   := 8;                             -- size of the arbiter
-          out_reg_g : boolean   := true;                          -- True = Registered output False = Combinatorial output
-          rst_pol_g : std_logic :='1');                           -- reset polarity
-  port(   clk_i     : in  std_logic;                              -- clock
-          rst_i     : in  std_logic;                              -- reset
+          out_reg_g : boolean   := true;                           -- True = Registered output False = Combinatorial output
+          rst_pol_g : std_logic :='1');                            -- reset polarity
+  port(   clk_i     : in  std_logic;                               -- clock
+          rst_i     : in  std_logic;                               -- reset
           req_i     : in  std_logic_vector(width_g - 1 downto 0);  -- Request input signals, The highest (left-most) bit has highest priority
           grant_o   : out std_logic_vector(width_g - 1 downto 0)   -- Grant output signal
         );
