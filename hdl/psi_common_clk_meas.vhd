@@ -17,11 +17,11 @@ entity psi_common_clk_meas is
   generic( master_frequency_g    : positive := 125000000;       -- clock frequency in Hz for system clock
            max_meas_frequency_g  : positive := 250000000;       -- clock frequency in Hz for system clock
            rst_pol_g             : std_logic:= '1');            -- reset polarity
-  port(   clk_master_i   : in  std_logic;                       -- system clock
-          rst_i          : in  std_logic;                       -- system reset
-          frequency_hz_o : out std_logic_vector(31 downto 0);   -- Synchronous to ClkMaster
-          vld_o          : out std_logic;                       -- Pulse when frequency is valid
-          clk_test_i     : in  std_logic);                      -- clock to be tested
+  port(   clk_master_i           : in  std_logic;                       -- system clock
+          rst_i                  : in  std_logic;                       -- system reset
+          frequency_hz_o         : out std_logic_vector(31 downto 0);   -- Synchronous to ClkMaster
+          vld_o                  : out std_logic;                       -- Pulse when frequency is valid
+          clk_test_i             : in  std_logic);                      -- clock to be tested
 end entity;
 --@fromatter:on
 architecture rtl of psi_common_clk_meas is

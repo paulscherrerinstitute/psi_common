@@ -25,10 +25,10 @@ entity psi_common_multi_pl_stage is
   port(   clk_i     : in  std_logic;                              -- system clock
           rst_i     : in  std_logic;                              -- system reset 
           vld_i     : in  std_logic;                              -- valid input signal
-          rdy_in_o  : out std_logic;                              -- ready signal output
+          rdy_o  : out std_logic;                              -- ready signal output
           dat_i     : in  std_logic_vector(width_g - 1 downto 0); -- data input
           vld_o     : out std_logic;                              -- valid output signal
-          rdy_out_i : in  std_logic := '1';                       -- ready signal input
+          rdy_i : in  std_logic := '1';                       -- ready signal input
           dat_o     : out std_logic_vector(width_g - 1 downto 0));-- data output
 end entity;
 -- @formatter:on
@@ -44,7 +44,7 @@ begin
 
   g_nonzero : if stages_g > 0 generate
     vld_s(0)   <= vld_i;
-    rdy_in_o <= rdy_s(0);
+    rdy_o <= rdy_s(0);
     data_s(0)  <= dat_i;
 
     g_stages : for i in 0 to stages_g - 1 generate
@@ -67,14 +67,14 @@ begin
     end generate;
 
     vld_o         <= vld_s(stages_g);
-    rdy_s(stages_g) <= rdy_out_i;
+    rdy_s(stages_g) <= rdy_i;
     dat_o         <= data_s(stages_g);
   end generate;
 
   g_zero : if stages_g = 0 generate
     vld_o    <= vld_i;
     dat_o    <= dat_i;
-    rdy_in_o <= rdy_out_i;
+    rdy_o <= rdy_i;
   end generate;
 
 end architecture;
