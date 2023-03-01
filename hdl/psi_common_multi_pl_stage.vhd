@@ -25,10 +25,10 @@ entity psi_common_multi_pl_stage is
   port(   clk_i     : in  std_logic;                              -- system clock
           rst_i     : in  std_logic;                              -- system reset 
           vld_i     : in  std_logic;                              -- valid input signal
-          rdy_o  : out std_logic;                              -- ready signal output
+          rdy_o     : out std_logic;                              -- ready signal output
           dat_i     : in  std_logic_vector(width_g - 1 downto 0); -- data input
           vld_o     : out std_logic;                              -- valid output signal
-          rdy_i : in  std_logic := '1';                       -- ready signal input
+          rdy_i     : in  std_logic := '1';                       -- ready signal input
           dat_o     : out std_logic_vector(width_g - 1 downto 0));-- data output
 end entity;
 -- @formatter:on

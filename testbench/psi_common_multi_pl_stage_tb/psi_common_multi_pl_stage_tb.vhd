@@ -51,10 +51,10 @@ architecture sim of psi_common_multi_pl_stage_tb is
   signal clk_i     : std_logic                              := '0';
   signal rst_i     : std_logic                              := '1';
   signal vld_i   : std_logic                              := '0';
-  signal rdy_in_i   : std_logic                              := '0';
+  signal rdy_obs   : std_logic                              := '0';
   signal dat_i  : std_logic_vector(width_g - 1 downto 0) := (others => '0');
   signal vld_o  : std_logic                              := '0';
-  signal rdy_out_i  : std_logic                              := '0';
+  signal rdy_sti  : std_logic                              := '0';
   signal dat_o : std_logic_vector(width_g - 1 downto 0) := (others => '0');
 
   -- Handwritten
@@ -75,10 +75,10 @@ begin
       clk_i     => clk_i,
       rst_i     => rst_i,
       vld_i   => vld_i,
-      rdy_in_o   => rdy_in_i,
+      rdy_o   => rdy_obs,
       dat_i  => dat_i,
       vld_o  => vld_o,
-      rdy_out_i  => rdy_out_i,
+      rdy_i  => rdy_sti,
       dat_o => dat_o
     );
 
@@ -133,13 +133,13 @@ begin
     testcase <= 0;
     wait until rising_edge(clk_i);
     for i in 0 to 4 loop
-      assert rdy_in_i = '1' or not handle_rdy_g report "###ERROR###: rdy_in_i went low unexpectedly" severity error;
+      assert rdy_obs = '1' or not handle_rdy_g report "###ERROR###: rdy_in_i went low unexpectedly" severity error;
       dat_i <= std_logic_vector(to_unsigned(i, width_g));
       vld_i  <= '1';
       for i in 0 to 9 loop
         wait until rising_edge(clk_i);
         vld_i <= '0';
-        assert rdy_in_i = '1' or not handle_rdy_g report "###ERROR###: rdy_in_i went low unexpectedly" severity error;
+        assert rdy_obs = '1' or not handle_rdy_g report "###ERROR###: rdy_in_i went low unexpectedly" severity error;
       end loop;
     end loop;
     if done /= true then
@@ -152,7 +152,7 @@ begin
     wait until rising_edge(clk_i);
     vld_i    <= '1';
     for i in 0 to 15 loop
-      assert rdy_in_i = '1' or not handle_rdy_g report "###ERROR###: rdy_in_i went low unexpectedly" severity error;
+      assert rdy_obs = '1' or not handle_rdy_g report "###ERROR###: rdy_in_i went low unexpectedly" severity error;
       dat_i <= std_logic_vector(to_unsigned(i, width_g));
       wait until rising_edge(clk_i);
     end loop;
@@ -171,7 +171,7 @@ begin
           for val in 1 to 80 loop
             vld_i  <= '1';
             dat_i <= std_logic_vector(to_unsigned(val, width_g));
-            wait until rising_edge(clk_i) and rdy_in_i = '1';
+            wait until rising_edge(clk_i) and rdy_obs = '1';
             for j in 0 to inDel - 1 loop
               vld_i <= '0';
               wait until rising_edge(clk_i);
@@ -196,7 +196,7 @@ begin
         for val in 1 to 40 loop
           vld_i  <= '1';
           dat_i <= std_logic_vector(to_unsigned(val, width_g));
-          wait until rising_edge(clk_i) and rdy_in_i = '1';
+          wait until rising_edge(clk_i) and rdy_obs = '1';
         end loop;
         vld_i <= '0';
         wait for 1 us;
@@ -222,7 +222,7 @@ begin
     wait until testcase = 0;
     done <= False;
     if handle_rdy_g then
-      rdy_out_i <= '1';
+      rdy_sti <= '1';
     end if;
     for i in 0 to 4 loop
       wait until rising_edge(clk_i) and vld_o = '1';
@@ -234,7 +234,7 @@ begin
     wait until testcase = 1;
     done <= False;
     if handle_rdy_g then
-      rdy_out_i <= '1';
+      rdy_sti <= '1';
     end if;
     for i in 0 to 15 loop
       wait until rising_edge(clk_i) and vld_o = '1';
@@ -249,11 +249,11 @@ begin
       for inDel in 3 downto 0 loop
         for outDel in 0 to 3 loop
           for val in 1 to 80 loop
-            rdy_out_i <= '1';
+            rdy_sti <= '1';
             wait until rising_edge(clk_i) and vld_o = '1';
             StdlvCompareInt(val, dat_o, "Wrong Data");
             for j in 0 to outDel - 1 loop
-              rdy_out_i <= '0';
+              rdy_sti <= '0';
               wait until rising_edge(clk_i);
             end loop;
           end loop;
@@ -266,7 +266,7 @@ begin
     if handle_rdy_g then
       wait until testcase = 3;
       done   <= False;
-      rdy_out_i <= '0';
+      rdy_sti <= '0';
       wait until rising_edge(clk_i);
       for outDel in 0 to 10 loop
         for val in 1 to 40 loop
@@ -278,11 +278,11 @@ begin
             assert vld_o = '1' report "###ERROR###: vld_o went low" severity error;
           end loop;
           wait for 1 ns;
-          rdy_out_i <= '1';
+          rdy_sti <= '1';
           StdlvCompareInt(val, dat_o, "Wrong Data");
           wait until rising_edge(clk_i);
           wait for 1 ns;
-          rdy_out_i <= '0';
+          rdy_sti <= '0';
         end loop;
       end loop;
       done   <= True;

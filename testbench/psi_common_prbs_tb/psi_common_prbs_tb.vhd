@@ -16,7 +16,7 @@ use work.psi_tb_compare_pkg.all;
 
 entity psi_common_prbs_tb is
   generic(width_g : natural range 2 to 32         := 10;
-          seed_g  : std_logic_vector(31 downto 0) := to_uslv(2**3-1, 32)
+          seed_g  : natural := 2**3-1
          );
 end psi_common_prbs_tb;
 
@@ -105,7 +105,7 @@ begin
     assert width_g < 20 report "####WARNING###: MEM ALLOCATION to big for tb Width > 20" severity warning;
     rst  <= '0' after 17 ns;
     wait until rising_edge(clk);
-    seed <= seed_g((N - 1) downto 0);
+    seed <= to_uslv(seed_g,32)((N - 1) downto 0);
     --wait for 20 ns;
     --wait until rising_edge(clk);
     --seed <= to_uslv(from_uslv(seed) + 5, seed'length);

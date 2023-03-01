@@ -133,14 +133,14 @@ begin
       stages_g  => stages_g,
       rst_pol_g => rst_pol_g)
     port map(
-      clk_i     => clk_i,
-      rst_i     => rst_i,
-      vld_i     => in_awvalid,
-      rdy_in_o  => in_awready,
-      dat_i     => AwDataIn,
-      vld_o     => out_awvalid,
-      rdy_out_i => out_awready,
-      dat_o     => AwDataOut);
+      clk_i => clk_i,
+      rst_i => rst_i,
+      vld_i => in_awvalid,
+      rdy_o => in_awready,
+      dat_i => AwDataIn,
+      vld_o => out_awvalid,
+      rdy_i => out_awready,
+      dat_o => AwDataOut);
 
   out_awprot  <= AwDataOut(ProtWidth_c - 1 downto 0);
   out_awcache <= AwDataOut(CacheWidth_c - 1 + ProtWidth_c downto ProtWidth_c);
@@ -162,10 +162,10 @@ begin
       clk_i     => clk_i,
       rst_i     => rst_i,
       vld_i     => in_wvalid,
-      rdy_in_o  => in_wready,
+      rdy_o  => in_wready,
       dat_i     => WDataIn,
       vld_o     => out_wvalid,
-      rdy_out_i => out_wready,
+      rdy_i => out_wready,
       dat_o     => WDataOut);
 
   out_wlast <= WDataOut(0);
@@ -183,10 +183,10 @@ begin
       clk_i     => clk_i,
       rst_i     => rst_i,
       vld_i     => out_bvalid,
-      rdy_in_o  => out_bready,
+      rdy_o  => out_bready,
       dat_i     => out_bresp,
       vld_o     => in_bvalid,
-      rdy_out_i => in_bready,
+      rdy_i => in_bready,
       dat_o     => in_bresp);
 
   -- read address channel
@@ -201,10 +201,10 @@ begin
       clk_i     => clk_i,
       rst_i     => rst_i,
       vld_i     => in_arvalid,
-      rdy_in_o  => in_arready,
+      rdy_o  => in_arready,
       dat_i     => ArDataIn,
       vld_o     => out_arvalid,
-      rdy_out_i => out_arready,
+      rdy_i => out_arready,
       dat_o     => ArDataOut);
 
   out_arprot  <= ArDataOut(ProtWidth_c - 1 downto 0);
@@ -227,10 +227,10 @@ begin
       clk_i     => clk_i,
       rst_i     => rst_i,
       vld_i     => out_rvalid,
-      rdy_in_o  => out_rready,
+      rdy_o  => out_rready,
       dat_i     => RDataIn,
       vld_o     => in_rvalid,
-      rdy_out_i => in_rready,
+      rdy_i => in_rready,
       dat_o     => RDataOut
     );
 

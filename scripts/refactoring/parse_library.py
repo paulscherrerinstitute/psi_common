@@ -58,7 +58,7 @@ database = {"#ALL#": {
 }
 
 #ignore those ports
-blacklist  = ["rst_pol_g",]
+blacklist  = ["rst_pol_g", "a_rst_pol_g", "b_rst_pol_g"]
 
 for path in Path(old_library_dir).rglob('*.vhd'):
     path = str(path)

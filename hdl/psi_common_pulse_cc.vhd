@@ -81,7 +81,7 @@ begin
   ARst_p : process(a_clk_i)
   begin
     if rising_edge(a_clk_i) then
-      if a_rst_pol_g then
+      if a_rst_pol_g = '1' then
         RstAI <= RstSyncB2A(RstSyncB2A'left) or a_rst_i;
       else
         RstAI <= RstSyncB2A(RstSyncB2A'left) and a_rst_i;  
@@ -102,7 +102,7 @@ begin
   BRst_p : process(b_clk_i)
   begin
     if rising_edge(b_clk_i) then
-      if b_rst_pol_g then
+      if b_rst_pol_g = '1' then
         RstBI <= RstSyncA2B(RstSyncA2B'left) or b_rst_i;
       else
         RstBI <= RstSyncA2B(RstSyncA2B'left) and b_rst_i;

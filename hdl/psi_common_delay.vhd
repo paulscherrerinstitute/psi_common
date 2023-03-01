@@ -23,6 +23,7 @@ entity psi_common_delay is
           resource_g       : string   := "AUTO";                           -- AUTO, SRL or BRAM
           bram_threshold_g : positive := 128;                              -- Number of delay taps to start using BRAM from (if Resource_g = AUTO)
           rst_state_g      : boolean  := True;                             -- True = '0' is outputted after reset, '1' after reset the existing state is outputted
+          rst_pol_g        : std_logic:='1';                               -- reset polarity
           ram_behavior_g   : string   := "RBW" );                          -- "RBW" = read-before-write, "WBR" = write-before-read
   port(   clk_i            : in  std_logic;                                -- system clock
           rst_i            : in  std_logic;                                -- system reset
@@ -73,7 +74,7 @@ begin
     p_bram : process(clk_i)
     begin
       if rising_edge(clk_i) then
-        if rst_i = '1' then
+        if rst_i = rst_pol_g then
           WrAddr <= std_logic_vector(to_unsigned(MemTaps_c - 1, WrAddr'length));
           RdAddr <= (others => '0');
         elsif vld_i = '1' then
@@ -123,7 +124,7 @@ begin
   p_outreg : process(clk_i)
   begin
     if rising_edge(clk_i) then
-      if rst_i = '1' then
+      if rst_i = rst_pol_g then
         dat_o       <= (others => '0');
          vld_o      <= '0';
         RstStateCnt <= 0;
