@@ -57,11 +57,16 @@ database = {"#ALL#": {
         }
 }
 
+#ignore those ports
+blacklist  = ["rst_pol_g",]
+
 for path in Path(old_library_dir).rglob('*.vhd'):
     path = str(path)
     print("Parsing " + path)
     entity_db = entity_declaration_parser(path)
     for k,v in entity_db.items():
+        for b in blacklist:
+            v.pop(b, None)
         database[k] = v;
 
 for path in Path(new_library_dir).rglob('*.vhd'):
@@ -71,6 +76,8 @@ for path in Path(new_library_dir).rglob('*.vhd'):
     for k,v in entity_db.items():
         #for p0,p1 in zip(database[k].keys(), v.values()):
         #print(database[k].keys())
+        for b in blacklist:
+            v.pop(b, None)
         merge = dict(zip(database[k].keys(), v.values()))
         database[k] = merge;
 
