@@ -173,7 +173,10 @@ def entity_declaration_parser (file_name_i):
     start_port_declaration = re.compile(r'\s+port\s+', re.IGNORECASE)
     start_generic_declaration = re.compile(r'\s+generic\s+', re.IGNORECASE)
 
-    port_declaration = re.compile(r'\s+(\w+)\s*:', re.IGNORECASE)
+    #port_declaration = re.compile(r'\(|\s+(\w+)\s*:', re.IGNORECASE)
+    # also include something like port(aa : 
+    #port_declaration = re.compile(r'(?:\(}|\s+)(\w+)\s*:', re.IGNORECASE)
+    port_declaration = re.compile(r'(\w+)\s*:', re.IGNORECASE)
 
     
     # ======================================================================
@@ -198,7 +201,7 @@ def entity_declaration_parser (file_name_i):
                 start = False
 
             if start:
-                if grp := re.match(port_declaration, l):
+                if grp := re.search(port_declaration, l):
                     port_name = grp[1]
                     RET[comp_name][port_name] = port_name
     #print(RET)
