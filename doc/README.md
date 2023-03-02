@@ -82,10 +82,10 @@ Data width conversion from a multiple N-bits to a N-bits  	| [psi_common_wconv_x
 ### Time Division Multiplexing (TDM) data Handling components
 Component 					    | Source                                                      | Description
 ------------------------|-------------------------------------------------------------|:-------------------------------------------:
-TDM data to parallel  	| [psi_common_tdm_par.vhd](../hdl/psi_common_tdm_par.vhd)   	|  [link](ch8_tdm_handling/psi_common_tdm_par.md)
-Parallel to TDM data  	| [psi_common_par_tdm.vhd](../hdl/psi_common_par_tdm.vhd)  		|  [link](ch8_tdm_handling/psi_common_par_tdm.md)
+TDM data to parallel  	| [psi_common_tdm_par.vhd](../hdl/psi_common_tdm_par.vhd)   	|  [link](files/psi_common_tdm_par.md)
+Parallel to TDM data  	| [psi_common_par_tdm.vhd](../hdl/psi_common_par_tdm.vhd)  		|  [link](files/psi_common_par_tdm.md)
 TDM data to Parallel with configurable valid output channel number  |   [psi_common_tdm_par_cfg.vhd](../hdl/psi_common_tdm_par_cfg.vhd)  				|  [link](files/psi_common_tdm_par_cfg.md)
-TDM data multiplexer    | [psi_common_tdm_mux.vhd](../hdl/psi_common_tdm_mux.vhd)  | [link](ch8_tdm_handling/psi_common_tdm_mux.md)
+TDM data multiplexer    | [psi_common_tdm_mux.vhd](../hdl/psi_common_tdm_mux.vhd)  | [link](files/psi_common_tdm_mux.md)
 Parallel to TDM with configurable valid output output channel |  [psi_common_par_tdm_cfg.vhd](../hdl/psi_common_par_tdm_cfg.vhd)  				|  [link](files/ch8_5_par_tdpsi_common_par_tdm_cfgm_cfg.md)
 TDM data to parallel with last support and completion  	| [psi_common_tdm_par_fill.vhd](../hdl/psi_common_tdm_par_fill.vhd)   			|  [link](files/psi_common_tdm_par_fill.md)
 ***
