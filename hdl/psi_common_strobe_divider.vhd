@@ -16,13 +16,13 @@ use ieee.numeric_std.all;
 
 -- @formatter:off
 entity psi_common_strobe_divider is
-  generic(width_g  : natural   := 4;                             -- ratio division bit width $$ constant=4 $$
-          rst_pol_g : std_logic := '0');                         -- reset polarity
-  port(   clk_i   : in  std_logic;                               -- clk in
-          rst_i   : in  std_logic;                               -- synchornous reset
-          vld_i   : in  std_logic;                               -- strobe in (if not strobe an edge detection is done)
-          ratio_i : in  std_logic_vector(width_g - 1 downto 0);  -- parameter ratio for division
-          vld_o   : out std_logic);                              -- strobe output
+  generic(width_g   : natural   := 4;                              -- ratio division bit width $$ constant=4 $$
+          rst_pol_g : std_logic := '0');                           -- reset polarity
+  port(   clk_i     : in  std_logic;                               -- clk in
+          rst_i     : in  std_logic;                               -- synchornous reset
+          vld_i     : in  std_logic;                               -- strobe in (if not strobe an edge detection is done)
+          ratio_i   : in  std_logic_vector(width_g - 1 downto 0);  -- parameter ratio for division
+          vld_o     : out std_logic);                              -- strobe output
 end entity;
 -- @formatter:on
 

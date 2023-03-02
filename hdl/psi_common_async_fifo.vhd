@@ -18,41 +18,39 @@ use work.psi_common_logic_pkg.all;
 use work.psi_common_math_pkg.all;
 --@formatter:off
 entity psi_common_async_fifo is
-  generic(width_g         : positive  := 16;
-          depth_g         : positive  := 32;
-          afull_on_g      : boolean   := false;
-          afull_lvl_g     : natural   := 28;
-          aempty_on_g     : boolean   := false;
-          aempty_level_g  : natural   := 4;
-          ram_style_g     : string    := "auto";
-          ram_behavior_g  : string    := "RBW"; -- "RBW" = read-before-write, "WBR" = write-before-read
-          rdy_rst_state_g : std_logic := '1';   -- Use '1' for minimal logic on Rdy path
-          rst_pol_g       : std_logic := '1');
+  generic(width_g         : positive  := 16;                                         -- Width of the FIFO|
+          depth_g         : positive  := 32;                                         -- Depth of the FIFO|
+          afull_on_g      : boolean   := false;                                      -- **True** = Almost full output is provided, **False** = Almost full output is omitted|
+          afull_lvl_g     : natural   := 28;                                         -- Almost full output is high if the level is \>= AlmFullLevel\_g|
+          aempty_on_g     : boolean   := false;                                      -- True = Almost empty output is provided, False = Almost empty output is omitted|
+          aempty_level_g  : natural   := 4;                                          -- Almost empty output is high if the level is \<= AlmFullLevel\_g|
+          ram_style_g     : string    := "auto";                                     -- **"auto"** (default) Automatic choice of block- or distributed-RAM **"distributed"** Use distributed RAM (LUT-RAM), **"block"** Use block RAM|
+          ram_behavior_g  : string    := "RBW";                                      -- **"RBW"** Read-before-write implementation, **"WBR"** Write-before-read implementation|
+          rdy_rst_state_g : std_logic := '1';                                        -- State of *InRdy* signal during reset. Usually this does not play a role and the default setting ('1') that leads to the least logic on the InRdy path is fine. Setting the value to '0' may lead to less optimal performance in terms of FMAX.
+          rst_pol_g       : std_logic := '1');                                       -- reset polarity, '1' high active & '0' low active|
   port(   -- Control Ports
-          in_clk_i     : in  std_logic;
-          in_rst_i     : in  std_logic;
-          out_clk_i    : in  std_logic;
-          out_rst_i    : in  std_logic;
-          -- Input Data
-          in_dat_i     : in  std_logic_vector(width_g - 1 downto 0);
-          in_vld_i     : in  std_logic;
-          in_rdy_o     : out std_logic;       -- not full
-          -- Output Data
-          out_dat_o    : out std_logic_vector(width_g - 1 downto 0);
-          out_vld_o    : out std_logic;       -- not empty
-          out_rdy_o    : in  std_logic;
-          -- Input Status
-          in_full_o    : out std_logic;
-          in_empty_o   : out std_logic;
-          in_afull_o   : out std_logic;
-          in_aempty_o  : out std_logic;
-          in_lvl_o     : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0);
-          -- Output Status
-          out_full_o   : out std_logic;
-          out_empty_o  : out std_logic;
-          out_afull_o  : out std_logic;
-          out_aempty_o : out std_logic;
-          out_lvl_o    : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0));
+          in_clk_i     : in  std_logic;                                               --    Write side clock
+          in_rst_i     : in  std_logic;                                               --    Write side reset input (active high)
+          out_clk_i    : in  std_logic;                                               --    Read side clock
+          out_rst_i    : in  std_logic;                                               --    Read side reset  input (active high)
+          -- data
+          in_dat_i     : in  std_logic_vector(width_g - 1 downto 0);                  --    Write data
+          in_vld_i     : in  std_logic;                                               --    AXI-S  handshaking signal
+          in_rdy_o     : out std_logic;       -- not full                             --    AXI-S  handshaking signal
+          out_dat_o    : out std_logic_vector(width_g - 1 downto 0);                  --    Read data
+          out_vld_o    : out std_logic;       -- not empty                            --    AXI-S  handshaking signal
+          out_rdy_o    : in  std_logic;                                               --    AXI-S handshaking signal
+          -- status signal in
+          in_full_o    : out std_logic;                                               --    FIFO full signal synchronous to *in_clk_i*
+          in_empty_o   : out std_logic;                                               --    FIFO empty signal synchronous to *in_clk_i*
+          in_afull_o   : out std_logic;                                               --    FIFO almost full signal synchronous to *in_clk_i*, Only exists if *AlmFullOn\_g*  = true
+          in_aempty_o  : out std_logic;                                               --    FIFO almost empty signal synchronous to *in_clk_i*, Only exists if   *AlmEmptyOn\_g* = true|
+          in_lvl_o     : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0);    --    FIFO level synchronous to  *in_clk_i*
+          out_full_o   : out std_logic;                                               --    FIFO full  signal  synchronous to *out_clk_i*
+          out_empty_o  : out std_logic;                                               --    FIFO empty signal   synchronous to *out_clk_i*        |
+          out_afull_o  : out std_logic;                                               --    FIFO almost full signal synchronous to *out_clk_i* Only exists if *AlmFullOn\_g* = true
+          out_aempty_o : out std_logic;                                               --    FIFO almost   empty signal  synchronous to *out_clk_i*  Only exists if  *AlmEmptyOn\_g* = true
+          out_lvl_o    : out std_logic_vector(log2ceil(depth_g + 1) - 1 downto 0));   --    FIFO level synchronous to   *out_clk_i*
 end entity;
 --@formatter:on
 

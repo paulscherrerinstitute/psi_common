@@ -21,6 +21,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.psi_common_math_pkg.all;
+
 -- @formatter:off
 entity psi_common_ser_par is
   generic(rst_pol_g : std_logic := '1';                            -- reset polarity
@@ -36,7 +37,8 @@ entity psi_common_ser_par is
           vld_o     : out std_logic);                              -- valid/strobe
 end entity;
 -- @formatter:on
-architecture RTL of psi_common_ser_par is
+
+architecture rtl of psi_common_ser_par is
 
   type two_process_t is record
     cnt : unsigned(log2ceil(width_g) - 1 downto 0);

@@ -3,7 +3,7 @@
 ***
 ## Introduction
 
-[read me first](ch1_introduction/ch1_introduction.md)
+[read me first](old/ch1_introduction/ch1_introduction.md)
 
 **Quick syntax rules to push into the library:**
 

@@ -10,7 +10,10 @@
  - Testbench source: [psi_common_tdm_mux_tb.vhd](../../testbench/psi_common_tdm_mux_tb/psi_common_tdm_mux_tb.vhd)
 
 ### Description
-*INSERT YOUR TEXT*
+
+This component allows selecting one unique channel over a bunch of "N" time division multiplexed (tdm) data. The output comes with a strobe/valid signal at the falling edge of the "tdm" strobe/valid input with a two clock cycles latency.
+
+<p align="center"><img src="psi_common_tdm_mux_fig0.png"></p>
 
 ### Generics
 | Name              | type      | Description           |

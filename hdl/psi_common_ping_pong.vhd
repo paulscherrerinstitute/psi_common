@@ -37,7 +37,6 @@ entity psi_common_ping_pong is
        rst_i             : in  std_logic;                                                                    -- rst data
        dat_i             : in  std_logic_vector(choose(tdm_g, width_g - 1, ch_nb_g * width_g - 1) downto 0); -- data input
        vld_i             : in  std_logic;                                                                    -- strobe input (ie valid)
-       --*** mem read interface ***
        mem_irq_o         : out std_logic;                                                                    -- indicate when a set of buffer has been filled
        mem_clk_i         : in  std_logic;                                                                    -- clock mem
        mem_addr_ch_i     : in  std_logic_vector(log2ceil(ch_nb_g) - 1 downto 0);                             -- Channel selection for mem read

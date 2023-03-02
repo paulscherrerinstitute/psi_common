@@ -15,13 +15,13 @@ use ieee.std_logic_1164.all;
 
 -- @formatter:off
 entity psi_common_tickgenerator is
-  generic( clk_in_mhz_g             : integer := 8;
-           tick_width_g             : integer := 1;
+  generic( clk_in_mhz_g             : integer := 8;  -- frequency clock in MHz
+           tick_width_g             : integer := 1;  -- pulse length
            sim_sec_speedup_factor_g : integer := 1); -- Set to 1 for implementation!!! speedup factor for simulation, does only apply to sec, not to us/ms
-  port( clock_i    : in  std_logic;
-        tick1us_o  : out std_logic;
-        tick1ms_o  : out std_logic;
-        tick1sec_o : out std_logic);
+  port(    clock_i                  : in  std_logic; -- system clock
+           tick1us_o                : out std_logic; -- 1 us pulse
+           tick1ms_o                : out std_logic; -- 1 ms pulse
+           tick1sec_o               : out std_logic);-- 1 sec pulse
 end entity;
 -- @formatter:on
 

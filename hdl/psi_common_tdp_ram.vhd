@@ -17,21 +17,19 @@ use work.psi_common_math_pkg.all;
 
 -- @formatter:off
 entity psi_common_tdp_ram is
-  generic(depth_g    : positive := 1024;
-          width_g    : positive := 32;
-          behavior_g : string   := "RBW");      -- "RBW" = read-before-write, "WBR" = write-before-read
-  port(   -- Port A
-          a_clk_i  : in  std_logic                                        := '0';
-          a_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
-          a_wr_i   : in  std_logic                                        := '0';
-          a_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-          a_dat_o  : out std_logic_vector(width_g - 1 downto 0);
-          -- Port B
-          b_clk_i  : in  std_logic                                        := '0';
-          b_addr_i : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
-          b_wr_i   : in  std_logic                                        := '0';
-          b_dat_i  : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0');
-          b_dat_o  : out std_logic_vector(width_g - 1 downto 0));
+  generic(depth_g    : positive := 1024;                                                        -- mem depth in samples
+          width_g    : positive := 32;                                                          -- data vector width in bits
+          behavior_g : string   := "RBW");                                                      -- "RBW" = read-before-write, "WBR" = write-before-read
+  port(   a_clk_i    : in  std_logic                                        := '0';             -- port a clock
+          a_addr_i   : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0'); -- port a addr
+          a_wr_i     : in  std_logic                                        := '0';             -- port a write enable acitve high
+          a_dat_i    : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0'); -- port a data input
+          a_dat_o    : out std_logic_vector(width_g - 1 downto 0);                              -- port a data output                                                                           
+          b_clk_i    : in  std_logic                                        := '0';             -- port b clock
+          b_addr_i   : in  std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0'); -- port b addr
+          b_wr_i     : in  std_logic                                        := '0';             -- port b write enable active high
+          b_dat_i    : in  std_logic_vector(width_g - 1 downto 0)           := (others => '0'); -- port b data input
+          b_dat_o    : out std_logic_vector(width_g - 1 downto 0));                             -- port b data output
 end entity;
 -- @formatter:on
 
