@@ -86,6 +86,7 @@ add_sources "../hdl" {
   psi_common_find_min_max.vhd \
   psi_common_min_max_sum.vhd \
   psi_common_prbs.vhd \
+  psi_common_pwm.vhd \
 } -tag src
 
 # testbenches
@@ -155,6 +156,7 @@ add_sources "../testbench" {
   psi_common_min_max_sum_tb/psi_common_min_max_sum_tb.vhd \
   psi_common_prbs_tb/maximal_length_lfsr.vhd \
   psi_common_prbs_tb/psi_common_prbs_tb.vhd \
+  psi_common_pwm_tb/psi_common_pwm_tb.vhd \
 } -tag tb
 
 #TB Runs

@@ -133,6 +133,7 @@ Serial to parallel  				| [psi_common_ser_par.vhd](../hdl/psi_common_ser_par.vhd
 Find Min Max  							| [psi_common_find_min_max.vhd](../hdl/psi_common_find_min_max.vhd)   | [link](files/psi_common_find_min_max.md)
 Min Max Sum  						   	| [psi_common_find_min_max.vhd](../hdl/psi_common_min_max_sum.vhd)   | [link](files/psi_common_min_max_sum.md)
 PRBS  						  		  	| [psi_common_prbs.vhd](../hdl/psi_common_prbs.vhd)   | [link](files/psi_common_prbs.md)    
+PWM   						  		  	| [psi_common_pwm.vhd](../hdl/psi_common_pwm.vhd)   | [link](files/psi_common_pwm.md)     |  
 ***
 
 ### Packages
