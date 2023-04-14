@@ -13,104 +13,78 @@
 -- over a single signal)
 -- The number of channels to be serialized can be configured at runtime.
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
-
-------------------------------------------------------------------------------
--- Entity
-------------------------------------------------------------------------------	
--- $$ processes=inp,outp $$
+-- @formatter:off
 entity psi_common_par_tdm_cfg is
-  generic(
-    ChannelCount_g : natural := 8;      -- $$ constant=3 $$
-    ChannelWidth_g : natural := 16      -- $$ constant=8 $$
-  );
-  port(
-    -- Control Signals
-    Clk             : in  std_logic;    -- $$ type=clk; freq=100e6 $$
-    Rst             : in  std_logic;    -- $$ type=rst; clk=Clk $$
-    EnabledChannels : in  integer range 0 to ChannelCount_g := ChannelCount_g; -- Number of enabled output channels (starting from index 0)
-
-    -- Data Ports
-    Parallel        : in  std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0);
-    ParallelVld     : in  std_logic;
-    Tdm             : out std_logic_vector(ChannelWidth_g - 1 downto 0);
-    TdmLast         : out std_logic;
-    TdmVld          : out std_logic
-  );
+  generic(ch_nb_g      : natural := 8;                                            -- maximum number of channel
+          ch_width_g   : natural := 16;                                           -- vector length per channel
+          rst_pol_g    : std_logic:='1');                                         -- '1' active high, '0' active low
+  port(   clk_i        : in  std_logic;                                           -- system clock
+          rst_i        : in  std_logic;                                           -- system reset
+          enabled_ch_i : in  integer range 0 to ch_nb_g := ch_nb_g;               -- Number of enabled output channels (starting from index 0)
+          dat_i        : in  std_logic_vector(ch_nb_g * ch_width_g - 1 downto 0); -- DATA big vector interpreted as // input
+          vld_i        : in  std_logic;                                           -- valid input
+          dat_o        : out std_logic_vector(ch_width_g - 1 downto 0);           -- DATa output in TDM fashion
+          last_o       : out std_logic;                                           -- AXI-S TLAST signal, set for the last transfer in a packet
+          vld_o        : out std_logic);                                          -- AXI-S handshaking signal
 end entity;
-
-------------------------------------------------------------------------------
--- Architecture section
-------------------------------------------------------------------------------
-
+-- @formatter:on
 architecture rtl of psi_common_par_tdm_cfg is
-
   -- Two Process Method
   type two_process_r is record
-    ShiftReg : std_logic_vector(Parallel'range);
-    ChCnt    : integer range 0 to ChannelCount_g;
+    ShiftReg : std_logic_vector(dat_i'range);
+    ChCnt    : integer range 0 to ch_nb_g;
   end record;
   signal r, r_next : two_process_r;
 begin
 
-  --------------------------------------------------------------------------
-  -- Combinatorial Process
-  --------------------------------------------------------------------------
-  p_comb : process(r, Parallel, ParallelVld, EnabledChannels)
+  p_comb : process(r, dat_i, vld_i, enabled_ch_i)
     variable v : two_process_r;
   begin
     -- hold variables stable
     v := r;
 
     -- *** Implementation ***
-    if ParallelVld = '1' then
-      v.ShiftReg := Parallel;
-      v.ChCnt    := EnabledChannels;
+    if vld_i = '1' then
+      v.ShiftReg := dat_i;
+      v.ChCnt    := enabled_ch_i;
     else
-      v.ShiftReg := shiftRight(r.ShiftReg, ChannelWidth_g);
+      v.ShiftReg := shift_right(r.ShiftReg, ch_width_g);
       if r.ChCnt /= 0 then
         v.ChCnt := r.ChCnt - 1;
       end if;
     end if;
 
     -- *** Outputs ***
-    Tdm     <= r.ShiftReg(ChannelWidth_g - 1 downto 0);
-    if r.ChCnt /= 0 then 
-      TdmVld  <= '1'; 
-    else 
-      TdmVld  <= '0'; 
+    dat_o <= r.ShiftReg(ch_width_g - 1 downto 0);
+    if r.ChCnt /= 0 then
+      vld_o <= '1';
+    else
+      vld_o <= '0';
     end if;
-    if r.ChCnt = 1 then 
-      TdmLast <= '1'; 
-    else 
-      TdmLast <= '0'; 
+    if r.ChCnt = 1 then
+      last_o <= '1';
+    else
+      last_o <= '0';
     end if;
 
     -- Apply to record
     r_next <= v;
 
   end process;
-
-  --------------------------------------------------------------------------
-  -- Sequential Process
-  --------------------------------------------------------------------------	
-  p_seq : process(Clk)
+  p_seq : process(clk_i)
   begin
-    if rising_edge(Clk) then
+    if rising_edge(clk_i) then
       r <= r_next;
-      if Rst = '1' then
+      if rst_i = rst_pol_g then
         r.ChCnt <= 0;
       end if;
     end if;
   end process;
 
-end rtl;
+end architecture;

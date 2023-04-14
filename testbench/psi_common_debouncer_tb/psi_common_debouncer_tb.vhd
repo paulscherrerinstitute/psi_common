@@ -60,14 +60,14 @@ begin
     generic map(dbnc_per_g => dbnc_per_g,
                 freq_clk_g => freq_clk_g,
                 rst_pol_g  => rst_pol_g,
-                len_g      => len_g,
+                width_g      => len_g,
                 in_pol_g   => in_pol_c,
                 out_pol_g  => out_pol_c,
                 sync_g     => sync_g)
     port map(clk_i => clk_sti,
              rst_i => rst_sti,
-             inp_i => inp_sti,
-             out_o => out_obs);
+             dat_i => inp_sti,
+             dat_o => out_obs);
 
   --*** stim process ***
   proc_stim : process

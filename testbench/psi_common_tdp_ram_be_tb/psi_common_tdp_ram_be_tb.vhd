@@ -32,9 +32,9 @@ architecture sim of psi_common_tdp_ram_be_tb is
   -- *** Fixed Generics ***
 
   -- *** Not Assigned Generics (default values) ***
-  constant Depth_g    : positive := 4096;
-  constant Width_g    : positive := 32;
-  constant Behavior_g : string   := "RBW";
+  constant depth_g    : positive := 4096;
+  constant width_g    : positive := 32;
+  constant behavior_g : string   := "RBW";
 
   -- *** TB Control ***
   signal TbRunning            : boolean                  := True;
@@ -44,18 +44,18 @@ architecture sim of psi_common_tdp_ram_be_tb is
   constant TbProcNr_Stimuli_c : integer                  := 0;
 
   -- *** DUT Signals ***
-  signal ClkA  : std_logic                                        := '1';
-  signal AddrA : std_logic_vector(log2ceil(Depth_g) - 1 downto 0) := (others => '0');
-  signal BeA   : std_logic_vector(Width_g / 8 - 1 downto 0)       := (others => '0');
-  signal WrA   : std_logic                                        := '0';
-  signal DinA  : std_logic_vector(Width_g - 1 downto 0)           := (others => '0');
-  signal DoutA : std_logic_vector(Width_g - 1 downto 0)           := (others => '0');
-  signal ClkB  : std_logic                                        := '1';
-  signal AddrB : std_logic_vector(log2ceil(Depth_g) - 1 downto 0) := (others => '0');
-  signal BeB   : std_logic_vector(Width_g / 8 - 1 downto 0)       := (others => '0');
-  signal WrB   : std_logic                                        := '0';
-  signal DinB  : std_logic_vector(Width_g - 1 downto 0)           := (others => '0');
-  signal DoutB : std_logic_vector(Width_g - 1 downto 0)           := (others => '0');
+  signal a_clk_i  : std_logic                                        := '1';
+  signal a_addr_i : std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
+  signal a_be_i   : std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '0');
+  signal a_wr_i   : std_logic                                        := '0';
+  signal a_dat_i  : std_logic_vector(width_g - 1 downto 0)           := (others => '0');
+  signal a_dat_o : std_logic_vector(width_g - 1 downto 0)           := (others => '0');
+  signal b_clk_i  : std_logic                                        := '1';
+  signal b_addr_i : std_logic_vector(log2ceil(depth_g) - 1 downto 0) := (others => '0');
+  signal b_be_i   : std_logic_vector(width_g / 8 - 1 downto 0)       := (others => '0');
+  signal b_wr_i   : std_logic                                        := '0';
+  signal b_dat_i  : std_logic_vector(width_g - 1 downto 0)           := (others => '0');
+  signal b_dat_o : std_logic_vector(width_g - 1 downto 0)           := (others => '0');
 
 begin
   ------------------------------------------------------------
@@ -63,23 +63,23 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_tdp_ram_be
     generic map(
-      Depth_g    => Depth_g,
-      Width_g    => Width_g,
-      Behavior_g => Behavior_g
+      depth_g    => depth_g,
+      width_g    => width_g,
+      behavior_g => behavior_g
     )
     port map(
-      ClkA  => ClkA,
-      AddrA => AddrA,
-      BeA   => BeA,
-      WrA   => WrA,
-      DinA  => DinA,
-      DoutA => DoutA,
-      ClkB  => ClkB,
-      AddrB => AddrB,
-      BeB   => BeB,
-      WrB   => WrB,
-      DinB  => DinB,
-      DoutB => DoutB
+      a_clk_i  => a_clk_i,
+      a_addr_i => a_addr_i,
+      a_be_i   => a_be_i,
+      a_wr_i   => a_wr_i,
+      a_dat_i  => a_dat_i,
+      a_dat_o => a_dat_o,
+      b_clk_i  => b_clk_i,
+      b_addr_i => b_addr_i,
+      b_be_i   => b_be_i,
+      b_wr_i   => b_wr_i,
+      b_dat_i  => b_dat_i,
+      b_dat_o => b_dat_o
     );
 
   ------------------------------------------------------------
@@ -100,7 +100,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      ClkA <= not ClkA;
+      a_clk_i <= not a_clk_i;
     end loop;
     wait;
   end process;
@@ -110,7 +110,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      ClkB <= not ClkB;
+      b_clk_i <= not b_clk_i;
     end loop;
     wait;
   end process;
@@ -127,114 +127,114 @@ begin
   begin
     -- Delay a few clock cycles
     for i in 0 to 99 loop
-      wait until falling_edge(ClkA);
+      wait until falling_edge(a_clk_i);
     end loop;
 
     -- Write from portA
-    wait until falling_edge(ClkA);
-    WrA   <= '1';
-    BeA   <= "1111";
-    AddrA <= X"000";
-    DinA  <= X"11111111";
-    wait until falling_edge(ClkA);
-    AddrA <= X"001";
-    DinA  <= X"22222222";
-    wait until falling_edge(ClkA);
-    AddrA <= X"002";
-    BeA   <= "0011";
-    DinA  <= X"33333333";
-    wait until falling_edge(ClkA);
-    AddrA <= X"003";
-    BeA   <= "0100";
-    DinA  <= X"44444444";
-    wait until falling_edge(ClkA);
-    WrA   <= '0';
+    wait until falling_edge(a_clk_i);
+    a_wr_i   <= '1';
+    a_be_i   <= "1111";
+    a_addr_i <= X"000";
+    a_dat_i  <= X"11111111";
+    wait until falling_edge(a_clk_i);
+    a_addr_i <= X"001";
+    a_dat_i  <= X"22222222";
+    wait until falling_edge(a_clk_i);
+    a_addr_i <= X"002";
+    a_be_i   <= "0011";
+    a_dat_i  <= X"33333333";
+    wait until falling_edge(a_clk_i);
+    a_addr_i <= X"003";
+    a_be_i   <= "0100";
+    a_dat_i  <= X"44444444";
+    wait until falling_edge(a_clk_i);
+    a_wr_i   <= '0';
 
     -- Readback from port AddrA
-    wait until falling_edge(ClkA);
-    AddrA <= X"000";
-    wait until falling_edge(ClkA);
-    StdlvCompareStdlv(X"11111111", DoutA, "Wrong Data A 1");
-    AddrA <= X"001";
-    wait until falling_edge(ClkA);
-    StdlvCompareStdlv(X"22222222", DoutA, "Wrong Data A 1");
-    AddrA <= X"002";
-    wait until falling_edge(ClkA);
-    StdlvCompareStdlv(X"00003333", DoutA, "Wrong Data A 1");
-    AddrA <= X"003";
-    wait until falling_edge(ClkA);
-    StdlvCompareStdlv(X"00440000", DoutA, "Wrong Data A 1");
+    wait until falling_edge(a_clk_i);
+    a_addr_i <= X"000";
+    wait until falling_edge(a_clk_i);
+    StdlvCompareStdlv(X"11111111", a_dat_o, "Wrong Data A 1");
+    a_addr_i <= X"001";
+    wait until falling_edge(a_clk_i);
+    StdlvCompareStdlv(X"22222222", a_dat_o, "Wrong Data A 1");
+    a_addr_i <= X"002";
+    wait until falling_edge(a_clk_i);
+    StdlvCompareStdlv(X"00003333", a_dat_o, "Wrong Data A 1");
+    a_addr_i <= X"003";
+    wait until falling_edge(a_clk_i);
+    StdlvCompareStdlv(X"00440000", a_dat_o, "Wrong Data A 1");
 
     -- Readback from port AddrB
-    wait until falling_edge(ClkB);
-    AddrB <= X"000";
-    wait until falling_edge(ClkB);
-    StdlvCompareStdlv(X"11111111", DoutB, "Wrong Data B 1");
-    AddrB <= X"001";
-    wait until falling_edge(ClkB);
-    StdlvCompareStdlv(X"22222222", DoutB, "Wrong Data B 1");
-    AddrB <= X"002";
-    wait until falling_edge(ClkB);
-    StdlvCompareStdlv(X"00003333", DoutB, "Wrong Data B 1");
-    AddrB <= X"003";
-    wait until falling_edge(ClkB);
-    StdlvCompareStdlv(X"00440000", DoutB, "Wrong Data B 1");
+    wait until falling_edge(b_clk_i);
+    b_addr_i <= X"000";
+    wait until falling_edge(b_clk_i);
+    StdlvCompareStdlv(X"11111111", b_dat_o, "Wrong Data B 1");
+    b_addr_i <= X"001";
+    wait until falling_edge(b_clk_i);
+    StdlvCompareStdlv(X"22222222", b_dat_o, "Wrong Data B 1");
+    b_addr_i <= X"002";
+    wait until falling_edge(b_clk_i);
+    StdlvCompareStdlv(X"00003333", b_dat_o, "Wrong Data B 1");
+    b_addr_i <= X"003";
+    wait until falling_edge(b_clk_i);
+    StdlvCompareStdlv(X"00440000", b_dat_o, "Wrong Data B 1");
 
     -- Write from portB
-    wait until falling_edge(ClkB);
-    WrB   <= '1';
-    BeB   <= "1111";
-    AddrB <= X"100";
-    DinB  <= X"AAAAAAAA";
-    wait until falling_edge(ClkB);
-    AddrB <= X"001";
-    DinB  <= X"BBBBBBBB";
-    wait until falling_edge(ClkB);
-    AddrB <= X"002";
-    BeB   <= "1100";
-    DinB  <= X"CCCCCCCC";
-    wait until falling_edge(ClkB);
-    AddrB <= X"003";
-    BeB   <= "0110";
-    DinB  <= X"DDDDDDDD";
-    wait until falling_edge(ClkB);
-    WrB   <= '0';
+    wait until falling_edge(b_clk_i);
+    b_wr_i   <= '1';
+    b_be_i   <= "1111";
+    b_addr_i <= X"100";
+    b_dat_i  <= X"AAAAAAAA";
+    wait until falling_edge(b_clk_i);
+    b_addr_i <= X"001";
+    b_dat_i  <= X"BBBBBBBB";
+    wait until falling_edge(b_clk_i);
+    b_addr_i <= X"002";
+    b_be_i   <= "1100";
+    b_dat_i  <= X"CCCCCCCC";
+    wait until falling_edge(b_clk_i);
+    b_addr_i <= X"003";
+    b_be_i   <= "0110";
+    b_dat_i  <= X"DDDDDDDD";
+    wait until falling_edge(b_clk_i);
+    b_wr_i   <= '0';
 
     -- Readback from port AddrA
-    wait until falling_edge(ClkA);
-    AddrA <= X"000";
-    wait until falling_edge(ClkA);
-    StdlvCompareStdlv(X"11111111", DoutA, "Wrong Data A 2");
-    AddrA <= X"100";
-    wait until falling_edge(ClkA);
-    StdlvCompareStdlv(X"AAAAAAAA", DoutA, "Wrong Data A 2");
-    AddrA <= X"001";
-    wait until falling_edge(ClkA);
-    StdlvCompareStdlv(X"BBBBBBBB", DoutA, "Wrong Data A 2");
-    AddrA <= X"002";
-    wait until falling_edge(ClkA);
-    StdlvCompareStdlv(X"CCCC3333", DoutA, "Wrong Data A 2");
-    AddrA <= X"003";
-    wait until falling_edge(ClkA);
-    StdlvCompareStdlv(X"00DDDD00", DoutA, "Wrong Data A 2");
+    wait until falling_edge(a_clk_i);
+    a_addr_i <= X"000";
+    wait until falling_edge(a_clk_i);
+    StdlvCompareStdlv(X"11111111", a_dat_o, "Wrong Data A 2");
+    a_addr_i <= X"100";
+    wait until falling_edge(a_clk_i);
+    StdlvCompareStdlv(X"AAAAAAAA", a_dat_o, "Wrong Data A 2");
+    a_addr_i <= X"001";
+    wait until falling_edge(a_clk_i);
+    StdlvCompareStdlv(X"BBBBBBBB", a_dat_o, "Wrong Data A 2");
+    a_addr_i <= X"002";
+    wait until falling_edge(a_clk_i);
+    StdlvCompareStdlv(X"CCCC3333", a_dat_o, "Wrong Data A 2");
+    a_addr_i <= X"003";
+    wait until falling_edge(a_clk_i);
+    StdlvCompareStdlv(X"00DDDD00", a_dat_o, "Wrong Data A 2");
 
     -- Readback from port AddrB
-    wait until falling_edge(ClkB);
-    AddrB <= X"000";
-    wait until falling_edge(ClkB);
-    StdlvCompareStdlv(X"11111111", DoutB, "Wrong Data B 2");
-    AddrB <= X"100";
-    wait until falling_edge(ClkB);
-    StdlvCompareStdlv(X"AAAAAAAA", DoutB, "Wrong Data B 2");
-    AddrB <= X"001";
-    wait until falling_edge(ClkB);
-    StdlvCompareStdlv(X"BBBBBBBB", DoutB, "Wrong Data B 2");
-    AddrB <= X"002";
-    wait until falling_edge(ClkB);
-    StdlvCompareStdlv(X"CCCC3333", DoutB, "Wrong Data B 2");
-    AddrB <= X"003";
-    wait until falling_edge(ClkB);
-    StdlvCompareStdlv(X"00DDDD00", DoutB, "Wrong Data B 2");
+    wait until falling_edge(b_clk_i);
+    b_addr_i <= X"000";
+    wait until falling_edge(b_clk_i);
+    StdlvCompareStdlv(X"11111111", b_dat_o, "Wrong Data B 2");
+    b_addr_i <= X"100";
+    wait until falling_edge(b_clk_i);
+    StdlvCompareStdlv(X"AAAAAAAA", b_dat_o, "Wrong Data B 2");
+    b_addr_i <= X"001";
+    wait until falling_edge(b_clk_i);
+    StdlvCompareStdlv(X"BBBBBBBB", b_dat_o, "Wrong Data B 2");
+    b_addr_i <= X"002";
+    wait until falling_edge(b_clk_i);
+    StdlvCompareStdlv(X"CCCC3333", b_dat_o, "Wrong Data B 2");
+    b_addr_i <= X"003";
+    wait until falling_edge(b_clk_i);
+    StdlvCompareStdlv(X"00DDDD00", b_dat_o, "Wrong Data B 2");
 
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_Stimuli_c) <= '1';

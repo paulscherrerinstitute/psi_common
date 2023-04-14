@@ -21,28 +21,29 @@ use ieee.numeric_std.all;
 
 use work.psi_common_math_pkg.all;
 
+-- @formatter:off
 entity psi_common_par_ser is
-  generic(rst_pol_g : std_logic               := '1';       -- reset polarity
-          msb_g     : boolean                 := true;      -- msb first in the frame
-          ratio_g   : natural range 1 to 4096 := 2;         -- output valid speed related to clock
-          length_g  : natural                 := 16);       -- vetor in width
-  port(clk_i : in  std_logic;                               -- clock system
-       rst_i : in  std_logic;                               -- reset system
-       dat_i : in  std_logic_vector(length_g - 1 downto 0); -- data in parallel
-       vld_i : in  std_logic;                               -- valid/strobe/load in
-       dat_o : out std_logic;                               -- data out serialized
-       err_o : out std_logic;                               -- error out when input valid too fast
-       frm_o : out std_logic;                               -- frame out
-       ld_o  : out std_logic;                               -- start of frame out
-       vld_o : out std_logic);                              -- valid/strobe
+  generic(rst_pol_g : std_logic               := '1';             -- reset polarity
+          msb_g     : boolean                 := true;            -- msb first in the frame
+          ratio_g   : natural range 1 to 4096 := 2;               -- output valid speed related to clock
+          width_g   : natural                 := 16);             -- vector in width
+  port(   clk_i     : in  std_logic;                              -- clock system
+          rst_i     : in  std_logic;                              -- reset system
+          dat_i     : in  std_logic_vector(width_g - 1 downto 0); -- data in parallel
+          vld_i     : in  std_logic;                              -- valid/strobe/load in
+          dat_o     : out std_logic;                              -- data out serialized
+          err_o     : out std_logic;                              -- error out when input valid too fast
+          frm_o     : out std_logic;                              -- frame out
+          ld_o      : out std_logic;                              -- start of frame out
+          vld_o     : out std_logic);                             -- valid/strobe
 end entity;
+-- @formatter:on
 
 architecture RTL of psi_common_par_ser is
-
   type two_process_t is record
-    cnt    : unsigned(log2ceil(length_g) - 1 downto 0);
-    dat    : std_logic_vector(length_g - 1 downto 0);
-    idat   : std_logic_vector(length_g - 1 downto 0);
+    cnt    : unsigned(log2ceil(width_g) - 1 downto 0);
+    dat    : std_logic_vector(width_g - 1 downto 0);
+    idat   : std_logic_vector(width_g - 1 downto 0);
     frm    : std_logic;
     vld    : std_logic;
     err    : std_logic;
@@ -118,12 +119,12 @@ begin
       --*** serializer active ***
       if vld_i = '1' then
         v.active := '1';
-      elsif r.cnt = length_g - 1 and r.tick = '1' and vld_i='0' then
+      elsif r.cnt = width_g - 1 and r.tick = '1' and vld_i='0' then
         v.active := '0';
       end if;
       
       --*** serialize statement ***
-      if r.cnt <= length_g - 1 then
+      if r.cnt <= width_g - 1 then
         v.vld := r.tick;
         
         --*** cnt statements upon tick ***
@@ -132,14 +133,14 @@ begin
           v.dat := r.idat;
           --*** shifter left MSB or right LSB ***
             if msb_g then
-              v.idat := r.idat(length_g - 2 downto 0) & '0';
+              v.idat := r.idat(width_g - 2 downto 0) & '0';
             else
-              v.idat := '0' & r.idat(length_g - 1 downto 1);
+              v.idat := '0' & r.idat(width_g - 1 downto 1);
             end if;
         end if;
         
         -- *** end of frame output ***
-        if r.cnt = length_g - 1 and r.tick = '1' then
+        if r.cnt = width_g - 1 and r.tick = '1' then
           v.frm := '1';
         else
           v.frm := '0';
@@ -163,18 +164,18 @@ begin
         v.dat := dat_i;
       else
         v.ld  := '0';
-        if r.cnt < length_g-1 then
+        if r.cnt < width_g-1 then
           v.cnt := r.cnt+1;
           
           --*** shifter left MSB or right LSB ***
           if msb_g then
-            v.dat := r.dat(length_g - 2 downto 0) & '0';
+            v.dat := r.dat(width_g - 2 downto 0) & '0';
           else
-            v.dat := '0' & r.dat(length_g - 1 downto 1);
+            v.dat := '0' & r.dat(width_g - 1 downto 1);
           end if;
           
           --*** end of frame handling ***
-          if r.cnt = length_g-2 then
+          if r.cnt = width_g-2 then
             v.frm := '1';
           else
             v.frm := '0';
@@ -187,7 +188,7 @@ begin
       end if;    
         
       --*** error when serialize process isn't complete ***
-      if vld_i = '1' and r.cnt /= length_g - 1 then
+      if vld_i = '1' and r.cnt /= width_g - 1 then
         v.err := '1';
       else
         v.err := '0';
@@ -199,7 +200,7 @@ begin
   end process;
 
   --*** output map ***
-  dat_o <= r.dat(length_g - 1) when msb_g else r.dat(0);
+  dat_o <= r.dat(width_g - 1) when msb_g else r.dat(0);
   vld_o <= r.vld;
   err_o <= r.err;
   ld_o  <= r.ld;

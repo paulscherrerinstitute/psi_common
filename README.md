@@ -1,5 +1,8 @@
 # General Information
 
+New release of library to enhance readibility and unifying code through all files, new documentation organization.
+This version is not backward compatible but a script is given to help user to adapt code to new release.
+
 ## Maintainer
 Benoît Stef [benoit.stef@psi.ch]
 
@@ -57,7 +60,7 @@ Alternatively the repository [psi\_fpga\_all](https://github.com/paulscherrerins
   * [PsiSim](https://github.com/paulscherrerinstitute/PsiSim) (2.1.0 or higher)
 * VHDL
   * [**psi\_common**](https://github.com/paulscherrerinstitute/psi_common)
-  * [psi\_tb](https://github.com/paulscherrerinstitute/psi_tb) (2.6.0 or higher)
+  * [psi\_tb](https://github.com/paulscherrerinstitute/psi_tb) (3.0.0 or higher)
 
 <!-- END OF PARSED SECTION -->
 

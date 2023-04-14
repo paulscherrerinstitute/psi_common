@@ -4,12 +4,8 @@
 --  Authors: Waldemar Koprek, Oliver Bruendler
 ------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee ;
 	use ieee.std_logic_1164.all;
-
 ------------------------------------------------------------------------------
 -- Package Header
 ------------------------------------------------------------------------------
@@ -53,4 +49,4 @@ package psi_common_array_pkg is
   type t_areal is array (natural range <>) of real;
   type t_abool is array (natural range <>) of boolean;
 
-end psi_common_array_pkg;	 
+end package;

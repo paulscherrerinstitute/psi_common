@@ -86,7 +86,7 @@ begin
   --*** DUT ***
   inst_dut : entity work.psi_common_ser_par
     generic map(rst_pol_g => '1',
-                length_g  => length_g,
+                width_g  => length_g,
                 msb_g     => false)
     port map(
       clk_i => clk_sti,

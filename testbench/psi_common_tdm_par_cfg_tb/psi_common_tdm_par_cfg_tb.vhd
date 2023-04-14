@@ -33,8 +33,8 @@ end entity;
 ------------------------------------------------------------
 architecture sim of psi_common_tdm_par_cfg_tb is
   -- *** Fixed Generics ***
-  constant ChannelCount_g : natural := 3;
-  constant ChannelWidth_g : natural := 8;
+  constant channel_count_g : natural := 3;
+  constant channel_width_g : natural := 8;
 
   -- *** Not Assigned Generics (default values) ***
 
@@ -46,37 +46,37 @@ architecture sim of psi_common_tdm_par_cfg_tb is
   constant TbProcNr_outp_c    : integer                  := 1;
 
   -- *** DUT Signals ***
-  signal Clk             : std_logic                                                      := '1';
-  signal Rst             : std_logic                                                      := '1';
-  signal EnabledChannels : natural range 0 to ChannelCount_g                              := ChannelCount_g;
-  signal Tdm             : std_logic_vector(ChannelWidth_g - 1 downto 0)                  := (others => '0');
-  signal TdmVld          : std_logic                                                      := '0';
-  signal TdmLast         : std_logic                                                      := '0';
-  signal Parallel        : std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0) := (others => '0');
-  signal ParallelVld     : std_logic                                                      := '0';
+  signal clk_i             : std_logic                                                      := '1';
+  signal rst_i             : std_logic                                                      := '1';
+  signal enabled_channels_i : natural range 0 to channel_count_g                              := channel_count_g;
+  signal dat_i             : std_logic_vector(channel_width_g - 1 downto 0)                  := (others => '0');
+  signal vld_i          : std_logic                                                      := '0';
+  signal last_i         : std_logic                                                      := '0';
+  signal dat_o        : std_logic_vector(channel_count_g * channel_width_g - 1 downto 0) := (others => '0');
+  signal vld_o     : std_logic                                                      := '0';
 
   -- handwritten
   signal TestCase : integer := -1;
 
   procedure Expect3Channels(Values : in t_ainteger(0 to 2)) is
   begin
-    wait until rising_edge(Clk) and ParallelVld = '1';
-    StdlvCompareInt(Values(0), Parallel(1 * ChannelWidth_g - 1 downto 0 * ChannelWidth_g), "Wrong value Channel 0", false);
-    StdlvCompareInt(Values(1), Parallel(2 * ChannelWidth_g - 1 downto 1 * ChannelWidth_g), "Wrong value Channel 1", false);
-    StdlvCompareInt(Values(2), Parallel(3 * ChannelWidth_g - 1 downto 2 * ChannelWidth_g), "Wrong value Channel 2", false);
+    wait until rising_edge(clk_i) and vld_o = '1';
+    StdlvCompareInt(Values(0), dat_o(1 * channel_width_g - 1 downto 0 * channel_width_g), "Wrong value Channel 0", false);
+    StdlvCompareInt(Values(1), dat_o(2 * channel_width_g - 1 downto 1 * channel_width_g), "Wrong value Channel 1", false);
+    StdlvCompareInt(Values(2), dat_o(3 * channel_width_g - 1 downto 2 * channel_width_g), "Wrong value Channel 2", false);
   end procedure;
 
   procedure Expect2Channels(Values : in t_ainteger(0 to 1)) is
   begin
-    wait until rising_edge(Clk) and ParallelVld = '1';
-    StdlvCompareInt(Values(0), Parallel(1 * ChannelWidth_g - 1 downto 0 * ChannelWidth_g), "Wrong value Channel 0", false);
-    StdlvCompareInt(Values(1), Parallel(2 * ChannelWidth_g - 1 downto 1 * ChannelWidth_g), "Wrong value Channel 1", false);
+    wait until rising_edge(clk_i) and vld_o = '1';
+    StdlvCompareInt(Values(0), dat_o(1 * channel_width_g - 1 downto 0 * channel_width_g), "Wrong value Channel 0", false);
+    StdlvCompareInt(Values(1), dat_o(2 * channel_width_g - 1 downto 1 * channel_width_g), "Wrong value Channel 1", false);
   end procedure;
 
   procedure Expect1Channel(Value : in integer) is
   begin
-    wait until rising_edge(Clk) and ParallelVld = '1';
-    StdlvCompareInt(Value, Parallel(1 * ChannelWidth_g - 1 downto 0 * ChannelWidth_g), "Wrong value Channel 0", false);
+    wait until rising_edge(clk_i) and vld_o = '1';
+    StdlvCompareInt(Value, dat_o(1 * channel_width_g - 1 downto 0 * channel_width_g), "Wrong value Channel 0", false);
   end procedure;
 
 begin
@@ -85,18 +85,18 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_tdm_par_cfg
     generic map(
-      ChannelCount_g => ChannelCount_g,
-      ChannelWidth_g => ChannelWidth_g
+      ch_nb_g => channel_count_g,
+      width_g => channel_width_g
     )
     port map(
-      Clk             => Clk,
-      Rst             => Rst,
-      EnabledChannels => EnabledChannels,
-      Tdm             => Tdm,
-      TdmVld          => TdmVld,
-      TdmLast         => TdmLast,
-      Parallel        => Parallel,
-      ParallelVld     => ParallelVld
+      clk_i             => clk_i,
+      rst_i             => rst_i,
+      enabled_ch_i => enabled_channels_i,
+      dat_i             => dat_i,
+      vld_i          => vld_i,
+      last_i         => last_i,
+      dat_o        => dat_o,
+      vld_o     => vld_o
     );
 
   ------------------------------------------------------------
@@ -104,7 +104,7 @@ begin
   ------------------------------------------------------------
   p_tb_control : process
   begin
-    wait until Rst = '0';
+    wait until rst_i = '0';
     wait until ProcessDone = AllProcessesDone_c;
     TbRunning <= false;
     wait;
@@ -118,7 +118,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      Clk <= not Clk;
+      clk_i <= not clk_i;
     end loop;
     wait;
   end process;
@@ -130,9 +130,9 @@ begin
   begin
     wait for 1 us;
     -- Wait for two clk edges to ensure reset is active for at least one edge
-    wait until rising_edge(Clk);
-    wait until rising_edge(Clk);
-    Rst <= '0';
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    rst_i <= '0';
     wait;
   end process;
 
@@ -143,214 +143,214 @@ begin
   p_inp : process
   begin
     -- start of process !DO NOT EDIT
-    wait until Rst = '0';
+    wait until rst_i = '0';
 
     -- *** TdmLast not used ***
     -- *** max input length (EnabledChannels = ChannelCount_g) ***
     -- *** Samples with much space in between ***
     TestCase        <= 0;
-    EnabledChannels <= ChannelCount_g;
-    wait until rising_edge(Clk);
+    enabled_channels_i <= channel_count_g;
+    wait until rising_edge(clk_i);
     for sample in 0 to 3 loop
       for channel in 0 to 2 loop
-        TdmVld <= '1';
-        Tdm    <= std_logic_vector(to_unsigned(channel * 16#10# + sample, Tdm'length));
-        wait until rising_edge(Clk);
-        TdmVld <= '0';
-        Tdm    <= (others => '0');
+        vld_i <= '1';
+        dat_i    <= std_logic_vector(to_unsigned(channel * 16#10# + sample, dat_i'length));
+        wait until rising_edge(clk_i);
+        vld_i <= '0';
+        dat_i    <= (others => '0');
         for del in 0 to 9 loop
-          wait until rising_edge(Clk);
+          wait until rising_edge(clk_i);
         end loop;
       end loop;
     end loop;
 
     -- *** Samples back to back ***
     TestCase <= 1;
-    wait until rising_edge(Clk);
-    TdmVld   <= '1';
+    wait until rising_edge(clk_i);
+    vld_i   <= '1';
     for sample in 0 to 3 loop
       for channel in 0 to 2 loop
-        Tdm <= std_logic_vector(to_unsigned(16#50# + channel * 16#10# + sample, Tdm'length));
-        wait until rising_edge(Clk);
+        dat_i <= std_logic_vector(to_unsigned(16#50# + channel * 16#10# + sample, dat_i'length));
+        wait until rising_edge(clk_i);
       end loop;
     end loop;
-    TdmVld   <= '0';
+    vld_i   <= '0';
 
     wait for 100 ns;
     -- *** Input length is 2 (EnabledChannels = ChannelCount_g - 1) ***
     -- *** Samples with much space in between ***
     TestCase        <= 2;
-    EnabledChannels <= ChannelCount_g - 1;
-    wait until rising_edge(Clk);
+    enabled_channels_i <= channel_count_g - 1;
+    wait until rising_edge(clk_i);
     for sample in 0 to 3 loop
       for channel in 0 to 1 loop
-        TdmVld <= '1';
-        Tdm    <= std_logic_vector(to_unsigned(channel * 16#10# + sample, Tdm'length));
-        wait until rising_edge(Clk);
-        TdmVld <= '0';
-        Tdm    <= (others => '0');
+        vld_i <= '1';
+        dat_i    <= std_logic_vector(to_unsigned(channel * 16#10# + sample, dat_i'length));
+        wait until rising_edge(clk_i);
+        vld_i <= '0';
+        dat_i    <= (others => '0');
         for del in 0 to 9 loop
-          wait until rising_edge(Clk);
+          wait until rising_edge(clk_i);
         end loop;
       end loop;
     end loop;
 
     -- *** Samples back to back ***
     TestCase <= 3;
-    wait until rising_edge(Clk);
-    TdmVld   <= '1';
+    wait until rising_edge(clk_i);
+    vld_i   <= '1';
     for sample in 0 to 3 loop
       for channel in 0 to 1 loop
-        Tdm <= std_logic_vector(to_unsigned(16#50# + channel * 16#10# + sample, Tdm'length));
-        wait until rising_edge(Clk);
+        dat_i <= std_logic_vector(to_unsigned(16#50# + channel * 16#10# + sample, dat_i'length));
+        wait until rising_edge(clk_i);
       end loop;
     end loop;
-    TdmVld   <= '0';
+    vld_i   <= '0';
 
     wait for 100 ns;
     -- *** Input length is 1 (EnabledChannels = ChannelCount_g - 2) ***
     -- *** Samples with much space in between ***
     TestCase        <= 4;
-    EnabledChannels <= ChannelCount_g - 2;
-    wait until rising_edge(Clk);
+    enabled_channels_i <= channel_count_g - 2;
+    wait until rising_edge(clk_i);
     for sample in 0 to 3 loop
-      TdmVld <= '1';
-      Tdm    <= std_logic_vector(to_unsigned(sample, Tdm'length));
-      wait until rising_edge(Clk);
-      TdmVld <= '0';
-      Tdm    <= (others => '0');
+      vld_i <= '1';
+      dat_i    <= std_logic_vector(to_unsigned(sample, dat_i'length));
+      wait until rising_edge(clk_i);
+      vld_i <= '0';
+      dat_i    <= (others => '0');
       for del in 0 to 9 loop
-        wait until rising_edge(Clk);
+        wait until rising_edge(clk_i);
       end loop;
     end loop;
 
     -- *** Samples back to back ***
     TestCase <= 5;
-    wait until rising_edge(Clk);
-    TdmVld   <= '1';
+    wait until rising_edge(clk_i);
+    vld_i   <= '1';
     for sample in 0 to 3 loop
-      Tdm <= std_logic_vector(to_unsigned(16#50# + sample, Tdm'length));
-      wait until rising_edge(Clk);
+      dat_i <= std_logic_vector(to_unsigned(16#50# + sample, dat_i'length));
+      wait until rising_edge(clk_i);
     end loop;
-    TdmVld   <= '0';
+    vld_i   <= '0';
 
     wait for 100 ns;
     -- *** TdmLast test ***
     -- *** max input length (EnabledChannels = ChannelCount_g) ***
     -- *** Samples with much space in between ***
     TestCase        <= 6;
-    EnabledChannels <= ChannelCount_g;
-    wait until rising_edge(Clk);
+    enabled_channels_i <= channel_count_g;
+    wait until rising_edge(clk_i);
     for sample in 0 to 3 loop
       for channel in 0 to 2 loop
-        TdmVld  <= '1';
-        Tdm     <= std_logic_vector(to_unsigned(channel * 16#10# + sample, Tdm'length));
+        vld_i  <= '1';
+        dat_i     <= std_logic_vector(to_unsigned(channel * 16#10# + sample, dat_i'length));
         if channel = 2 then
-          TdmLast <= '1';
+          last_i <= '1';
         else
-          TdmLast <= '0';
+          last_i <= '0';
         end if;
-        wait until rising_edge(Clk);
-        TdmVld  <= '0';
-        Tdm     <= (others => '0');
-        TdmLast <= '0';
+        wait until rising_edge(clk_i);
+        vld_i  <= '0';
+        dat_i     <= (others => '0');
+        last_i <= '0';
         for del in 0 to 9 loop
-          wait until rising_edge(Clk);
+          wait until rising_edge(clk_i);
         end loop;
       end loop;
     end loop;
 
     -- *** Samples back to back ***
     TestCase <= 7;
-    wait until rising_edge(Clk);
-    TdmVld   <= '1';
+    wait until rising_edge(clk_i);
+    vld_i   <= '1';
     for sample in 0 to 3 loop
       for channel in 0 to 2 loop
-        Tdm <= std_logic_vector(to_unsigned(16#50# + channel * 16#10# + sample, Tdm'length));
+        dat_i <= std_logic_vector(to_unsigned(16#50# + channel * 16#10# + sample, dat_i'length));
         if channel = 2 then
-          TdmLast <= '1';
+          last_i <= '1';
         else
-          TdmLast <= '0';
+          last_i <= '0';
         end if;
-        wait until rising_edge(Clk);
+        wait until rising_edge(clk_i);
       end loop;
     end loop;
-    TdmLast  <= '0';
-    TdmVld   <= '0';
+    last_i  <= '0';
+    vld_i   <= '0';
 
     wait for 100 ns;
     -- *** Input length is 2 (EnabledChannels = ChannelCount_g - 1) ***
     -- *** Samples with much space in between ***
     TestCase        <= 8;
-    EnabledChannels <= ChannelCount_g - 1;
-    wait until rising_edge(Clk);
+    enabled_channels_i <= channel_count_g - 1;
+    wait until rising_edge(clk_i);
     for sample in 0 to 3 loop
       for channel in 0 to 1 loop
-        TdmVld  <= '1';
-        Tdm     <= std_logic_vector(to_unsigned(channel * 16#10# + sample, Tdm'length));
+        vld_i  <= '1';
+        dat_i     <= std_logic_vector(to_unsigned(channel * 16#10# + sample, dat_i'length));
         if channel = 1 then
-          TdmLast <= '1';
+          last_i <= '1';
         else
-          TdmLast <= '0';
+          last_i <= '0';
         end if;
-        wait until rising_edge(Clk);
-        TdmVld  <= '0';
-        Tdm     <= (others => '0');
-        TdmLast <= '0';
+        wait until rising_edge(clk_i);
+        vld_i  <= '0';
+        dat_i     <= (others => '0');
+        last_i <= '0';
         for del in 0 to 9 loop
-          wait until rising_edge(Clk);
+          wait until rising_edge(clk_i);
         end loop;
       end loop;
     end loop;
 
     -- *** Samples back to back ***
     TestCase <= 9;
-    wait until rising_edge(Clk);
-    TdmVld   <= '1';
+    wait until rising_edge(clk_i);
+    vld_i   <= '1';
     for sample in 0 to 3 loop
       for channel in 0 to 1 loop
-        Tdm <= std_logic_vector(to_unsigned(16#50# + channel * 16#10# + sample, Tdm'length));
+        dat_i <= std_logic_vector(to_unsigned(16#50# + channel * 16#10# + sample, dat_i'length));
         if channel = 1 then
-          TdmLast <= '1';
+          last_i <= '1';
         else
-          TdmLast <= '0';
+          last_i <= '0';
         end if;
-        wait until rising_edge(Clk);
+        wait until rising_edge(clk_i);
       end loop;
     end loop;
-    TdmLast  <= '0';
-    TdmVld   <= '0';
+    last_i  <= '0';
+    vld_i   <= '0';
 
     wait for 100 ns;
     -- *** Input length is 1 (EnabledChannels = ChannelCount_g - 2) ***
     -- *** Samples with much space in between ***
     TestCase        <= 10;
-    EnabledChannels <= ChannelCount_g - 2;
-    wait until rising_edge(Clk);
+    enabled_channels_i <= channel_count_g - 2;
+    wait until rising_edge(clk_i);
     for sample in 0 to 3 loop
-      TdmVld  <= '1';
-      Tdm     <= std_logic_vector(to_unsigned(sample, Tdm'length));
-      TdmLast <= '1';
-      wait until rising_edge(Clk);
-      TdmVld  <= '0';
-      Tdm     <= (others => '0');
-      TdmLast <= '0';
+      vld_i  <= '1';
+      dat_i     <= std_logic_vector(to_unsigned(sample, dat_i'length));
+      last_i <= '1';
+      wait until rising_edge(clk_i);
+      vld_i  <= '0';
+      dat_i     <= (others => '0');
+      last_i <= '0';
       for del in 0 to 9 loop
-        wait until rising_edge(Clk);
+        wait until rising_edge(clk_i);
       end loop;
     end loop;
 
     -- *** Samples back to back ***
     TestCase <= 11;
-    wait until rising_edge(Clk);
-    TdmVld   <= '1';
+    wait until rising_edge(clk_i);
+    vld_i   <= '1';
     for sample in 0 to 3 loop
-      Tdm     <= std_logic_vector(to_unsigned(16#50# + sample, Tdm'length));
-      TdmLast <= '1';
-      wait until rising_edge(Clk);
+      dat_i     <= std_logic_vector(to_unsigned(16#50# + sample, dat_i'length));
+      last_i <= '1';
+      wait until rising_edge(clk_i);
     end loop;
-    TdmLast  <= '0';
-    TdmVld   <= '0';
+    last_i  <= '0';
+    vld_i   <= '0';
 
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_inp_c) <= '1';
@@ -361,7 +361,7 @@ begin
   p_outp : process
   begin
     -- start of process !DO NOT EDIT
-    wait until Rst = '0';
+    wait until rst_i = '0';
 
     -- *** Test without TdmLast used ***
     -- *** max input length (EnabledChannels = ChannelCount_g) ***

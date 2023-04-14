@@ -26,15 +26,9 @@
 --    );
 --
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 
-------------------------------------------------------------------------------
--- Package Header
-------------------------------------------------------------------------------
 package psi_common_axi_pkg is
 
     -- AXI BUS parameters:
@@ -196,7 +190,6 @@ package psi_common_axi_pkg is
                 ready => '0'
                 );
                 
-
     --------------------------------------------------------------------------
     -- Legacy Typedef: DO NOT USE FOR NEW CODE!! 
     -- Will be removed in future major release.
@@ -216,5 +209,4 @@ package psi_common_axi_pkg is
     constant C_AXI_SLV_INP_DEF : rec_axi_ms := C_AXI_MS_DEF;
     constant C_AXI_SLV_OUP_DEF : rec_axi_sm := C_AXI_SM_DEF;
     
-    
-end psi_common_axi_pkg;
+end package;

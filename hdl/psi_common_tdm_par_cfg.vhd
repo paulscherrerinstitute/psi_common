@@ -12,62 +12,44 @@
 -- parallel (multiple values distributed over multiple parallel signals).
 -- The enabled channels order is (EnabledChannels -1 downto 0). 
 -- This can be used with AXI stream.
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity
-------------------------------------------------------------------------------	
--- $$ processes=inp,outp $$
+-- @formatter:off
 entity psi_common_tdm_par_cfg is
-  generic(
-    ChannelCount_g : natural := 8;      -- $$ constant=3 $$
-    ChannelWidth_g : natural := 16      -- $$ constant=8 $$
-  );
-  port(
-    -- Control Signals
-    Clk             : in  std_logic;    -- $$ type=clk; freq=100e6 $$
-    Rst             : in  std_logic;    -- $$ type=rst; clk=Clk $$
-    EnabledChannels : in  integer range 0 to ChannelCount_g := ChannelCount_g; -- Number of enabled output channels
-    -- Data Ports
-    Tdm             : in  std_logic_vector(ChannelWidth_g - 1 downto 0);
-    TdmVld          : in  std_logic;
-    TdmLast         : in  std_logic;
-    Parallel        : out std_logic_vector(ChannelCount_g * ChannelWidth_g - 1 downto 0);
-    ParallelVld     : out std_logic
-  );
+  generic(ch_nb_g      : natural := 8;                                        -- number of channel
+          width_g      : natural := 16;                                       -- data widthg in bit
+          rst_pol_g    : std_logic := '1');                                   -- '1' active high, '0' active low 
+  port(   clk_i        : in  std_logic;                                       -- system clock 
+          rst_i        : in  std_logic;                                       -- system reset
+          enabled_ch_i : in  integer range 0 to ch_nb_g := ch_nb_g;           -- Number of enabled output channels
+          dat_i        : in  std_logic_vector(width_g - 1 downto 0);          -- data signal input
+          vld_i        : in  std_logic;                                       -- valid signal input
+          last_i       : in  std_logic;                                       -- Last input
+          dat_o        : out std_logic_vector(ch_nb_g * width_g - 1 downto 0);-- data signaé  output
+          vld_o        : out std_logic);                                      -- valid signal output
 end entity;
-
-------------------------------------------------------------------------------
--- Architecture section
-------------------------------------------------------------------------------
+-- @formatter:on
 
 architecture rtl of psi_common_tdm_par_cfg is
 
   -- Two Process Method
   type two_process_r is record
-    ParallelReg    : std_logic_vector(Parallel'range);
-    ChCounter      : integer range 0 to ChannelCount_g + 1;
-    EnChannelsMask : std_logic_vector(ChannelCount_g - 1 downto 0);
-    Odata          : std_logic_vector(Parallel'range);
+    ParallelReg    : std_logic_vector(dat_o'range);
+    ChCounter      : integer range 0 to ch_nb_g + 1;
+    EnChannelsMask : std_logic_vector(ch_nb_g - 1 downto 0);
+    Odata          : std_logic_vector(dat_o'range);
     Ovld           : std_logic;
     TdmLast_d      : std_logic;
   end record;
   signal r, r_next : two_process_r;
 begin
 
-  --------------------------------------------------------------------------
-  -- Combinatorial Process
-  --------------------------------------------------------------------------
-  p_comb : process(r, Tdm, TdmVld, EnabledChannels, TdmLast)
+  p_comb : process(r, dat_i, vld_i, enabled_ch_i, last_i)
     variable v : two_process_r;
   begin
     -- hold variables stable
@@ -75,50 +57,47 @@ begin
 
     -- *** Implementation ***
     v.TdmLast_d := '0';
-    if TdmVld = '1' then
-      if (v.ChCounter < EnabledChannels) then
-        v.ParallelReg((ChannelWidth_g * v.ChCounter) + (ChannelWidth_g - 1) downto ChannelWidth_g * v.ChCounter) := Tdm;
+    if vld_i = '1' then
+      if (v.ChCounter < enabled_ch_i) then
+        v.ParallelReg((width_g * v.ChCounter) + (width_g - 1) downto width_g * v.ChCounter) := dat_i;
       else
-        v.ParallelReg((ChannelWidth_g - 1) downto 0) := Tdm; -- Necessary if you have a stream and TdmVld stays at '1' between one data word and the next one
+        v.ParallelReg((width_g - 1) downto 0) := dat_i; -- Necessary if you have a stream and TdmVld stays at '1' between one data word and the next one
       end if;
       v.ChCounter := v.ChCounter + 1;
-      v.TdmLast_d := TdmLast;
+      v.TdmLast_d := last_i;
 
     end if;
 
     -- *** Latch ***
     v.Ovld := '0';
 
-    if r.ChCounter = EnabledChannels or r.TdmLast_d = '1' then
+    if r.ChCounter = enabled_ch_i or r.TdmLast_d = '1' then
       v.Ovld           := '1';
       v.Odata          := r.ParallelReg;
-      v.EnChannelsMask := PartiallyOnesVector(ChannelCount_g, EnabledChannels);
-      v.ChCounter      := to_integer(unsigned'('0' & TdmVld)); -- Necessary if you have a stream and TdmVld stays at '1' between one data word and the next one
+      v.EnChannelsMask := partially_ones_vector(ch_nb_g, enabled_ch_i);
+      v.ChCounter      := to_integer(unsigned'('0' & vld_i)); -- Necessary if you have a stream and TdmVld stays at '1' between one data word and the next one
     end if;
 
     -- *** Outputs ***
-    parallel_assign : for i in 0 to ChannelCount_g - 1 loop
+    parallel_assign : for i in 0 to ch_nb_g - 1 loop
       if r.EnChannelsMask(i) = '1' then
-        Parallel((ChannelWidth_g * i) + (ChannelWidth_g - 1) downto ChannelWidth_g * i) <= r.Odata((ChannelWidth_g * i) + (ChannelWidth_g - 1) downto ChannelWidth_g * i);
+        dat_o((width_g * i) + (width_g - 1) downto width_g * i) <= r.Odata((width_g * i) + (width_g - 1) downto width_g * i);
       else
-        Parallel((ChannelWidth_g * i) + (ChannelWidth_g - 1) downto ChannelWidth_g * i) <= (others => '0');
+        dat_o((width_g * i) + (width_g - 1) downto width_g * i) <= (others => '0');
       end if;
     end loop;
-    ParallelVld <= r.Ovld;
+    vld_o <= r.Ovld;
 
     -- Apply to record
     r_next <= v;
 
   end process;
 
-  --------------------------------------------------------------------------
-  -- Sequential Process
-  --------------------------------------------------------------------------	
-  p_seq : process(Clk)
+  p_seq : process(clk_i)
   begin
-    if rising_edge(Clk) then
+    if rising_edge(clk_i) then
       r <= r_next;
-      if Rst = '1' then
+      if rst_i = rst_pol_g then
         r.ChCounter      <= 0;
         r.EnChannelsMask <= (others => '0');
         r.Ovld           <= '0';
@@ -127,4 +106,4 @@ begin
     end if;
   end process;
 
-end rtl;
+end architecture;

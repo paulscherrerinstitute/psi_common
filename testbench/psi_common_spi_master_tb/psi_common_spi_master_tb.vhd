@@ -31,9 +31,9 @@ use work.psi_tb_txt_util.all;
 ------------------------------------------------------------
 entity psi_common_spi_master_tb is
   generic(
-    SpiCPOL_g  : natural := 0;
-    SpiCPHA_g  : natural := 0;
-    LsbFirst_g : boolean := false
+    spi_cpol_g  : natural := 0;
+    spi_cpha_g  : natural := 0;
+    lsb_first_g : boolean := false
   );
 end entity;
 
@@ -42,10 +42,10 @@ end entity;
 ------------------------------------------------------------
 architecture sim of psi_common_spi_master_tb is
   -- *** Fixed Generics ***
-  constant ClockDivider_g : natural  := 8;
-  constant TransWidth_g   : positive := 8;
-  constant CsHighCycles_g : positive := 12;
-  constant SlaveCnt_g     : positive := 2;
+  constant clk_div_g : natural  := 8;
+  constant trans_width_g   : positive := 8;
+  constant cs_high_cycles_g : positive := 12;
+  constant slave_cnt_g     : positive := 2;
 
   -- *** Not Assigned Generics (default values) ***
 
@@ -58,19 +58,19 @@ architecture sim of psi_common_spi_master_tb is
   constant TbProcNr_spi_c     : integer                  := 1;
 
   -- *** DUT Signals ***
-  signal Clk     : std_logic                                           := '1';
-  signal Rst     : std_logic                                           := '1';
-  signal Start   : std_logic                                           := '0';
-  signal Slave   : std_logic_vector(log2ceil(SlaveCnt_g) - 1 downto 0) := (others => '0');
-  signal Busy    : std_logic                                           := '0';
-  signal Done    : std_logic                                           := '0';
-  signal WrData  : std_logic_vector(TransWidth_g - 1 downto 0)         := (others => '0');
-  signal RdData  : std_logic_vector(TransWidth_g - 1 downto 0)         := (others => '0');
-  signal SpiSck  : std_logic                                           := '0';
-  signal SpiMosi : std_logic                                           := '0';
-  signal SpiMiso : std_logic                                           := '0';
-  signal SpiLe   : std_logic_vector(SlaveCnt_g-1 downto 0)             := (others => '0');
-  signal SpiCs_n : std_logic_vector(SlaveCnt_g - 1 downto 0)           := (others => '0');
+  signal clk_i     : std_logic                                           := '1';
+  signal rst_i     : std_logic                                           := '1';
+  signal start_i   : std_logic                                           := '0';
+  signal slave_i   : std_logic_vector(log2ceil(slave_cnt_g) - 1 downto 0) := (others => '0');
+  signal busy_o    : std_logic                                           := '0';
+  signal done_o    : std_logic                                           := '0';
+  signal dat_i  : std_logic_vector(trans_width_g - 1 downto 0)         := (others => '0');
+  signal dat_o  : std_logic_vector(trans_width_g - 1 downto 0)         := (others => '0');
+  signal spi_sck_o  : std_logic                                           := '0';
+  signal spi_mosi_o : std_logic                                           := '0';
+  signal spi_miso_i : std_logic                                           := '0';
+  signal spi_le_o   : std_logic_vector(slave_cnt_g-1 downto 0)             := (others => '0');
+  signal spi_cs_n_o : std_logic_vector(slave_cnt_g - 1 downto 0)           := (others => '0');
 
   -- *** Handwritten Stuff ***
   signal SlaveTx         : std_logic_vector(7 downto 0);
@@ -86,28 +86,28 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_spi_master
     generic map(
-      SpiCPOL_g      => SpiCPOL_g,
-      SpiCPHA_g      => SpiCPHA_g,
-      LsbFirst_g     => LsbFirst_g,
-      ClockDivider_g => ClockDivider_g,
-      TransWidth_g   => TransWidth_g,
-      CsHighCycles_g => CsHighCycles_g,
-      SlaveCnt_g     => SlaveCnt_g
+      spi_cpol_g      => spi_cpol_g,
+      spi_cpha_g      => spi_cpha_g,
+      lsb_first_g     => lsb_first_g,
+      clk_div_g => clk_div_g,
+      trans_width_g   => trans_width_g,
+      cs_high_cycles_g => cs_high_cycles_g,
+      slave_cnt_g     => slave_cnt_g
     )
     port map(
-      Clk     => Clk,
-      Rst     => Rst,
-      Start   => Start,
-      Slave   => Slave,
-      Busy    => Busy,
-      Done    => Done,
-      WrData  => WrData,
-      RdData  => RdData,
-      SpiSck  => SpiSck,
-      SpiMosi => SpiMosi,
-      SpiMiso => SpiMiso,
-      SpiCs_n => SpiCs_n,
-      SpiLe   => SpiLe
+      clk_i     => clk_i,
+      rst_i     => rst_i,
+      start_i   => start_i,
+      slave_i   => slave_i,
+      busy_o    => busy_o,
+      done_o    => done_o,
+      dat_i  => dat_i,
+      dat_o  => dat_o,
+      spi_sck_o  => spi_sck_o,
+      spi_mosi_o => spi_mosi_o,
+      spi_miso_i => spi_miso_i,
+      spi_cs_n_o => spi_cs_n_o,
+      spi_le_o   => spi_le_o
     );
 
   ------------------------------------------------------------
@@ -115,7 +115,7 @@ begin
   ------------------------------------------------------------
   p_tb_control : process
   begin
-    wait until Rst = '0';
+    wait until rst_i = '0';
     wait until ProcessDone = AllProcessesDone_c;
     TbRunning <= false;
     wait;
@@ -129,7 +129,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      Clk <= not Clk;
+      clk_i <= not clk_i;
     end loop;
     wait;
   end process;
@@ -141,9 +141,9 @@ begin
   begin
     wait for 1 us;
     -- Wait for two clk edges to ensure reset is active for at least one edge
-    wait until rising_edge(Clk);
-    wait until rising_edge(Clk);
-    Rst <= '0';
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    rst_i <= '0';
     wait;
   end process;
 
@@ -154,74 +154,74 @@ begin
   p_stim : process
   begin
     -- start of process !DO NOT EDIT
-    wait until Rst = '0';
+    wait until rst_i = '0';
 
     -- *** Simple Transfer ***
     for i in 0 to 4 loop
       SlaveTx         <= MisoWords_c(i);
       ExpectedSlaveRx <= MosiWords_c(i);
       SlaveNr         <= i mod 2;
-      wait until rising_edge(Clk);
-      WrData          <= MosiWords_c(i);
-      Slave           <= std_logic_vector(to_unsigned(i mod 2, Slave'length));
-      Start           <= '1';
-      wait until rising_edge(Clk);
-      WrData          <= X"00";
-      Slave           <= "0";
-      Start           <= '0';
-      wait until falling_edge(Clk);
-      StdlCompare(1, Busy, "Busy did not go high");
-      wait until rising_edge(Clk) and Busy = '0';
-      StdlvCompareStdlv(MisoWords_c(i), RdData, "SPI master received wrong data");
+      wait until rising_edge(clk_i);
+      dat_i          <= MosiWords_c(i);
+      slave_i           <= std_logic_vector(to_unsigned(i mod 2, slave_i'length));
+      start_i           <= '1';
+      wait until rising_edge(clk_i);
+      dat_i          <= X"00";
+      slave_i           <= "0";
+      start_i           <= '0';
+      wait until falling_edge(clk_i);
+      StdlCompare(1, busy_o, "busy_o did not go high");
+      wait until rising_edge(clk_i) and busy_o = '0';
+      StdlvCompareStdlv(MisoWords_c(i), dat_o, "SPI master received wrong data");
     end loop;
 
     -- *** Check Done Signal ***
     SlaveTx         <= X"55";
     ExpectedSlaveRx <= X"AA";
     SlaveNr         <= 0;
-    wait until rising_edge(Clk);
-    WrData          <= X"AA";
-    Slave           <= "0";
-    Start           <= '1';
-    wait until rising_edge(Clk);
-    WrData          <= X"00";
-    Slave           <= "0";
-    Start           <= '0';
-    wait until falling_edge(Clk);
-    StdlCompare(1, Busy, "Busy did not go high");
-    while Busy = '1' loop
-      StdlCompare(0, Done, "Done high unexpectedly");
-      wait until rising_edge(Clk);
+    wait until rising_edge(clk_i);
+    dat_i          <= X"AA";
+    slave_i           <= "0";
+    start_i           <= '1';
+    wait until rising_edge(clk_i);
+    dat_i          <= X"00";
+    slave_i           <= "0";
+    start_i           <= '0';
+    wait until falling_edge(clk_i);
+    StdlCompare(1, busy_o, "busy_o did not go high");
+    while busy_o = '1' loop
+      StdlCompare(0, done_o, "done_o high unexpectedly");
+      wait until rising_edge(clk_i);
     end loop;
-    StdlCompare(1, Done, "Done did not go high");
-    StdlvCompareStdlv(X"55", RdData, "SPI master received wrong data");
-    wait until rising_edge(Clk);
-    StdlCompare(0, Done, "Done did not go low again");
+    StdlCompare(1, done_o, "done_o did not go high");
+    StdlvCompareStdlv(X"55", dat_o, "SPI master received wrong data");
+    wait until rising_edge(clk_i);
+    StdlCompare(0, done_o, "done_o did not go low again");
 
     -- *** Check Transfer start during busy ***
     SlaveTx         <= X"55";
     ExpectedSlaveRx <= X"AA";
     SlaveNr         <= 0;
-    wait until rising_edge(Clk);
-    WrData          <= X"AA";
-    Slave           <= "0";
-    Start           <= '1';
-    wait until rising_edge(Clk);
-    WrData          <= X"00";
-    Slave           <= "0";
-    wait until falling_edge(Clk);
-    StdlCompare(1, Busy, "Busy did not go high");
+    wait until rising_edge(clk_i);
+    dat_i          <= X"AA";
+    slave_i           <= "0";
+    start_i           <= '1';
+    wait until rising_edge(clk_i);
+    dat_i          <= X"00";
+    slave_i           <= "0";
+    wait until falling_edge(clk_i);
+    StdlCompare(1, busy_o, "busy_o did not go high");
     for i in 0 to 20 loop
-      wait until rising_edge(Clk);
+      wait until rising_edge(clk_i);
     end loop;
-    Start           <= '0';
-    wait until rising_edge(Clk) and Busy = '0';
-    StdlvCompareStdlv(X"55", RdData, "SPI master received wrong data");
+    start_i           <= '0';
+    wait until rising_edge(clk_i) and busy_o = '0';
+    StdlvCompareStdlv(X"55", dat_o, "SPI master received wrong data");
     for i in 0 to 20 loop
-      wait until rising_edge(Clk);
-      StdlCompare(0, Busy, "Busy did not stay low");
+      wait until rising_edge(clk_i);
+      StdlCompare(0, busy_o, "busy_o did not stay low");
     end loop;
-    StdlCompare(0, Done, "Done did not go low again");
+    StdlCompare(0, done_o, "done_o did not go low again");
 
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_stim_c) <= '1';
@@ -230,74 +230,74 @@ begin
 
   -- *** spi ***
   p_spi : process
-    variable ShiftRegRx_v : std_logic_vector(TransWidth_g - 1 downto 0);
-    variable ShiftRegTx_v : std_logic_vector(TransWidth_g - 1 downto 0);
+    variable ShiftRegRx_v : std_logic_vector(trans_width_g - 1 downto 0);
+    variable ShiftRegTx_v : std_logic_vector(trans_width_g - 1 downto 0);
   begin
     -- start of process !DO NOT EDIT
-    wait until Rst = '0';
+    wait until rst_i = '0';
 
     -- Do not wait for this process
     ProcessDone(TbProcNr_spi_c) <= '1';
 
     while TbRunning loop
       -- If start of transfer
-      if SpiCs_n /= "11" then
+      if spi_cs_n_o /= "11" then
         ShiftRegTx_v := SlaveTx;
         ShiftRegRx_v := (others => 'U');
 
         -- Check correct slave
-        for s in 0 to SlaveCnt_g - 1 loop
+        for s in 0 to slave_cnt_g - 1 loop
           if s = SlaveNr then
-            StdlCompare(0, SpiCs_n(s), "Slave " & to_string(s) & " not selected");
+            StdlCompare(0, spi_cs_n_o(s), "slave_i " & to_string(s) & " not selected");
           else
-            StdlCompare(1, SpiCs_n(s), "Slave " & to_string(s) & " selected wrongly");
+            StdlCompare(1, spi_cs_n_o(s), "slave_i " & to_string(s) & " selected wrongly");
           end if;
         end loop;
 
         -- loop over bits
-        for i in 0 to TransWidth_g - 1 loop
+        for i in 0 to trans_width_g - 1 loop
           -- Wait for apply edge 
-          if (SpiCPHA_g = 1) and (i /= TransWidth_g - 1) then
-            if SpiCPOL_g = 0 then
-              wait until rising_edge(SpiSck);
+          if (spi_cpha_g = 1) and (i /= trans_width_g - 1) then
+            if spi_cpol_g = 0 then
+              wait until rising_edge(spi_sck_o);
             else
-              wait until falling_edge(SpiSck);
+              wait until falling_edge(spi_sck_o);
             end if;
-          elsif (SpiCPHA_g = 0) and (i /= 0) then
-            if SpiCPOL_g = 0 then
-              wait until falling_edge(SpiSck);
+          elsif (spi_cpha_g = 0) and (i /= 0) then
+            if spi_cpol_g = 0 then
+              wait until falling_edge(spi_sck_o);
             else
-              wait until rising_edge(SpiSck);
+              wait until rising_edge(spi_sck_o);
             end if;
           end if;
           -- Shift TX
-          if LsbFirst_g then
-            SpiMiso      <= ShiftRegTx_v(0);
-            ShiftRegTx_v := 'U' & ShiftRegTx_v(TransWidth_g - 1 downto 1);
+          if lsb_first_g then
+            spi_miso_i      <= ShiftRegTx_v(0);
+            ShiftRegTx_v := 'U' & ShiftRegTx_v(trans_width_g - 1 downto 1);
           else
-            SpiMiso      <= ShiftRegTx_v(TransWidth_g - 1);
-            ShiftRegTx_v := ShiftRegTx_v(TransWidth_g - 2 downto 0) & 'U';
+            spi_miso_i      <= ShiftRegTx_v(trans_width_g - 1);
+            ShiftRegTx_v := ShiftRegTx_v(trans_width_g - 2 downto 0) & 'U';
           end if;
           -- Wait for transfer edge
-          if ((SpiCPOL_g = 0) and (SpiCPHA_g = 0)) or ((SpiCPOL_g = 1) and (SpiCPHA_g = 1)) then
-            wait until rising_edge(SpiSck);
+          if ((spi_cpol_g = 0) and (spi_cpha_g = 0)) or ((spi_cpol_g = 1) and (spi_cpha_g = 1)) then
+            wait until rising_edge(spi_sck_o);
           else
-            wait until falling_edge(SpiSck);
+            wait until falling_edge(spi_sck_o);
           end if;
           -- Shift RX
-          if LsbFirst_g then
-            ShiftRegRx_v := SpiMosi & ShiftRegRx_v(TransWidth_g - 1 downto 1);
+          if lsb_first_g then
+            ShiftRegRx_v := spi_mosi_o & ShiftRegRx_v(trans_width_g - 1 downto 1);
           else
-            ShiftRegRx_v := ShiftRegRx_v(TransWidth_g - 2 downto 0) & SpiMosi;
+            ShiftRegRx_v := ShiftRegRx_v(trans_width_g - 2 downto 0) & spi_mosi_o;
           end if;
         end loop;
-        StdlCompare ('0', SpiLe(SlaveNr),  "LE is not low");
+        StdlCompare ('0', spi_le_o(SlaveNr),  "LE is not low");
         -- wait fir CS going high
-        wait until SpiCs_n = "11";
-        StdlCompare ('1', SpiLe(SlaveNr), "LE not high after transmission");
-        StdlvCompareStdlv (ExpectedSlaveRx, ShiftRegRx_v, "SPI slave received wrong data");
+        wait until spi_cs_n_o = "11";
+        StdlCompare ('1', spi_le_o(SlaveNr), "LE not high after transmission");
+        StdlvCompareStdlv (ExpectedSlaveRx, ShiftRegRx_v, "SPI slave_i received wrong data");
       else
-        wait until rising_edge(Clk);
+        wait until rising_edge(clk_i);
       end if;
     end loop;
 

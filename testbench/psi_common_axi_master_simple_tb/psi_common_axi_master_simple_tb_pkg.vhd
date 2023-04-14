@@ -27,20 +27,20 @@ package psi_common_axi_master_simple_tb_pkg is
 
   -- *** Generics Record ***
   type Generics_t is record
-    ImplRead_g  : boolean;
-    ImplWrite_g : boolean;
+    impl_read_g  : boolean;
+    impl_write_g : boolean;
   end record;
 
   ------------------------------------------------------------
   -- Not exported Generics
   ------------------------------------------------------------
-  constant DataFifoDepth_g           : natural := 14;
-  constant AxiDataWidth_g            : natural := 16;
-  constant UserTransactionSizeBits_g : natural := 16;
-  constant AxiAddrWidth_g            : natural := 32;
-  constant AxiMaxBeats_g             : natural := 16;
-  constant RamBehavior_g             : string  := "RBW";
-  constant AxiMaxOpenTrasactions_g   : natural := 3;
+  constant data_fifo_depth_g           : natural := 14;
+  constant axi_data_width_g            : natural := 16;
+  constant user_transaction_size_bits_g : natural := 16;
+  constant axi_addr_width_g            : natural := 32;
+  constant axi_max_beats_g             : natural := 16;
+  constant ram_behavior_g             : string  := "RBW";
+  constant axi_max_open_transactions_g   : natural := 3;
 
   ------------------------------------------------------------
   -- Axi
@@ -73,8 +73,8 @@ package psi_common_axi_master_simple_tb_pkg is
   procedure ApplyCommand(Addr               : in integer;
                          Size               : in integer;
                          LowLat             : in boolean;
-                         signal CmdX_Addr   : out std_logic_vector(AxiAddrWidth_g-1 downto 0);
-                         signal CmdX_Size   : out std_logic_vector(UserTransactionSizeBits_g-1 downto 0);
+                         signal CmdX_Addr   : out std_logic_vector(axi_addr_width_g-1 downto 0);
+                         signal CmdX_Size   : out std_logic_vector(user_transaction_size_bits_g-1 downto 0);
                          signal CmdX_LowLat : out std_logic;
                          signal CmdX_Vld    : out std_logic;
                          signal CmdX_Rdy    : in std_logic;
@@ -82,10 +82,10 @@ package psi_common_axi_master_simple_tb_pkg is
 
   procedure ApplyWrDataSingle(Data              : in integer;
                               Be                : in std_logic_vector;
-                              signal WrDat_Data : out std_logic_vector(AxiDataWidth_g-1 downto 0);
-                              signal WrDat_Be   : out std_logic_vector;
-                              signal WrDat_Vld  : out std_logic;
-                              signal WrDat_Rdy  : in std_logic;
+                              signal wr_dat_i : out std_logic_vector(axi_data_width_g-1 downto 0);
+                              signal wr_data_be   : out std_logic_vector;
+                              signal wr_vld_i  : out std_logic;
+                              signal wr_rdy_o  : in std_logic;
                               signal Clk        : in std_logic);
 
   procedure ApplyWrDataMulti(Start             : in integer;
@@ -93,25 +93,25 @@ package psi_common_axi_master_simple_tb_pkg is
                              Size              : in integer;
                              FirstBe           : in std_logic_vector;
                              LastBe            : in std_logic_vector;
-                             signal WrDat_Data : out std_logic_vector(AxiDataWidth_g-1 downto 0);
-                             signal WrDat_Be   : out std_logic_vector;
-                             signal WrDat_Vld  : out std_logic;
-                             signal WrDat_Rdy  : in std_logic;
+                             signal wr_dat_i : out std_logic_vector(axi_data_width_g-1 downto 0);
+                             signal wr_data_be   : out std_logic_vector;
+                             signal wr_vld_i  : out std_logic;
+                             signal wr_rdy_o  : in std_logic;
                              signal Clk        : in std_logic;
                              VldLowCyc         : in integer := 0);
 
   procedure CheckRdDataSingle(Data              : in integer;
-                              signal RdDat_Data : in std_logic_vector(AxiDataWidth_g-1 downto 0);
-                              signal RdDat_Vld  : in std_logic;
-                              signal RdDat_Rdy  : out std_logic;
+                              signal rd_dat_o : in std_logic_vector(axi_data_width_g-1 downto 0);
+                              signal rd_vld_o  : in std_logic;
+                              signal rd_rdy_i  : out std_logic;
                               signal Clk        : in std_logic);
 
   procedure CheckRdDataMulti(Start             : in integer;
                              Incr              : in integer;
                              Size              : in integer;
-                             signal RdDat_Data : in std_logic_vector(AxiDataWidth_g-1 downto 0);
-                             signal RdDat_Vld  : in std_logic;
-                             signal RdDat_Rdy  : out std_logic;
+                             signal rd_dat_o : in std_logic_vector(axi_data_width_g-1 downto 0);
+                             signal rd_vld_o  : in std_logic;
+                             signal rd_rdy_i  : out std_logic;
                              signal Clk        : in std_logic;
                              RdyLowCyc         : in integer := 0);
 
@@ -175,8 +175,8 @@ package body psi_common_axi_master_simple_tb_pkg is
   procedure ApplyCommand(Addr               : in integer;
                          Size               : in integer;
                          LowLat             : in boolean;
-                         signal CmdX_Addr   : out std_logic_vector(AxiAddrWidth_g-1 downto 0);
-                         signal CmdX_Size   : out std_logic_vector(UserTransactionSizeBits_g-1 downto 0);
+                         signal CmdX_Addr   : out std_logic_vector(axi_addr_width_g-1 downto 0);
+                         signal CmdX_Size   : out std_logic_vector(user_transaction_size_bits_g-1 downto 0);
                          signal CmdX_LowLat : out std_logic;
                          signal CmdX_Vld    : out std_logic;
                          signal CmdX_Rdy    : in std_logic;
@@ -197,17 +197,17 @@ package body psi_common_axi_master_simple_tb_pkg is
 
   procedure ApplyWrDataSingle(Data              : in integer;
                               Be                : in std_logic_vector;
-                              signal WrDat_Data : out std_logic_vector(AxiDataWidth_g-1 downto 0);
-                              signal WrDat_Be   : out std_logic_vector;
-                              signal WrDat_Vld  : out std_logic;
-                              signal WrDat_Rdy  : in std_logic;
+                              signal wr_dat_i : out std_logic_vector(axi_data_width_g-1 downto 0);
+                              signal wr_data_be   : out std_logic_vector;
+                              signal wr_vld_i  : out std_logic;
+                              signal wr_rdy_o  : in std_logic;
                               signal Clk        : in std_logic) is
   begin
-    WrDat_Be   <= Be;
-    WrDat_Data <= std_logic_vector(to_unsigned(Data, WrDat_Data'length));
-    WrDat_Vld  <= '1';
-    wait until rising_edge(Clk) and WrDat_Rdy = '1';
-    WrDat_Vld  <= '0';
+    wr_data_be   <= Be;
+    wr_dat_i <= std_logic_vector(to_unsigned(Data, wr_dat_i'length));
+    wr_vld_i  <= '1';
+    wait until rising_edge(Clk) and wr_rdy_o = '1';
+    wr_vld_i  <= '0';
   end procedure;
 
   procedure ApplyWrDataMulti(Start             : in integer;
@@ -215,74 +215,74 @@ package body psi_common_axi_master_simple_tb_pkg is
                              Size              : in integer;
                              FirstBe           : in std_logic_vector;
                              LastBe            : in std_logic_vector;
-                             signal WrDat_Data : out std_logic_vector(AxiDataWidth_g-1 downto 0);
-                             signal WrDat_Be   : out std_logic_vector;
-                             signal WrDat_Vld  : out std_logic;
-                             signal WrDat_Rdy  : in std_logic;
+                             signal wr_dat_i : out std_logic_vector(axi_data_width_g-1 downto 0);
+                             signal wr_data_be   : out std_logic_vector;
+                             signal wr_vld_i  : out std_logic;
+                             signal wr_rdy_o  : in std_logic;
                              signal Clk        : in std_logic;
                              VldLowCyc         : in integer := 0) is
     variable DataCnt_v : integer                          := Start;
     constant LastIdx_c : integer                          := Size - 1;
-    constant BeOnes_c  : std_logic_vector(WrDat_Be'range) := (others => '1');
+    constant BeOnes_c  : std_logic_vector(wr_data_be'range) := (others => '1');
   begin
     for i in 0 to Size - 1 loop
       if i = 0 then
-        WrDat_Be <= FirstBe;
+        wr_data_be <= FirstBe;
       elsif i = LastIdx_c then
-        WrDat_Be <= LastBe;
+        wr_data_be <= LastBe;
       else
-        WrDat_Be <= BeOnes_c;
+        wr_data_be <= BeOnes_c;
       end if;
-      WrDat_Data <= std_logic_vector(to_unsigned(DataCnt_v, WrDat_Data'length));
-      WrDat_Vld  <= '1';
-      wait until rising_edge(Clk) and WrDat_Rdy = '1';
-      DataCnt_v  := (DataCnt_v + Incr) mod 2**AxiDataWidth_g;
+      wr_dat_i <= std_logic_vector(to_unsigned(DataCnt_v, wr_dat_i'length));
+      wr_vld_i  <= '1';
+      wait until rising_edge(Clk) and wr_rdy_o = '1';
+      DataCnt_v  := (DataCnt_v + Incr) mod 2**axi_data_width_g;
       if VldLowCyc > 0 then
-        WrDat_Vld <= '0';
+        wr_vld_i <= '0';
         for i in 0 to VldLowCyc - 1 loop
           wait until rising_edge(Clk);
         end loop;
       end if;
     end loop;
-    WrDat_Vld <= '0';
+    wr_vld_i <= '0';
   end procedure;
 
   procedure CheckRdDataSingle(Data              : in integer;
-                              signal RdDat_Data : in std_logic_vector(AxiDataWidth_g-1 downto 0);
-                              signal RdDat_Vld  : in std_logic;
-                              signal RdDat_Rdy  : out std_logic;
+                              signal rd_dat_o : in std_logic_vector(axi_data_width_g-1 downto 0);
+                              signal rd_vld_o  : in std_logic;
+                              signal rd_rdy_i  : out std_logic;
                               signal Clk        : in std_logic) is
   begin
-    RdDat_Rdy <= '1';
-    wait until rising_edge(Clk) and RdDat_Vld = '1';
-    StdlvCompareInt(Data, RdDat_Data, "Received wrong Read Data", false);
-    RdDat_Rdy <= '0';
+    rd_rdy_i <= '1';
+    wait until rising_edge(Clk) and rd_vld_o = '1';
+    StdlvCompareInt(Data, rd_dat_o, "Received wrong Read Data", false);
+    rd_rdy_i <= '0';
   end procedure;
 
   procedure CheckRdDataMulti(Start             : in integer;
                              Incr              : in integer;
                              Size              : in integer;
-                             signal RdDat_Data : in std_logic_vector(AxiDataWidth_g-1 downto 0);
-                             signal RdDat_Vld  : in std_logic;
-                             signal RdDat_Rdy  : out std_logic;
+                             signal rd_dat_o : in std_logic_vector(axi_data_width_g-1 downto 0);
+                             signal rd_vld_o  : in std_logic;
+                             signal rd_rdy_i  : out std_logic;
                              signal Clk        : in std_logic;
                              RdyLowCyc         : in integer := 0) is
     variable DataCnt_v : integer := Start;
     constant LastIdx_c : integer := Size - 1;
   begin
     for i in 0 to Size - 1 loop
-      RdDat_Rdy <= '1';
-      wait until rising_edge(Clk) and RdDat_Vld = '1';
-      StdlvCompareInt(DataCnt_v, RdDat_Data, "Received wrong Read Data in Burst", false);
-      DataCnt_v := (DataCnt_v + Incr) mod 2**AxiDataWidth_g;
+      rd_rdy_i <= '1';
+      wait until rising_edge(Clk) and rd_vld_o = '1';
+      StdlvCompareInt(DataCnt_v, rd_dat_o, "Received wrong Read Data in Burst", false);
+      DataCnt_v := (DataCnt_v + Incr) mod 2**axi_data_width_g;
       if RdyLowCyc > 0 then
-        RdDat_Rdy <= '0';
+        rd_rdy_i <= '0';
         for i in 0 to RdyLowCyc - 1 loop
           wait until rising_edge(Clk);
         end loop;
       end if;
     end loop;
-    RdDat_Rdy <= '0';
+    rd_rdy_i <= '0';
   end procedure;
 
   procedure WaitForCompletion(Success        : in boolean;
@@ -310,7 +310,7 @@ package body psi_common_axi_master_simple_tb_pkg is
                              SendResp      : in boolean := true) is
   begin
     axi_expect_aw(Addr, AxSIZE_2_c, 1 - 1, xBURST_INCR_c, axi_ms, axi_sm, Clk);
-    axi_expect_wd_single(std_logic_vector(to_unsigned(Data, AxiDataWidth_g)), Be, axi_ms, axi_sm, Clk);
+    axi_expect_wd_single(std_logic_vector(to_unsigned(Data, axi_data_width_g)), Be, axi_ms, axi_sm, Clk);
     if SendResp then
       axi_apply_bresp(Resp, axi_ms, axi_sm, Clk);
     end if;
@@ -349,7 +349,7 @@ package body psi_common_axi_master_simple_tb_pkg is
                              signal Clk    : in std_logic) is
   begin
     axi_expect_ar(Addr, AxSIZE_2_c, 1 - 1, xBURST_INCR_c, axi_ms, axi_sm, Clk);
-    axi_apply_rresp_single(std_logic_vector(to_unsigned(Data, AxiDataWidth_g)), Resp, axi_ms, axi_sm, Clk);
+    axi_apply_rresp_single(std_logic_vector(to_unsigned(Data, axi_data_width_g)), Resp, axi_ms, axi_sm, Clk);
   end procedure;
 
   procedure AxiCheckRdBurst(Addr          : in integer;

@@ -28,9 +28,9 @@ end entity;
 ------------------------------------------------------------
 architecture sim of psi_common_trigger_analog_tb is
   -- *** Fixed Generics ***
-  constant analog_input_number_g : integer   := 32; -- number of analog trigger inputs
-  constant analog_input_width_g     : integer   := 16; -- analog trigger input signal width
-  constant analog_trg_signed_g    : boolean   := true; -- analog trigger input signal width
+  constant anl_input_number_g : integer   := 32; -- number of analog trigger inputs
+  constant anl_input_width_g     : integer   := 16; -- analog trigger input signal width
+  constant anl_trg_signed_g    : boolean   := true; -- analog trigger input signal width
   constant rst_pol_g              : std_logic := '1'; -- reset polarity
 
   -- *** Not Assigned Generics (default values) ***
@@ -41,33 +41,33 @@ architecture sim of psi_common_trigger_analog_tb is
   constant AllProcessesDone_c : std_logic_vector(0 to 0) := (others => '1');
 
   -- *** DUT Signals ***
-  signal InClk                 : std_logic                                                                  := '1';
-  signal InRst                 : std_logic                                                                  := '1';
-  signal InTrgModeCfg          : std_logic_vector(0 downto 0)                                               := (others => '0');
-  signal InTrgArmCfg           : std_logic                                                                  := '0';
-  signal InTrgEdgeCfg          : std_logic_vector(1 downto 0)                                               := (others => '0');
-  signal InTrgAnalogSourceCfg  : std_logic_vector(log2ceil(analog_input_number_g )-1 downto 0):= (others => '0');
-  signal InAnalogTrg           : std_logic_vector(analog_input_number_g * analog_input_width_g - 1 downto 0) := (others => '0');
-  signal InAnalogThTrg         : std_logic_vector(analog_input_width_g - 1 downto 0)                          := (others => '0');
-  signal InExtDisarm           : std_logic  := '0';
-  signal OutTrgIsArmed         : std_logic;
-  signal OutTrigger            : std_logic;
+  signal clk_i                 : std_logic                                                                  := '1';
+  signal rst_i                 : std_logic                                                                  := '1';
+  signal trg_mode_cfg_i          : std_logic_vector(0 downto 0)                                               := (others => '0');
+  signal trg_arm_cfg_i           : std_logic                                                                  := '0';
+  signal trg_edge_cfg_i          : std_logic_vector(1 downto 0)                                               := (others => '0');
+  signal trg_anlg_src_cfg_i  : std_logic_vector(log2ceil(anl_input_number_g )-1 downto 0):= (others => '0');
+  signal anl_trig_i           : std_logic_vector(anl_input_number_g * anl_input_width_g - 1 downto 0) := (others => '0');
+  signal anl_th_trig_i         : std_logic_vector(anl_input_width_g - 1 downto 0)                          := (others => '0');
+  signal ext_disarm_i           : std_logic  := '0';
+  signal trg_is_armed_i         : std_logic;
+  signal trig_o            : std_logic;
 
   -- handwritten
   signal TestCase : integer := -1;
   
   procedure ExpectTriggerIs(Value : in integer) is
   begin
-    wait until rising_edge(InClk);
-    wait until rising_edge(InClk);
-    wait until rising_edge(InClk);
-    StdlCompare(Value, OutTrigger, "Wrong OutTrigger behaviour");
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    StdlCompare(Value, trig_o, "Wrong trig_o behaviour");
   end procedure;
 
   procedure ExpectTrgIsArmedIs(Value : in integer) is
   begin
-    wait until rising_edge(InClk);
-    StdlCompare(Value, OutTrgIsArmed, "Wrong OutTrgIsArmed behaviour");
+    wait until rising_edge(clk_i);
+    StdlCompare(Value, trg_is_armed_i, "Wrong trg_is_armed_i behaviour");
   end procedure;
 
 begin
@@ -76,23 +76,23 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_trigger_analog
     generic map(
-      analog_input_number_g => analog_input_number_g,
-      analog_input_width_g     => analog_input_width_g,
-      analog_trg_signed_g    => analog_trg_signed_g,
+      trig_nb_g => anl_input_number_g,
+      width_g     => anl_input_width_g,
+      is_signed_g    => anl_trg_signed_g,
       rst_pol_g              => rst_pol_g
     )
     port map(
-      InClk => InClk,
-      InRst => InRst,
-      InTrgModeCfg => InTrgModeCfg,
-      InTrgArmCfg => InTrgArmCfg,
-      InTrgEdgeCfg => InTrgEdgeCfg,
-      InTrgAnalogSourceCfg => InTrgAnalogSourceCfg,
-      InAnalogThTrg => InAnalogThTrg,
-      InAnalogTrg => InAnalogTrg,
-      InExtDisarm => InExtDisarm,
-      OutTrgIsArmed => OutTrgIsArmed,
-      OutTrigger => OutTrigger
+      clk_i => clk_i,
+      rst_i => rst_i,
+      trg_mode_cfg_i => trg_mode_cfg_i,
+      trg_arm_cfg_i => trg_arm_cfg_i,
+      trg_edge_cfg_i => trg_edge_cfg_i,
+      trg_anlg_src_cfg_i => trg_anlg_src_cfg_i,
+      anl_th_trig_i => anl_th_trig_i,
+      anl_trig_i => anl_trig_i,
+      ext_disarm_i => ext_disarm_i,
+      trg_is_armed_i => trg_is_armed_i,
+      trig_o => trig_o
     );
 
   ------------------------------------------------------------
@@ -100,7 +100,7 @@ begin
   ------------------------------------------------------------
   p_tb_control : process
   begin
-    wait until InRst = '0';
+    wait until rst_i = '0';
     wait until ProcessDone = AllProcessesDone_c;
     TbRunning <= false;
     wait;
@@ -114,7 +114,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      InClk <= not InClk;
+      clk_i <= not clk_i;
     end loop;
     wait;
   end process;
@@ -126,9 +126,9 @@ begin
   begin
     wait for 1 us;
     -- Wait for two InClk edges to ensure reset is active for at least one edge
-    wait until rising_edge(InClk);
-    wait until rising_edge(InClk);
-    InRst <= '0';
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    rst_i <= '0';
     wait;
   end process;
 
@@ -139,327 +139,327 @@ begin
   p_inp : process
   begin
     -- start of process !DO NOT EDIT
-    wait until InRst = '0';
+    wait until rst_i = '0';
 
     -- *** Analog input test ***
 
-    InTrgArmCfg <= '0';                 -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg <= '1';
-    wait until rising_edge(InClk);
+    trg_arm_cfg_i <= '0';                 -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i <= '1';
+    wait until rising_edge(clk_i);
 
     -- Continuous mode, two sensitive edges, multi clock cycle input
     TestCase <= 0;
 
-    InTrgModeCfg(0)      <= '0';        -- continuous mode
-    InTrgEdgeCfg         <= "11";       -- both edges are sensitive
-    InTrgAnalogSourceCfg <= std_logic_vector(to_unsigned(2,log2ceil(analog_input_number_g)));
-    InAnalogThTrg        <= x"0010";
+    trg_mode_cfg_i(0)      <= '0';        -- continuous mode
+    trg_edge_cfg_i         <= "11";       -- both edges are sensitive
+    trg_anlg_src_cfg_i <= std_logic_vector(to_unsigned(2,log2ceil(anl_input_number_g)));
+    anl_th_trig_i        <= x"0010";
 
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     ---------------------------------------
     -- Continuous mode, two sensitive edges, single clock cycle input
     TestCase <= 1;
 
-    InTrgModeCfg(0)      <= '0';               -- continuous mode
-    InTrgEdgeCfg <= "11";               -- both edges are sensitive
+    trg_mode_cfg_i(0)      <= '0';               -- continuous mode
+    trg_edge_cfg_i <= "11";               -- both edges are sensitive
 
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Continuous mode, rising edge, multi clock cycle input
     TestCase <= 2;
 
-    InTrgModeCfg(0)      <= '0';        -- continuous mode
-    InTrgEdgeCfg <= "10";               -- rising edge sensitive
+    trg_mode_cfg_i(0)      <= '0';        -- continuous mode
+    trg_edge_cfg_i <= "10";               -- rising edge sensitive
 
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Continuous mode, rising edge, single clock cycle input
     TestCase <= 3;
 
-    InTrgModeCfg(0)      <= '0';        -- continuous mode
-    InTrgEdgeCfg <= "10";               -- rising edge sensitive
+    trg_mode_cfg_i(0)      <= '0';        -- continuous mode
+    trg_edge_cfg_i <= "10";               -- rising edge sensitive
 
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Continuous mode, falling edge, multi clock cycle input
     TestCase <= 4;
 
-    InTrgModeCfg(0)      <= '0';        -- continuous mode
-    InTrgEdgeCfg <= "01";               -- falling edge sensitive
+    trg_mode_cfg_i(0)      <= '0';        -- continuous mode
+    trg_edge_cfg_i <= "01";               -- falling edge sensitive
 
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Continuous mode, falling edge, single clock cycle input
     TestCase <= 5;
 
-    InTrgModeCfg(0)      <= '0';        -- continuous mode
-    InTrgEdgeCfg <= "01";               -- falling edge sensitive
+    trg_mode_cfg_i(0)      <= '0';        -- continuous mode
+    trg_edge_cfg_i <= "01";               -- falling edge sensitive
 
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, both edge, multi clock cycle input
     TestCase <= 6;
 
-    InTrgModeCfg(0)      <= '1';        -- single mode
-    InTrgEdgeCfg <= "11";
+    trg_mode_cfg_i(0)      <= '1';        -- single mode
+    trg_edge_cfg_i <= "11";
 
-    InTrgArmCfg <= '0';                 -- de-arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg <= '1';
-    wait until rising_edge(InClk);
+    trg_arm_cfg_i <= '0';                 -- de-arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i <= '1';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(0);
 
-    InTrgArmCfg <= '0';                 -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg <= '1';                 -- arm trigger
-    wait until rising_edge(InClk);
+    trg_arm_cfg_i <= '0';                 -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i <= '1';                 -- arm trigger
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
 
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, both edge, single clock cycle input
     TestCase <= 7;
 
-    InTrgModeCfg(0)      <= '1';        -- single mode
-    InTrgArmCfg                                                                                    <= '0'; -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg                                                                                   <= "11";
+    trg_mode_cfg_i(0)      <= '1';        -- single mode
+    trg_arm_cfg_i                                                                                    <= '0'; -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i                                                                                   <= "11";
     ExpectTrgIsArmedIs(1);
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, rising edge, multi clock cycle input
     TestCase <= 8;
 
-    InTrgModeCfg(0)      <= '1';        -- single mode
-    InTrgArmCfg                                                                                    <= '0'; -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg                                                                                   <= "10";
+    trg_mode_cfg_i(0)      <= '1';        -- single mode
+    trg_arm_cfg_i                                                                                    <= '0'; -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i                                                                                   <= "10";
     ExpectTrgIsArmedIs(1);
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '0'; -- de-arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '1';
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '0'; -- de-arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '1';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(0);
-    InTrgArmCfg                                                                                    <= '0'; -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '1';
-    wait until rising_edge(InClk);
+    trg_arm_cfg_i                                                                                    <= '0'; -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '1';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, rising edge, single clock cycle input
     TestCase <= 9;
 
-    InTrgModeCfg(0)      <= '1';        -- single mode
-    InTrgArmCfg                                                                                    <= '0'; -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg                                                                                   <= "10";
+    trg_mode_cfg_i(0)      <= '1';        -- single mode
+    trg_arm_cfg_i                                                                                    <= '0'; -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i                                                                                   <= "10";
     ExpectTrgIsArmedIs(1);
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, rising edge, multi clock cycle input
     TestCase <= 10;
 
-    InTrgModeCfg(0)      <= '1';        -- single mode
-    InTrgArmCfg                                                                                    <= '0'; -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg                                                                                   <= "01";
+    trg_mode_cfg_i(0)      <= '1';        -- single mode
+    trg_arm_cfg_i                                                                                    <= '0'; -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i                                                                                   <= "01";
     ExpectTrgIsArmedIs(1);
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '0'; -- de-arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '1';
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '0'; -- de-arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '1';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(0);
-    InTrgArmCfg                                                                                    <= '0'; -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '1';
-    wait until rising_edge(InClk);
+    trg_arm_cfg_i                                                                                    <= '0'; -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '1';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, rising edge, single clock cycle input
     TestCase <= 11;
 
-    InTrgModeCfg(0)      <= '1';        -- single mode
-    InTrgArmCfg                                                                                    <= '0'; -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg                                                                                   <= "01";
+    trg_mode_cfg_i(0)      <= '1';        -- single mode
+    trg_arm_cfg_i                                                                                    <= '0'; -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i                                                                                   <= "01";
     ExpectTrgIsArmedIs(1);
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"0020";
-    wait until rising_edge(InClk);
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"0020";
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, inExtDisarm test
     TestCase <= 12;
 
-    InTrgModeCfg(0)      <= '1';        -- single mode
-    InTrgArmCfg                                                                                    <= '0'; -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg                                                                                   <= "01";
-    wait until rising_edge(InClk);
+    trg_mode_cfg_i(0)      <= '1';        -- single mode
+    trg_arm_cfg_i                                                                                    <= '0'; -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i                                                                                   <= "01";
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
-    InExtDisarm  <= '1';
-    wait until rising_edge(InClk);
-    InExtDisarm  <= '0';
+    wait until rising_edge(clk_i);
+    ext_disarm_i  <= '1';
+    wait until rising_edge(clk_i);
+    ext_disarm_i  <= '0';
     ExpectTrgIsArmedIs(0);
-    InAnalogTrg((analog_input_width_g * 2) + (analog_input_width_g - 1) downto analog_input_width_g * 2) <= x"8020";
+    anl_trig_i((anl_input_width_g * 2) + (anl_input_width_g - 1) downto anl_input_width_g * 2) <= x"8020";
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- end of process !DO NOT EDIT!
     ProcessDone(0) <= '1';

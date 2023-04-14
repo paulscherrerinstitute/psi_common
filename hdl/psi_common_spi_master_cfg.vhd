@@ -11,55 +11,43 @@
 -- This entity implements a simple SPI-master
 -- Modification: allows modifying transmit vector length dynamically
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
-library work;
 use work.psi_common_math_pkg.all;
 use work.psi_common_logic_pkg.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
--- $$ processes=stim,spi $$
--- $$ tbpkg=work.psi_tb_compare_pkg,work.psi_tb_activity_pkg,work.psi_tb_txt_util $$
+-- @formatter:off
 entity psi_common_spi_master_cfg is
-  generic(
-    ClockDivider_g  : natural range 4 to 1_000_000 := 4; -- Must be a multiple of two	$$ constant=8 $$
-    MaxTransWidth_g : positive                     := 16; -- SPI Transaction width		$$ constant=8 $$
-    CsHighCycles_g  : positive                     := 2; -- $$ constant=2 $$
-    SpiCPOL_g       : natural range 0 to 1         := 1; -- $$ export=true $$
-    SpiCPHA_g       : natural range 0 to 1         := 1; -- $$ export=true $$
-    SlaveCnt_g      : positive                     := 1; -- $$ constant=2 $$
-    LsbFirst_g      : boolean                      := false; -- $$ export=true $$
-    MosiIdleState_g : std_logic                    := '0'
-  );
-  port(
-    -- Control Signals
-    Clk        : in  std_logic;         -- $$ type=clk; freq=100e6 $$
-    Rst        : in  std_logic;         -- $$ type=rst; clk=Clk $$
-
-    -- Parallel Interface
-    Start      : in  std_logic;
-    Slave      : in  std_logic_vector(log2ceil(SlaveCnt_g) - 1 downto 0);
-    Busy       : out std_logic;
-    Done       : out std_logic;
-    WrData     : in  std_logic_vector(MaxTransWidth_g - 1 downto 0);
-    RdData     : out std_logic_vector(MaxTransWidth_g - 1 downto 0);
-    TransWidth : in  std_logic_vector(log2ceil(MaxTransWidth_g) downto 0);
-    -- SPI 
-
-    SpiSck     : out std_logic;
-    SpiMosi    : out std_logic;
-    SpiMiso    : in  std_logic;
-    SpiCs_n    : out std_logic_vector(SlaveCnt_g - 1 downto 0)
-  );
+  generic(clock_divider_g   : natural range 4 to 1_000_000 := 4;                          -- Must be a multiple of two, Ratio between *clk_i* and the *spi_sck_o* frequency
+          max_trans_width_g : positive                     := 16;                         -- Maximum SPI Transfer width (bits per transfer)
+          cs_high_cycles_g  : positive                     := 2;                          -- Minimal number of spi_cs_n_o high cycles between two transfers
+          spi_cpol_g        : natural range 0 to 1         := 1;                          -- SPI clock polarity 
+          spi_cpha_g        : natural range 0 to 1         := 1;                          -- SPI sampling edge configuration 
+          slave_cnt_g       : positive                     := 1;                          -- Number of slaves to support (number of spi_cs_n_o* lines)
+          lsb_first_g       : boolean                      := false;                      -- False => MSB first transmission, True => LSB first transmission
+          mosi_idle_state_g : std_logic                    := '0';                        -- Idle state of the MOSI line
+          rst_pol_g         : std_logic                    := '1');                       -- reset polarity, '1' active high
+  port(    -- Control Signals
+          clk_i             : in  std_logic;                                              -- system clock
+          rst_i             : in  std_logic;                                              -- system reset
+          -- Parallel Interface
+          start_i           : in  std_logic;                                              -- starts the transfer. Note that starting a transaction is  only possible when busy_o is low.
+          slave_i           : in  std_logic_vector(log2ceil(slave_cnt_g) - 1 downto 0);   -- Slave number to access  
+          busy_o            : out std_logic;                                              -- High during a transaction 
+          done_o            : out std_logic;                                              -- Goes high for a clock cycle after transaction is done and *rd_dat_o* is valid  
+          wr_dat_i          : in  std_logic_vector(max_trans_width_g - 1 downto 0);       -- Data to send to slave. Sampled  during start_i = '1'
+          rd_dat_o          : out std_logic_vector(max_trans_width_g - 1 downto 0);       -- Data received from slave. Must be sampled during done = '1' or busy = '0'.   
+          trans_width_i     : in  std_logic_vector(log2ceil(max_trans_width_g) downto 0); -- indicate the actual vector length to forward/receive
+          -- SPI
+          spi_sck_o         : out std_logic;                                              -- SPI clock  
+          spi_mosi_o        : out std_logic;                                              -- SPI master to slave data signal 
+          spi_miso_i        : in  std_logic;                                              -- SPI slave to master data signal  
+          spi_cs_n_o        : out std_logic_vector(slave_cnt_g - 1 downto 0));            -- SPI slave select signal (low active)
 end entity;
+-- @formatter:on
 
 ------------------------------------------------------------------------------
 -- Architecture Declaration
@@ -70,31 +58,31 @@ architecture rtl of psi_common_spi_master_cfg is
   type State_t is (Idle_s, SftComp_s, ClkInact_s, ClkAct_s, CsHigh_s);
 
   -- *** Constants ***
-  constant ClkDivThres_c : natural := ClockDivider_g / 2 - 1;
+  constant ClkDivThres_c : natural := clock_divider_g / 2 - 1;
 
   -- *** Two Process Method ***
   type two_process_r is record
-    State     : State_t;
-    StateLast : State_t;
-    ShiftReg  : std_logic_vector(MaxTransWidth_g - 1 downto 0);
-    RdData    : std_logic_vector(MaxTransWidth_g - 1 downto 0);
-    SpiCs_n   : std_logic_vector(SlaveCnt_g - 1 downto 0);
-    SpiSck    : std_logic;
-    SpiMosi   : std_logic;
-    ClkDivCnt : integer range 0 to ClkDivThres_c;
-    BitCnt    : integer range 0 to MaxTransWidth_g;
-    CsHighCnt : integer range 0 to CsHighCycles_g - 1;
-    Busy      : std_logic;
-    Done      : std_logic;
-    MosiNext  : std_logic;
-    TransWidth: std_logic_vector(log2ceil(MaxTransWidth_g) downto 0);
+    State         : State_t;
+    StateLast     : State_t;
+    ShiftReg      : std_logic_vector(max_trans_width_g - 1 downto 0);
+    rd_dat_o      : std_logic_vector(max_trans_width_g - 1 downto 0);
+    spi_cs_n_o    : std_logic_vector(slave_cnt_g - 1 downto 0);
+    spi_sck_o     : std_logic;
+    spi_mosi_o    : std_logic;
+    ClkDivCnt     : integer range 0 to ClkDivThres_c;
+    BitCnt        : integer range 0 to max_trans_width_g;
+    CsHighCnt     : integer range 0 to cs_high_cycles_g - 1;
+    busy_o        : std_logic;
+    done_o        : std_logic;
+    MosiNext      : std_logic;
+    trans_width_i : std_logic_vector(log2ceil(max_trans_width_g) downto 0);
   end record;
   signal r, r_next : two_process_r;
 
   -- *** Functions and procedures ***
   function GetClockLevel(ClkActive : boolean) return std_logic is
   begin
-    if SpiCPOL_g = 0 then
+    if spi_cpol_g = 0 then
       if ClkActive then
         return '1';
       else
@@ -109,12 +97,12 @@ architecture rtl of psi_common_spi_master_cfg is
     end if;
   end function;
 
-  procedure ShiftReg(signal BeforeShift  : in std_logic_vector(MaxTransWidth_g-1 downto 0);
-                     variable AfterShift : out std_logic_vector(MaxTransWidth_g-1 downto 0);
+  procedure ShiftReg(signal BeforeShift  : in std_logic_vector(max_trans_width_g-1 downto 0);
+                     variable AfterShift : out std_logic_vector(max_trans_width_g-1 downto 0);
                      signal InputBit     : in std_logic;
                      variable OutputBit  : out std_logic) is
   begin
-    if LsbFirst_g then
+    if lsb_first_g then
       OutputBit  := BeforeShift(0);
       AfterShift := InputBit & BeforeShift(BeforeShift'high downto 1);
     else
@@ -127,30 +115,30 @@ begin
   --------------------------------------------------------------------------
   -- Assertions
   --------------------------------------------------------------------------
-  assert floor(real(ClockDivider_g) / 2.0) = ceil(real(ClockDivider_g) / 2.0) report "###ERROR###: psi_common_spi_master - Ratio ClockDivider_g must be a multiple of two" severity error;
+  assert floor(real(clock_divider_g) / 2.0) = ceil(real(clock_divider_g) / 2.0) report "###ERROR###: psi_common_spi_master - Ratio clock_divider_g must be a multiple of two" severity error;
 
   --------------------------------------------------------------------------
   -- Combinatorial Proccess
   --------------------------------------------------------------------------
-  p_comb : process(r, Start, WrData, SpiMiso, Slave, TransWidth)
+  p_comb : process(r, start_i, wr_dat_i, spi_miso_i, slave_i, trans_width_i)
     variable v : two_process_r;
   begin
     -- *** hold variables stable ***
     v := r;
 
     -- *** Default Values ***
-    v.Done := '0';
+    v.done_o := '0';
 
     -- *** State Machine ***
     case r.State is
       when Idle_s =>
         -- Start of Transfer
-        if Start = '1' then
-          v.ShiftReg                             := WrData;
-          v.SpiCs_n(to_integer(unsigned(Slave))) := '0';
-          v.State                                := SftComp_s;
-          v.Busy                                 := '1';
-          v.TransWidth                           := TransWidth;
+        if start_i = '1' then
+          v.ShiftReg                                  := wr_dat_i;
+          v.spi_cs_n_o(to_integer(unsigned(slave_i))) := '0';
+          v.State                                     := SftComp_s;
+          v.busy_o                                    := '1';
+          v.trans_width_i                             := trans_width_i;
         end if;
         v.CsHighCnt := 0;
         v.ClkDivCnt := 0;
@@ -159,26 +147,26 @@ begin
       when SftComp_s =>
         v.State := ClkInact_s;
         -- Compensate shift for CPHA 0
-        if SpiCPHA_g = 0 then
-          ShiftReg(r.ShiftReg, v.ShiftReg, SpiMiso, v.MosiNext);
+        if spi_cpha_g = 0 then
+          ShiftReg(r.ShiftReg, v.ShiftReg, spi_miso_i, v.MosiNext);
         end if;
 
       when ClkInact_s =>
-        v.SpiSck := GetClockLevel(false);
+        v.spi_sck_o := GetClockLevel(false);
         -- Apply/Latch data if required
         if r.ClkDivCnt = 0 then
-          if SpiCPHA_g = 0 then
-            v.SpiMosi := r.MosiNext;
+          if spi_cpha_g = 0 then
+            v.spi_mosi_o := r.MosiNext;
           else
-            ShiftReg(r.ShiftReg, v.ShiftReg, SpiMiso, v.MosiNext);
+            ShiftReg(r.ShiftReg, v.ShiftReg, spi_miso_i, v.MosiNext);
           end if;
         end if;
         -- Clock period handling
         if r.ClkDivCnt = ClkDivThres_c then
           -- All bits done
-          if r.BitCnt = to_integer(unsigned(r.TransWidth)) then
-            v.SpiMosi := MosiIdleState_g;
-            v.State   := CsHigh_s;
+          if r.BitCnt = to_integer(unsigned(r.trans_width_i)) then
+            v.spi_mosi_o := mosi_idle_state_g;
+            v.State      := CsHigh_s;
           -- Otherwise contintue
           else
             v.State := ClkAct_s;
@@ -189,13 +177,13 @@ begin
         end if;
 
       when ClkAct_s =>
-        v.SpiSck := GetClockLevel(true);
+        v.spi_sck_o := GetClockLevel(true);
         -- Apply data if required
         if r.ClkDivCnt = 0 then
-          if SpiCPHA_g = 1 then
-            v.SpiMosi := r.MosiNext;
+          if spi_cpha_g = 1 then
+            v.spi_mosi_o := r.MosiNext;
           else
-            ShiftReg(r.ShiftReg, v.ShiftReg, SpiMiso, v.MosiNext);
+            ShiftReg(r.ShiftReg, v.ShiftReg, spi_miso_i, v.MosiNext);
           end if;
         end if;
         -- Clock period handling
@@ -208,17 +196,15 @@ begin
         end if;
 
       when CsHigh_s =>
-        v.SpiCs_n := (others => '1');
-        if r.CsHighCnt = CsHighCycles_g - 1 then
-          v.State  := Idle_s;
-          v.Busy   := '0';
-          v.Done   := '1';
-          v.RdData := r.ShiftReg;
+        v.spi_cs_n_o := (others => '1');
+        if r.CsHighCnt = cs_high_cycles_g - 1 then
+          v.State    := Idle_s;
+          v.busy_o   := '0';
+          v.done_o   := '1';
+          v.rd_dat_o := r.ShiftReg;
         else
           v.CsHighCnt := r.CsHighCnt + 1;
         end if;
-
-      when others => null;
     end case;
 
     -- *** assign signal ***
@@ -228,30 +214,29 @@ begin
   --------------------------------------------------------------------------
   -- Outputs
   --------------------------------------------------------------------------
-  Busy    <= r.Busy;
-  Done    <= r.Done;
-  RdData  <= r.RdData;
-  SpiSck  <= r.SpiSck;
-  SpiCs_n <= r.SpiCs_n;
-  SpiMosi <= r.SpiMosi;
+  busy_o     <= r.busy_o;
+  done_o     <= r.done_o;
+  rd_dat_o   <= r.rd_dat_o;
+  spi_sck_o  <= r.spi_sck_o;
+  spi_cs_n_o <= r.spi_cs_n_o;
+  spi_mosi_o <= r.spi_mosi_o;
 
   --------------------------------------------------------------------------
   -- Sequential Proccess
   --------------------------------------------------------------------------
-  p_seq : process(Clk)
+  p_seq : process(clk_i)
   begin
-    if rising_edge(Clk) then
+    if rising_edge(clk_i) then
       r <= r_next;
-      if Rst = '1' then
-        r.State   <= Idle_s;
-        r.SpiCs_n <= (others => '1');
-        r.SpiSck  <= GetClockLevel(false);
-        r.Busy    <= '0';
-        r.Done    <= '0';
-        r.SpiMosi <= MosiIdleState_g;
+      if rst_i = rst_pol_g then
+        r.State      <= Idle_s;
+        r.spi_cs_n_o <= (others => '1');
+        r.spi_sck_o  <= GetClockLevel(false);
+        r.busy_o     <= '0';
+        r.done_o     <= '0';
+        r.spi_mosi_o <= mosi_idle_state_g;
       end if;
     end if;
   end process;
 
-end;
-
+end architecture;

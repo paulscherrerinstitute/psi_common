@@ -51,15 +51,15 @@ begin
 	------------------------------------------------------------
 	i_dut : entity work.psi_common_ping_pong
 		generic map(ch_nb_g        => 3,
-		            sample_nb_g    => 6,
-		            dat_length_g   => 16,
+		            depth_g    => 6,
+		            width_g   => 16,
 		            tdm_g          => true,
 		            ram_behavior_g => "RBW",
 		            rst_pol_g      => '1')
 		port map(clk_i          => clk_i,
 		         rst_i          => rst_i,
 		         dat_i          => dat_i,
-		         str_i          => str_i,
+		         vld_i          => str_i,
 		         mem_irq_o      => mem_irq_o,
 		         mem_clk_i      => mem_clk_i,
 		         mem_addr_spl_i => mem_addr_spl_i,

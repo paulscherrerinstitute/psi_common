@@ -1,3 +1,10 @@
+## 3.0.0
+* Cleaning
+  * All codes have been unified for better readibility and all tabs have been removed 
+  * new script added to update your current project and replace instantiation with json database file
+* Added Features
+  * Added *psi\_common\_pwm*
+  
 ## 2.17.1
 * Bugfixes
   * Merge: psi_common_tdm_par_fill merged to psi_common_tdm_par 

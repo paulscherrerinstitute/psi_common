@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --  Copyright (c) 2019 by Paul Scherrer Institute, Switzerland
 --  All rights reserved.
---  Authors: Beno�t Stef & Oliver Bruendler
+--  Authors: BenoÃÂ®t Stef & Oliver Bruendler
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -21,9 +21,9 @@ use work.psi_tb_activity_pkg.all;
 entity psi_common_delay_cfg_tb is
   generic(freq_clk_g    : integer  := 100E6; --clock frequency in Hz 
           Width_g       : positive := 16; --data width in bits
-          MaxDelay_g    : positive := 100; -- max delay for the block
+          max_delay_g    : positive := 100; -- max delay for the block
           Delay_g       : positive := 2; -- initial delay     
-          RamBehavior_g : string   := "RBW" --RAM behavior 
+          ram_behavior_g : string   := "RBW" --RAM behavior 
          );
 end entity;
 
@@ -34,7 +34,7 @@ architecture tb of psi_common_delay_cfg_tb is
   signal rst_sti    : std_logic                                           := '1';
   signal dat_sti    : std_logic_vector(Width_g - 1 downto 0)              := (others => '0');
   signal str_sti    : std_logic                                           := '0';
-  signal del_sti    : std_logic_vector(log2ceil(MaxDelay_g) - 1 downto 0) := to_uslv(Delay_g, log2ceil(MaxDelay_g));
+  signal del_sti    : std_logic_vector(log2ceil(max_delay_g) - 1 downto 0) := to_uslv(Delay_g, log2ceil(max_delay_g));
   --*** observable signals ***
   signal dat_obs    : std_logic_vector((Width_g - 1) downto 0);
   --*** TB Control ***
@@ -84,15 +84,15 @@ begin
 
   --*** DUT***
   inst_dut : entity work.psi_common_delay_cfg
-    generic map(Width_g       => Width_g,
-                MaxDelay_g    => MaxDelay_g,
-                RStPol_g      => '1',
-                RamBehavior_g => RamBehavior_g,
-                Hold_g        => True)  -- DO NOT EDIT in this TESTBENCH
+    generic map(width_g       => Width_g,
+                max_delay_g    => max_delay_g,
+                rst_pol_g      => '1',
+                ram_behavior_g => ram_behavior_g,
+                hold_g        => True)  -- DO NOT EDIT in this TESTBENCH
     port map(clk_i => clk_sti,
              rst_i => rst_sti,
              dat_i => dat_sti,
-             str_i => str_sti,
+             vld_i => str_sti,
              del_i => del_sti,
              dat_o => dat_obs);
 
@@ -137,7 +137,7 @@ begin
     -------------------------------------------------------------------
     --*** Vld high constantaly with a delay change ***
     print(">> Vld high constantly & delay change on the fly");
-    wait for MaxDelay_g * period_c;
+    wait for max_delay_g * period_c;
     del_sti <= to_uslv(33, del_sti'length);
     str_sti <= '0';
     wait for period_c;
@@ -194,9 +194,9 @@ begin
     -------------------------------------------------------------------
     -- *** Vld toggling with max delay ***
     wait for from_uslv(del_sti) * period_c;
-    diff_v       := MaxDelay_g - 1 - from_uslv(del_sti);
+    diff_v       := max_delay_g - 1 - from_uslv(del_sti);
     prev_delay_v := from_uslv(del_sti);
-    del_sti      <= to_uslv(MaxDelay_g - 1, del_sti'length);
+    del_sti      <= to_uslv(max_delay_g - 1, del_sti'length);
 
     wait for period_c;
     wait until rising_edge(clk_sti);
@@ -236,7 +236,7 @@ begin
     dat_sti <= (others => '0');
     wait for from_uslv(del_sti) * period_c;
     WaitClockCycles(3, clk_sti);
-    del_sti <= to_uslv(MaxDelay_g - 1, del_sti'length);
+    del_sti <= to_uslv(max_delay_g - 1, del_sti'length);
     str_sti <= '1';
     dat_sti <= to_uslv(100, dat_sti'length);
     wait for 2 * from_uslv(del_sti) * period_c;

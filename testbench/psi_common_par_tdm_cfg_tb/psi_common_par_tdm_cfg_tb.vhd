@@ -33,8 +33,8 @@ end entity;
 ------------------------------------------------------------
 architecture sim of psi_common_par_tdm_cfg_tb is
 	-- *** Fixed Generics ***
-	constant ChannelCount_g : natural := 3;
-	constant ChannelWidth_g : natural := 8;
+	constant channel_count_g : natural := 3;
+	constant channel_width_g : natural := 8;
 	
 	-- *** Not Assigned Generics (default values) ***
 	
@@ -47,14 +47,14 @@ architecture sim of psi_common_par_tdm_cfg_tb is
 	constant TbProcNr_outp_c : integer := 1;
 	
 	-- *** DUT Signals ***
-	signal Clk : std_logic := '1';
-	signal Rst : std_logic := '1';
-	signal Parallel : std_logic_vector(ChannelCount_g*ChannelWidth_g-1 downto 0) := (others => '0');
-	signal ParallelVld : std_logic := '0';
-	signal EnabledChannels : integer range 0 to ChannelCount_g := ChannelCount_g;
-	signal Tdm : std_logic_vector(ChannelWidth_g-1 downto 0) := (others => '0');
-	signal TdmLast : std_logic := '0';
-	signal TdmVld : std_logic := '0';
+	signal clk_i : std_logic := '1';
+	signal rst_i : std_logic := '1';
+	signal dat_i : std_logic_vector(channel_count_g*channel_width_g-1 downto 0) := (others => '0');
+	signal vld_i : std_logic := '0';
+	signal enabled_channels_i : integer range 0 to channel_count_g := channel_count_g;
+	signal dat_o : std_logic_vector(channel_width_g-1 downto 0) := (others => '0');
+	signal last_o : std_logic := '0';
+	signal vld_o : std_logic := '0';
 	
 	-- handwritten
 	signal TestCase	: integer := -1;
@@ -62,39 +62,39 @@ architecture sim of psi_common_par_tdm_cfg_tb is
 	
 	procedure ExpectChannels(	Values : in t_ainteger(0 to 2)) is
 	begin
-		wait until rising_edge(Clk) and TdmVld = '1';
-		StdlCompare(0, TdmLast, "Last asserted wrongly channel 0");
-		StdlvCompareInt (Values(0), Tdm, "Wrong value Channel 0", false);
-		wait until rising_edge(Clk) and TdmVld = '1';
-		StdlvCompareInt (Values(1), Tdm, "Wrong value Channel 1", false);
-		StdlCompare(0, TdmLast, "Last asserted wrongly channel 1");
-		wait until rising_edge(Clk) and TdmVld = '1';
-		StdlvCompareInt (Values(2), Tdm, "Wrong value Channel 2", false);
-		StdlCompare(1, TdmLast, "Last not asserted 2");
+		wait until rising_edge(clk_i) and vld_o = '1';
+		StdlCompare(0, last_o, "Last asserted wrongly channel 0");
+		StdlvCompareInt (Values(0), dat_o, "Wrong value Channel 0", false);
+		wait until rising_edge(clk_i) and vld_o = '1';
+		StdlvCompareInt (Values(1), dat_o, "Wrong value Channel 1", false);
+		StdlCompare(0, last_o, "Last asserted wrongly channel 1");
+		wait until rising_edge(clk_i) and vld_o = '1';
+		StdlvCompareInt (Values(2), dat_o, "Wrong value Channel 2", false);
+		StdlCompare(1, last_o, "Last not asserted 2");
 	end procedure;
 	
 begin
 	------------------------------------------------------------
 	-- DUT Instantiation
 	------------------------------------------------------------
-	Parallel(ChannelWidth_g*3-1 downto ChannelWidth_g*2) <= Channels(2);
-	Parallel(ChannelWidth_g*2-1 downto ChannelWidth_g*1) <= Channels(1);
-	Parallel(ChannelWidth_g*1-1 downto ChannelWidth_g*0) <= Channels(0);
+	dat_i(channel_width_g*3-1 downto channel_width_g*2) <= Channels(2);
+	dat_i(channel_width_g*2-1 downto channel_width_g*1) <= Channels(1);
+	dat_i(channel_width_g*1-1 downto channel_width_g*0) <= Channels(0);
 	
 	i_dut : entity work.psi_common_par_tdm_cfg
 		generic map (
-			ChannelCount_g => ChannelCount_g,
-			ChannelWidth_g => ChannelWidth_g
+			ch_nb_g => channel_count_g,
+			ch_width_g => channel_width_g
 		)
 		port map (
-			Clk => Clk,
-			Rst => Rst,
-			Parallel => Parallel,
-			EnabledChannels => EnabledChannels,
-			ParallelVld => ParallelVld,
-			Tdm => Tdm,
-			TdmVld => TdmVld,
-			TdmLast => TdmLast
+			clk_i => clk_i,
+			rst_i => rst_i,
+			dat_i => dat_i,
+			enabled_ch_i => enabled_channels_i,
+			vld_i => vld_i,
+			dat_o => dat_o,
+			vld_o => vld_o,
+			last_o => last_o
 		);
 	
 	------------------------------------------------------------
@@ -102,7 +102,7 @@ begin
 	------------------------------------------------------------
 	p_tb_control : process
 	begin
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		wait until ProcessDone = AllProcessesDone_c;
 		TbRunning <= false;
 		wait;
@@ -116,7 +116,7 @@ begin
 	begin
 		while TbRunning loop
 			wait for 0.5*(1 sec)/Frequency_c;
-			Clk <= not Clk;
+			clk_i <= not clk_i;
 		end loop;
 		wait;
 	end process;
@@ -129,9 +129,9 @@ begin
 	begin
 		wait for 1 us;
 		-- Wait for two clk edges to ensure reset is active for at least one edge
-		wait until rising_edge(Clk);
-		wait until rising_edge(Clk);
-		Rst <= '0';
+		wait until rising_edge(clk_i);
+		wait until rising_edge(clk_i);
+		rst_i <= '0';
 		wait;
 	end process;
 	
@@ -143,70 +143,70 @@ begin
 	p_inp : process
 	begin
 		-- start of process !DO NOT EDIT
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		
 		-- *** Samples with much space in between ***
 		TestCase <= 0;
 		-- First Sample
-		wait until rising_edge(Clk);
+		wait until rising_edge(clk_i);
 		Channels(0) <= X"01";
 		Channels(1) <= X"11";
 		Channels(2) <= X"21";
-		ParallelVld <= '1';
-		wait until rising_edge(Clk);
-		ParallelVld <= '0';
+		vld_i <= '1';
+		wait until rising_edge(clk_i);
+		vld_i <= '0';
 		Channels <= (others => (others => '0'));
 		wait for 1 us;
 		
 		-- Second Sample
-		wait until rising_edge(Clk);
+		wait until rising_edge(clk_i);
 		Channels(0) <= X"02";
 		Channels(1) <= X"12";
 		Channels(2) <= X"22";	
-		ParallelVld <= '1';
-		wait until rising_edge(Clk);	
-		ParallelVld <= '0';
+		vld_i <= '1';
+		wait until rising_edge(clk_i);	
+		vld_i <= '0';
 		Channels <= (others => (others => '0'));	
 		wait for 1 us;
 
 		-- *** Samples at maximum rate ***
 		TestCase <= 1;
 		for i in 0 to 5 loop
-			wait until rising_edge(Clk);
-			Channels(0) <= std_logic_vector(to_unsigned(16#50# + i, ChannelWidth_g));
-			Channels(1) <= std_logic_vector(to_unsigned(16#60# + i, ChannelWidth_g));
-			Channels(2) <= std_logic_vector(to_unsigned(16#70# + i, ChannelWidth_g));	
-			ParallelVld <= '1';
-			wait until rising_edge(Clk);
-			ParallelVld <= '0';
+			wait until rising_edge(clk_i);
+			Channels(0) <= std_logic_vector(to_unsigned(16#50# + i, channel_width_g));
+			Channels(1) <= std_logic_vector(to_unsigned(16#60# + i, channel_width_g));
+			Channels(2) <= std_logic_vector(to_unsigned(16#70# + i, channel_width_g));	
+			vld_i <= '1';
+			wait until rising_edge(clk_i);
+			vld_i <= '0';
 			Channels <= (others => (others => '0'));
-			wait until rising_edge(Clk);
+			wait until rising_edge(clk_i);
 		end loop;
 		wait for 1 us;
 		
 		-- *** Do less channels that maximum ***
 		TestCase <= 2;
-		wait until rising_edge(Clk);
-		Channels(0) <= std_logic_vector(to_unsigned(16#0A#, ChannelWidth_g));
-		Channels(1) <= std_logic_vector(to_unsigned(16#0B#, ChannelWidth_g));
-		Channels(2) <= std_logic_vector(to_unsigned(16#0C#, ChannelWidth_g));
-		EnabledChannels	<= 2;
-		ParallelVld <= '1';
-		wait until rising_edge(Clk);
-		ParallelVld <= '0';
+		wait until rising_edge(clk_i);
+		Channels(0) <= std_logic_vector(to_unsigned(16#0A#, channel_width_g));
+		Channels(1) <= std_logic_vector(to_unsigned(16#0B#, channel_width_g));
+		Channels(2) <= std_logic_vector(to_unsigned(16#0C#, channel_width_g));
+		enabled_channels_i	<= 2;
+		vld_i <= '1';
+		wait until rising_edge(clk_i);
+		vld_i <= '0';
 		Channels <= (others => (others => '0'));
-		wait until rising_edge(Clk);
-		wait until rising_edge(Clk);
-		wait until rising_edge(Clk);
-		Channels(0) <= std_logic_vector(to_unsigned(16#0D#, ChannelWidth_g));
-		Channels(1) <= std_logic_vector(to_unsigned(16#0E#, ChannelWidth_g));
-		Channels(2) <= std_logic_vector(to_unsigned(16#0F#, ChannelWidth_g));
-		EnabledChannels	<= 1;
-		ParallelVld <= '1';
-		wait until rising_edge(Clk);
-		ParallelVld <= '0';
+		wait until rising_edge(clk_i);
+		wait until rising_edge(clk_i);
+		wait until rising_edge(clk_i);
+		Channels(0) <= std_logic_vector(to_unsigned(16#0D#, channel_width_g));
+		Channels(1) <= std_logic_vector(to_unsigned(16#0E#, channel_width_g));
+		Channels(2) <= std_logic_vector(to_unsigned(16#0F#, channel_width_g));
+		enabled_channels_i	<= 1;
+		vld_i <= '1';
+		wait until rising_edge(clk_i);
+		vld_i <= '0';
 		Channels <= (others => (others => '0'));
-		wait until rising_edge(Clk);
+		wait until rising_edge(clk_i);
 		
 			
 		-- end of process !DO NOT EDIT!
@@ -218,7 +218,7 @@ begin
 	p_outp : process
 	begin
 		-- start of process !DO NOT EDIT
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		
 		-- *** Samples with much space in between ***
 		wait until TestCase = 0;
@@ -235,20 +235,20 @@ begin
 		
 		-- *** Do less channels that maximum ***
 		wait until TestCase = 2;
-		wait until rising_edge(Clk) and TdmVld = '1';
-		StdlCompare(0, TdmLast, "Last asserted wrongly channel 0");
-		StdlvCompareInt (16#0A#, Tdm, "Wrong value Channel 0", false);
-		wait until rising_edge(Clk) and TdmVld = '1';
-		StdlvCompareInt (16#0B#, Tdm, "Wrong value Channel 1", false);
-		StdlCompare(1, TdmLast, "Last not asserted 1");
-		wait until rising_edge(Clk);
-		StdlCompare(0, TdmVld, "TdmVld not de-asserted");
+		wait until rising_edge(clk_i) and vld_o = '1';
+		StdlCompare(0, last_o, "Last asserted wrongly channel 0");
+		StdlvCompareInt (16#0A#, dat_o, "Wrong value Channel 0", false);
+		wait until rising_edge(clk_i) and vld_o = '1';
+		StdlvCompareInt (16#0B#, dat_o, "Wrong value Channel 1", false);
+		StdlCompare(1, last_o, "Last not asserted 1");
+		wait until rising_edge(clk_i);
+		StdlCompare(0, vld_o, "vld_o not de-asserted");
 		
-		wait until rising_edge(Clk) and TdmVld = '1';
-		StdlvCompareInt (16#0D#, Tdm, "Wrong value Channel 0", false);
-		StdlCompare(1, TdmLast, "Last not asserted 0");
-		wait until rising_edge(Clk);
-		StdlCompare(0, TdmVld, "TdmVld not de-asserted");
+		wait until rising_edge(clk_i) and vld_o = '1';
+		StdlvCompareInt (16#0D#, dat_o, "Wrong value Channel 0", false);
+		StdlCompare(1, last_o, "Last not asserted 0");
+		wait until rising_edge(clk_i);
+		StdlCompare(0, vld_o, "vld_o not de-asserted");
 		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_outp_c) <= '1';

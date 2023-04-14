@@ -38,31 +38,31 @@ architecture sim of psi_common_trigger_digital_tb is
   signal ProcessDone          : std_logic_vector(0 to 0) := (others => '0');
   constant AllProcessesDone_c : std_logic_vector(0 to 0) := (others => '1');
   -- *** DUT Signals ***
-  signal InClk                 : std_logic                                                                  := '1';
-  signal InRst                 : std_logic                                                                  := '1';
-  signal InTrgModeCfg          : std_logic_vector(0 downto 0)                                               := (others => '0');
-  signal InTrgArmCfg           : std_logic                                                                  := '0';
-  signal InTrgEdgeCfg          : std_logic_vector(1 downto 0)                                               := (others => '0');
-  signal InDigitalTrg          : std_logic_vector(digital_input_number_g - 1 downto 0) := (others => '0');
-  signal InTrgDigitalSourceCfg : std_logic_vector(choose(digital_input_number_g>1,log2ceil(digital_input_number_g)-1,0) downto 0):= (others => '0');
-  signal InExtDisarm           : std_logic  := '0';
-  signal OutTrgIsArmed         : std_logic;
-  signal OutTrigger            : std_logic;
+  signal clk_i                 : std_logic                                                                  := '1';
+  signal rst_i                 : std_logic                                                                  := '1';
+  signal trg_mode_cfg_i          : std_logic_vector(0 downto 0)                                               := (others => '0');
+  signal trg_arm_cfg_i           : std_logic                                                                  := '0';
+  signal trg_edge_cfg_i          : std_logic_vector(1 downto 0)                                               := (others => '0');
+  signal digital_trg_i          : std_logic_vector(digital_input_number_g - 1 downto 0) := (others => '0');
+  signal trg_digital_source_cfg_i : std_logic_vector(choose(digital_input_number_g>1,log2ceil(digital_input_number_g)-1,0) downto 0):= (others => '0');
+  signal ext_disarm_i           : std_logic  := '0';
+  signal trg_is_armed_o         : std_logic;
+  signal trigger_o            : std_logic;
 
   -- handwritten
   signal TestCase : integer := -1;
 
   procedure ExpectTriggerIs(Value : in integer) is
   begin
-    wait until rising_edge(InClk);
-    wait until rising_edge(InClk);
-    StdlCompare(Value, OutTrigger, "Wrong OutTrigger behaviour");
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    StdlCompare(Value, trigger_o, "Wrong trigger_o behaviour");
   end procedure;
 
   procedure ExpectTrgIsArmedIs(Value : in integer) is
   begin
-    wait until rising_edge(InClk);
-    StdlCompare(Value, OutTrgIsArmed, "Wrong OutTrgIsArmed behaviour");
+    wait until rising_edge(clk_i);
+    StdlCompare(Value, trg_is_armed_o, "Wrong trg_is_armed_o behaviour");
   end procedure;
 
 begin
@@ -71,20 +71,20 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_trigger_digital
     generic map(
-      digital_input_number_g => digital_input_number_g,
+      trig_nb_g => digital_input_number_g,
       rst_pol_g               => rst_pol_g
     )
     port map(
-      InClk => InClk,
-      InRst => InRst,
-      InTrgModeCfg => InTrgModeCfg,
-      InTrgArmCfg => InTrgArmCfg,
-      InTrgEdgeCfg => InTrgEdgeCfg,
-      InTrgDigitalSourceCfg => InTrgDigitalSourceCfg,
-      InDigitalTrg => InDigitalTrg,
-      InExtDisarm => InExtDisarm,
-      OutTrgIsArmed => OutTrgIsArmed,
-      OutTrigger => OutTrigger
+      clk_i => clk_i,
+      rst_i => rst_i,
+      trg_mode_cfg_i => trg_mode_cfg_i,
+      trg_arm_cfg_i => trg_arm_cfg_i,
+      trg_edge_cfg_i => trg_edge_cfg_i,
+      trg_digital_source_cfg_i => trg_digital_source_cfg_i,
+      digital_trg_i => digital_trg_i,
+      ext_disarm_i => ext_disarm_i,
+      trg_is_armed_o => trg_is_armed_o,
+      trigger_o => trigger_o
     );
 
   ------------------------------------------------------------
@@ -92,7 +92,7 @@ begin
   ------------------------------------------------------------
   p_tb_control : process
   begin
-    wait until InRst = '0';
+    wait until rst_i = '0';
     wait until ProcessDone = AllProcessesDone_c;
     TbRunning <= false;
     wait;
@@ -106,7 +106,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      InClk <= not InClk;
+      clk_i <= not clk_i;
     end loop;
     wait;
   end process;
@@ -118,9 +118,9 @@ begin
   begin
     wait for 1 us;
     -- Wait for two InClk edges to ensure reset is active for at least one edge
-    wait until rising_edge(InClk);
-    wait until rising_edge(InClk);
-    InRst <= '0';
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    rst_i <= '0';
     wait;
   end process;
 
@@ -131,338 +131,338 @@ begin
   p_inp : process
   begin
     -- start of process !DO NOT EDIT
-    wait until InRst = '0';
+    wait until rst_i = '0';
 
     -- *** digital trigger test ***
 
-    InTrgArmCfg <= '0';                 -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg <= '1';
-    wait until rising_edge(InClk);
+    trg_arm_cfg_i <= '0';                 -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i <= '1';
+    wait until rising_edge(clk_i);
 
     -- Continuous mode, two sensitive edges, multi clock cycle input
     TestCase <= 0;
 
-    InTrgModeCfg(0)          <= '0';      -- continuous mode
-    InTrgEdgeCfg          <= "11";      -- both edges are sensitive
-    InTrgDigitalSourceCfg <= std_logic_vector(to_unsigned(0,log2ceil(digital_input_number_g)));
+    trg_mode_cfg_i(0)          <= '0';      -- continuous mode
+    trg_edge_cfg_i          <= "11";      -- both edges are sensitive
+    trg_digital_source_cfg_i <= std_logic_vector(to_unsigned(0,log2ceil(digital_input_number_g)));
 
-    wait until rising_edge(InClk);
-    InDigitalTrg(0) <= '0';
+    wait until rising_edge(clk_i);
+    digital_trg_i(0) <= '0';
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Continuous mode, two sensitive edges, single clock cycle input
     TestCase <= 1;
 
-    InTrgModeCfg(0)          <= '0';      -- continuous mode
-    InTrgEdgeCfg <= "11";               -- both edges are sensitive
+    trg_mode_cfg_i(0)          <= '0';      -- continuous mode
+    trg_edge_cfg_i <= "11";               -- both edges are sensitive
 
-    wait until rising_edge(InClk);
-    InDigitalTrg(0) <= '0';
+    wait until rising_edge(clk_i);
+    digital_trg_i(0) <= '0';
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
-    InDigitalTrg(0) <= '0';
+    digital_trg_i(0) <= '0';
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Continuous mode, rising edge, multi clock cycle input
     TestCase <= 2;
 
-    InTrgModeCfg(0)          <= '0';      -- continuous mode
-    InTrgArmCfg  <= '0';                -- not used in continuous mode
-    InTrgEdgeCfg <= "10";               -- rising edge sensitive
+    trg_mode_cfg_i(0)          <= '0';      -- continuous mode
+    trg_arm_cfg_i  <= '0';                -- not used in continuous mode
+    trg_edge_cfg_i <= "10";               -- rising edge sensitive
 
-    wait until rising_edge(InClk);
-    InDigitalTrg(0) <= '0';
+    wait until rising_edge(clk_i);
+    digital_trg_i(0) <= '0';
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Continuous mode, rising edge, single clock cycle input
     TestCase <= 3;
 
-    InTrgModeCfg(0)          <= '0';      -- continuous mode
-    InTrgEdgeCfg <= "10";               -- rising edge sensitive
+    trg_mode_cfg_i(0)          <= '0';      -- continuous mode
+    trg_edge_cfg_i <= "10";               -- rising edge sensitive
 
-    wait until rising_edge(InClk);
-    InDigitalTrg(0) <= '0';
+    wait until rising_edge(clk_i);
+    digital_trg_i(0) <= '0';
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
-    InDigitalTrg(0) <= '0';
+    digital_trg_i(0) <= '0';
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Continuous mode, falling edge, multi clock cycle input
     TestCase <= 4;
 
-    InTrgModeCfg(0)          <= '0';      -- continuous mode
-    InTrgEdgeCfg <= "01";               -- falling edge sensitive
+    trg_mode_cfg_i(0)          <= '0';      -- continuous mode
+    trg_edge_cfg_i <= "01";               -- falling edge sensitive
 
-    wait until rising_edge(InClk);
-    InDigitalTrg(0) <= '0';
+    wait until rising_edge(clk_i);
+    digital_trg_i(0) <= '0';
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Continuous mode, falling edge, single clock cycle input
     TestCase <= 5;
 
-    InTrgModeCfg(0)          <= '0';      -- continuous mode
-    InTrgEdgeCfg <= "01";               -- falling edge sensitive
+    trg_mode_cfg_i(0)          <= '0';      -- continuous mode
+    trg_edge_cfg_i <= "01";               -- falling edge sensitive
 
-    wait until rising_edge(InClk);
-    InDigitalTrg(0) <= '0';
+    wait until rising_edge(clk_i);
+    digital_trg_i(0) <= '0';
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
-    InDigitalTrg(0) <= '0';
+    digital_trg_i(0) <= '0';
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, both edge, multi clock cycle input
     TestCase <= 6;
 
-    InTrgModeCfg(0)          <= '1';      -- single mode
-    InTrgArmCfg     <= '1';             -- de-arm trigger
-    InTrgEdgeCfg    <= "11";
-    wait until rising_edge(InClk);
+    trg_mode_cfg_i(0)          <= '1';      -- single mode
+    trg_arm_cfg_i     <= '1';             -- de-arm trigger
+    trg_edge_cfg_i    <= "11";
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(0);
-    InTrgArmCfg     <= '0';
-    wait until rising_edge(InClk);
+    trg_arm_cfg_i     <= '0';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(0);
-    InTrgArmCfg     <= '1';             -- arm trigger
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    trg_arm_cfg_i     <= '1';             -- arm trigger
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, both edge, single clock cycle input
     TestCase <= 7;
 
-    InTrgModeCfg(0)          <= '1';      -- single mode
-    InTrgArmCfg     <= '0';             -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg     <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg    <= "11";
+    trg_mode_cfg_i(0)          <= '1';      -- single mode
+    trg_arm_cfg_i     <= '0';             -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i     <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i    <= "11";
     ExpectTrgIsArmedIs(1);
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, rising edge, multi clock cycle input
     TestCase <= 8;
 
-    InTrgModeCfg(0)          <= '1';      -- single mode
-    InTrgArmCfg     <= '0';             -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg     <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg    <= "10";
+    trg_mode_cfg_i(0)          <= '1';      -- single mode
+    trg_arm_cfg_i     <= '0';             -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i     <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i    <= "10";
     ExpectTrgIsArmedIs(1);
-    wait until rising_edge(InClk);
-    InTrgArmCfg     <= '0';             -- de-arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg     <= '1';
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i     <= '0';             -- de-arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i     <= '1';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(0);
-    InTrgArmCfg     <= '0';             -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg     <= '1';
-    wait until rising_edge(InClk);
+    trg_arm_cfg_i     <= '0';             -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i     <= '1';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, rising edge, single clock cycle input
     TestCase <= 9;
 
-    InTrgModeCfg(0)          <= '1';      -- single mode
-    InTrgArmCfg     <= '0';             -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg     <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg    <= "10";
+    trg_mode_cfg_i(0)          <= '1';      -- single mode
+    trg_arm_cfg_i     <= '0';             -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i     <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i    <= "10";
     ExpectTrgIsArmedIs(1);
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, rising edge, multi clock cycle input
     TestCase <= 10;
 
-    InTrgModeCfg(0)          <= '1';      -- single mode
-    InTrgArmCfg     <= '0';             -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg     <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg    <= "01";
+    trg_mode_cfg_i(0)          <= '1';      -- single mode
+    trg_arm_cfg_i     <= '0';             -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i     <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i    <= "01";
     ExpectTrgIsArmedIs(1);
-    wait until rising_edge(InClk);
-    InTrgArmCfg     <= '0';             -- de-arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg     <= '1';
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i     <= '0';             -- de-arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i     <= '1';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(0);
-    InTrgArmCfg     <= '0';             -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg     <= '1';
-    wait until rising_edge(InClk);
+    trg_arm_cfg_i     <= '0';             -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i     <= '1';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, rising edge, single clock cycle input
     TestCase <= 11;
 
-    InTrgModeCfg(0)          <= '1';      -- single mode
-    InTrgArmCfg     <= '0';             -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg     <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg    <= "01";
+    trg_mode_cfg_i(0)          <= '1';      -- single mode
+    trg_arm_cfg_i     <= '0';             -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i     <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i    <= "01";
     ExpectTrgIsArmedIs(1);
-    InDigitalTrg(0) <= '0';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '0';
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
-    InDigitalTrg(0) <= '0';
+    digital_trg_i(0) <= '0';
     ExpectTriggerIs(1);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- Single mode, inExtDisarm test
     TestCase <= 12;
 
-    InTrgModeCfg(0)      <= '1';        -- single mode
-    InTrgArmCfg                                                                                    <= '0'; -- arm trigger
-    wait until rising_edge(InClk);
-    InTrgArmCfg                                                                                    <= '1';
-    wait until rising_edge(InClk);
-    InTrgEdgeCfg                                                                                   <= "01";
-    wait until rising_edge(InClk);
+    trg_mode_cfg_i(0)      <= '1';        -- single mode
+    trg_arm_cfg_i                                                                                    <= '0'; -- arm trigger
+    wait until rising_edge(clk_i);
+    trg_arm_cfg_i                                                                                    <= '1';
+    wait until rising_edge(clk_i);
+    trg_edge_cfg_i                                                                                   <= "01";
+    wait until rising_edge(clk_i);
     ExpectTrgIsArmedIs(1);
     wait for 100 ns;
-    wait until rising_edge(InClk);
-    InExtDisarm  <= '1';
-    wait until rising_edge(InClk);
-    InExtDisarm  <= '0';
+    wait until rising_edge(clk_i);
+    ext_disarm_i  <= '1';
+    wait until rising_edge(clk_i);
+    ext_disarm_i  <= '0';
     ExpectTriggerIs(0);
-    InDigitalTrg(0) <= '1';
-    wait until rising_edge(InClk);
+    digital_trg_i(0) <= '1';
+    wait until rising_edge(clk_i);
     ExpectTriggerIs(0);
-    InDigitalTrg(0) <= '0';
+    digital_trg_i(0) <= '0';
     ExpectTriggerIs(0);
     ExpectTrgIsArmedIs(0);
     wait for 100 ns;
-    wait until rising_edge(InClk);
+    wait until rising_edge(clk_i);
 
     -- end of process !DO NOT EDIT!
     ProcessDone(0) <= '1';

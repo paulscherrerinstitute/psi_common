@@ -35,8 +35,8 @@ use work.psi_tb_axi_pkg.all;
 ------------------------------------------------------------
 entity psi_common_axi_slave_ipif64_sram_tb is
   generic(
-    UseMem_g        : boolean := true;
-    AxiThrottling_g : natural := 3
+    use_mem_g        : boolean := true;
+    axi_throttling_g : natural := 3
   );
 end entity psi_common_axi_slave_ipif64_sram_tb;
 
@@ -121,14 +121,14 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_axi_slave_ipif64
     generic map(
-      NumReg_g       => NumReg_g,
-      UseMem_g       => UseMem_g,
-      ResetVal_g     => ResetVal_g,
+      num_reg_g       => NumReg_g,
+      use_mem_g       => use_mem_g,
+      rst_val_g     => ResetVal_g,
       --
-      AxiIdWidth_g   => 1,
-      AxiAddrWidth_g => AxiAddrWidth_g,
-      AxiDataWidth_g => DATA_WIDTH,
-      AxiByteWidth_g => BYTE_WIDTH
+      axi_id_width_g   => 1,
+      axi_addr_width_g => AxiAddrWidth_g,
+      axi_data_width_g => DATA_WIDTH,
+      axi_byte_width_g => BYTE_WIDTH
     )
     port map(
       s_axi_aclk    => s_axi_aclk,
@@ -181,24 +181,24 @@ begin
   gen_dut_sram_block_g : for k in 0 to BYTE_WIDTH - 1 generate --k identifies the bit position of the strobe
     i_dut_sram : entity work.psi_common_sdp_ram
       generic map(
-        Depth_g    => 2**(AxiAddrWidth_g - 3),
-        Width_g    => DATA_WIDTH / 8,
-        IsAsync_g  => false,
-        RamStyle_g => "auto",
-        Behavior_g => "RBW"
+        depth_g    => 2**(AxiAddrWidth_g - 3),
+        width_g    => DATA_WIDTH / 8,
+        is_async_g  => false,
+        ram_style_g => "auto",
+        ram_behavior_g => "RBW"
       )
       port map(
         -- Control Signals
-        Clk    => s_axi_aclk,
-        RdClk  => s_axi_aclk,
+        wr_clk_i    => s_axi_aclk,
+        rd_clk_i  => s_axi_aclk,
         -- Write Port
-        WrAddr => o_mem_addr(o_mem_addr'length - 1 downto 3),
-        Wr     => o_mem_wr(k),
-        WrData => o_mem_wdata((k + 1) * 8 - 1 downto k * 8),
+        wr_addr_i => o_mem_addr(o_mem_addr'length - 1 downto 3),
+        wr_i     => o_mem_wr(k),
+        wr_dat_i => o_mem_wdata((k + 1) * 8 - 1 downto k * 8),
         -- Read Port
-        RdAddr => o_mem_addr(o_mem_addr'length - 1 downto 3),
-        Rd     => '1',
-        RdData => i_mem_rdata((k + 1) * 8 - 1 downto k * 8)
+        rd_addr_i => o_mem_addr(o_mem_addr'length - 1 downto 3),
+        rd_i     => '1',
+        rd_dat_o => i_mem_rdata((k + 1) * 8 - 1 downto k * 8)
       );
   end generate gen_dut_sram_block_g;
 
@@ -269,7 +269,7 @@ begin
     -- *** Test Single Read/Write to Memory ***
     print(">> Single Read/Write to Memory");
     TestCase <= 2;
-    if UseMem_g then
+    if use_mem_g then
       -- write
       axi_single_write(8 * (NumReg_g + 1), "1122334455667788", 16, axi_ms, axi_sm, s_axi_aclk);
       -- read
@@ -291,11 +291,11 @@ begin
       TestCase <= 3;
       -- write
       axi_apply_aw(8 * 1, AxSIZE_8_c, 3 - 1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-      axi_apply_wd_burst(3, "100000007ffffff1", "A", 16, "11111111", "11111111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
+      axi_apply_wd_burst(3, "100000007ffffff1", "A", 16, "11111111", "11111111", axi_ms, axi_sm, s_axi_aclk, axi_throttling_g);
       axi_expect_bresp(xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk);
       -- read
       axi_apply_ar(8 * 1, AxSIZE_8_c, 3 - 1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-      axi_expect_rresp_burst(3, "1000000000000100", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
+      axi_expect_rresp_burst(3, "1000000000000100", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, axi_throttling_g);
       WaitDone(3);
     end if;
 
@@ -305,11 +305,11 @@ begin
       TestCase <= 4;
       -- write
       axi_apply_aw(0, AxSIZE_8_c, NumReg_g - 1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-      axi_apply_wd_burst(NumReg_g, "100000007ffffff1", "A", 16, "11111111", "11111111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
+      axi_apply_wd_burst(NumReg_g, "100000007ffffff1", "A", 16, "11111111", "11111111", axi_ms, axi_sm, s_axi_aclk, axi_throttling_g);
       axi_expect_bresp(xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk);
       -- read
       axi_apply_ar(0, AxSIZE_8_c, NumReg_g - 1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-      axi_expect_rresp_burst(NumReg_g, "1000000000001000", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
+      axi_expect_rresp_burst(NumReg_g, "1000000000001000", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, axi_throttling_g);
       WaitDone(4);
     end if;
 
@@ -318,8 +318,8 @@ begin
     TestCase <= 5;
     -- write
     axi_apply_aw(8 * (NumReg_g), AxSIZE_8_c, 4 - 1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-    axi_apply_wd_burst(4, "1000000000000200", "1", 16, "11111111", "10000111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
-    if UseMem_g then
+    axi_apply_wd_burst(4, "1000000000000200", "1", 16, "11111111", "10000111", axi_ms, axi_sm, s_axi_aclk, axi_throttling_g);
+    if use_mem_g then
       axi_expect_bresp(xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk);
     else
       -- Expect error if memory interface is not implemented
@@ -327,10 +327,10 @@ begin
     end if;
     -- read
     axi_apply_ar(8 * (NumReg_g), AxSIZE_8_c, 4 - 1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk); --Addr=NumReg_g+2 -> ExpData==0x302
-    if UseMem_g then
-      axi_expect_rresp_burst(4, "1000000000000200", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
+    if use_mem_g then
+      axi_expect_rresp_burst(4, "1000000000000200", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, axi_throttling_g);
     else
-      axi_expect_rresp_burst(4, "1000000000000200", "1", 16, xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, true, false, AxiThrottling_g);
+      axi_expect_rresp_burst(4, "1000000000000200", "1", 16, xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, true, false, axi_throttling_g);
     end if;
     WaitDone(5);
 
@@ -339,8 +339,8 @@ begin
     TestCase <= 6;
     -- write
     axi_apply_aw(8 * (NumReg_g - 2), AxSIZE_8_c, 256 - 1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-    axi_apply_wd_burst(256, "1000000000000400", "1", 16, "11111111", "11111111", axi_ms, axi_sm, s_axi_aclk, AxiThrottling_g);
-    if UseMem_g then
+    axi_apply_wd_burst(256, "1000000000000400", "1", 16, "11111111", "11111111", axi_ms, axi_sm, s_axi_aclk, axi_throttling_g);
+    if use_mem_g then
       axi_expect_bresp(xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk);
     else
       -- Expect error if memory interface is not implemented
@@ -348,10 +348,10 @@ begin
     end if;
     -- read
     axi_apply_ar(8 * (NumReg_g - 2), AxSIZE_8_c, 256 - 1, xBURST_INCR_c, axi_ms, axi_sm, s_axi_aclk);
-    if UseMem_g then
-      axi_expect_rresp_burst(256, "1000000000000400", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, AxiThrottling_g);
+    if use_mem_g then
+      axi_expect_rresp_burst(256, "1000000000000400", "1", 16, xRESP_OKAY_c, axi_ms, axi_sm, s_axi_aclk, false, false, axi_throttling_g);
     else
-      axi_expect_rresp_burst(256, "1000000000000400", "1", 16, xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, true, false, AxiThrottling_g);
+      axi_expect_rresp_burst(256, "1000000000000400", "1", 16, xRESP_DECERR_c, axi_ms, axi_sm, s_axi_aclk, true, false, axi_throttling_g);
     end if;
     WaitDone(6);
 
@@ -380,7 +380,7 @@ begin
       StdlvCompareStdlv(X"0000000000000000", o_reg_wdata(2), "Wrong reset data [2]");
       StdlvCompareStdlv(X"0000000000000000", o_reg_wdata(3), "Wrong reset data [3]");
     end if;
-    if UseMem_g then
+    if use_mem_g then
       StdlvCompareStdlv("00000000", o_mem_wr, "Wrong reset o_mem_wr");
     end if;
     CaseDone <= 0;
@@ -398,7 +398,7 @@ begin
     -- *** Test Single Read/Write to Memory ***		
     WaitCase(2);
     -- Write
-    if UseMem_g then
+    if use_mem_g then
       wait until rising_edge(s_axi_aclk) and o_mem_wr = "11111111" for 1 us;
       StdlvCompareStdlv("11111111", o_mem_wr, "Write did not arrive");
       StdlvCompareStdlv(X"1122334455667788", o_mem_wdata, "Received wrong data");
@@ -445,7 +445,7 @@ begin
     -- *** Test Burst Read/Write to Memory ***		
     WaitCase(5);
     -- Write
-    if UseMem_g then
+    if use_mem_g then
       wait until rising_edge(s_axi_aclk) and o_mem_wr /= "00000000" for 1 us;
       StdlvCompareStdlv("11111111", o_mem_wr, "o_mem_wr[0] wrong");
       StdlvCompareStdlv(X"1000000000000200", o_mem_wdata, "o_mem_wdata[0] wrong");
@@ -465,7 +465,7 @@ begin
     -- *** Test Burst over Reg/Mem Boundary***
     WaitCase(6);
     -- write (check each word in parallel since accesses to registers/memory have different timing and can happen at the same time)
-    if UseMem_g then
+    if use_mem_g then
       RecWords_v := (others => '0');
       MemWord_v  := 0;
       while RecWords_v(3 downto 0) /= "1111" loop
@@ -490,7 +490,7 @@ begin
       end loop;
     end if;
     -- read
-    if UseMem_g then
+    if use_mem_g then
       i_reg_rdata(NumReg_g - 2) <= X"1000000000000400";
       i_reg_rdata(NumReg_g - 1) <= X"1000000000000401";
       RecWords_v                := (others => '0');

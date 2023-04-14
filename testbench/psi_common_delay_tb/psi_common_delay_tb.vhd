@@ -25,9 +25,9 @@ use work.psi_tb_txt_util.all;
 ------------------------------------------------------------
 entity psi_common_delay_tb is
   generic(
-    Resource_g    : string  := "AUTO";  -- AUTO, SRL or BRAM
-    Delay_g       : integer := 10;
-    RamBehavior_g : string  := "RBW"
+    resource_g    : string  := "AUTO";  -- AUTO, SRL or BRAM
+    delay_g       : integer := 10;
+    ram_behavior_g : string  := "RBW"
   );
 end entity;
 
@@ -38,9 +38,9 @@ architecture sim of psi_common_delay_tb is
   -- *** Fixed Generics ***
 
   -- *** Not Assigned Generics (default values) ***
-  constant Width_g         : positive := 16;
-  constant BramThreshold_g : positive := 128;
-  constant RstState_g      : boolean  := True;
+  constant width_g         : positive := 16;
+  constant bram_threshold_g : positive := 128;
+  constant rst_state_g      : boolean  := True;
 
   -- *** TB Control ***
   signal TbRunning            : boolean                  := True;
@@ -50,11 +50,11 @@ architecture sim of psi_common_delay_tb is
   constant TbProcNr_Stimuli_c : integer                  := 0;
 
   -- *** DUT Signals ***
-  signal Clk     : std_logic                                := '0';
-  signal Rst     : std_logic                                := '1';
-  signal InData  : std_logic_vector(Width_g - 1 downto 0)   := (others => '0');
-  signal InVld   : std_logic                                := '0';
-  signal OutData : std_logic_vector((Width_g - 1) downto 0) := (others => '0');
+  signal clk_i     : std_logic                                := '0';
+  signal rst_i     : std_logic                                := '1';
+  signal dat_i  : std_logic_vector(width_g - 1 downto 0)   := (others => '0');
+  signal vld_i   : std_logic                                := '0';
+  signal dat_o : std_logic_vector((width_g - 1) downto 0) := (others => '0');
 
 begin
   ------------------------------------------------------------
@@ -62,16 +62,16 @@ begin
   ------------------------------------------------------------
   i_dut : entity work.psi_common_delay
     generic map(
-      Delay_g       => Delay_g,
-      RamBehavior_g => RamBehavior_g,
-      Resource_g    => Resource_g
+      delay_g       => delay_g,
+      ram_behavior_g => ram_behavior_g,
+      resource_g    => resource_g
     )
     port map(
-      Clk     => Clk,
-      Rst     => Rst,
-      InData  => InData,
-      InVld   => InVld,
-      OutData => OutData
+      clk_i     => clk_i,
+      rst_i     => rst_i,
+      dat_i  => dat_i,
+      vld_i   => vld_i,
+      dat_o => dat_o
     );
 
   ------------------------------------------------------------
@@ -92,7 +92,7 @@ begin
   begin
     while TbRunning loop
       wait for 0.5 * (1 sec) / Frequency_c;
-      Clk <= not Clk;
+      clk_i <= not clk_i;
     end loop;
     wait;
   end process;
@@ -109,43 +109,43 @@ begin
   begin
     -- *** Vld high constantly ***
     print(">> Vld high constantly");
-    wait until rising_edge(Clk);
-    Rst   <= '0';
-    wait until rising_edge(Clk);
-    InVld <= '1';
-    for i in 0 to Delay_g + 30 loop
-      InData <= std_logic_vector(to_unsigned(i, Width_g));
-      if i < Delay_g + 1 then           --
-        assert unsigned(OutData) = 0 report "###ERROR###: Out data wrong, expected " & to_string(0) & ", got " & to_string(OutData) severity error;
+    wait until rising_edge(clk_i);
+    rst_i   <= '0';
+    wait until rising_edge(clk_i);
+    vld_i <= '1';
+    for i in 0 to delay_g + 30 loop
+      dat_i <= std_logic_vector(to_unsigned(i, width_g));
+      if i < delay_g + 1 then           --
+        assert unsigned(dat_o) = 0 report "###ERROR###: Out data wrong, expected " & to_string(0) & ", got " & to_string(dat_o) severity error;
       else
         -- output is latched on the  next rising edge, therefore shift by one
-        assert unsigned(OutData) = i - 1 - Delay_g report "###ERROR###: Out data wrong, expected " & to_string(i-1-Delay_g) & ", got " & to_string(OutData) severity error;
+        assert unsigned(dat_o) = i - 1 - delay_g report "###ERROR###: Out data wrong, expected " & to_string(i-1-delay_g) & ", got " & to_string(dat_o) severity error;
       end if;
-      wait until rising_edge(Clk);
+      wait until rising_edge(clk_i);
     end loop;
-    InVld <= '0';
+    vld_i <= '0';
 
     -- *** Vld toggling ***
     print(">> Vld toggling");
-    Rst   <= '1';
-    wait until rising_edge(Clk);
-    Rst   <= '0';
-    wait until rising_edge(Clk);
-    for i in 0 to Delay_g + 30 loop
-      InVld  <= '1';
-      InData <= std_logic_vector(to_unsigned(i, Width_g));
-      if i < Delay_g then
-        assert unsigned(OutData) = 0 report "###ERROR###: Out data wrong, expected " & to_string(0) & ", got " & to_string(OutData) severity error;
+    rst_i   <= '1';
+    wait until rising_edge(clk_i);
+    rst_i   <= '0';
+    wait until rising_edge(clk_i);
+    for i in 0 to delay_g + 30 loop
+      vld_i  <= '1';
+      dat_i <= std_logic_vector(to_unsigned(i, width_g));
+      if i < delay_g then
+        assert unsigned(dat_o) = 0 report "###ERROR###: Out data wrong, expected " & to_string(0) & ", got " & to_string(dat_o) severity error;
       else
-        assert unsigned(OutData) = i - Delay_g report "###ERROR###: Out data wrong, expected " & to_string(i-Delay_g) & ", got " & to_string(OutData) severity error;
+        assert unsigned(dat_o) = i - delay_g report "###ERROR###: Out data wrong, expected " & to_string(i-delay_g) & ", got " & to_string(dat_o) severity error;
       end if;
-      wait until rising_edge(Clk);
-      InVld  <= '0';
-      wait until rising_edge(Clk);
-      wait until rising_edge(Clk);
-      wait until rising_edge(Clk);
+      wait until rising_edge(clk_i);
+      vld_i  <= '0';
+      wait until rising_edge(clk_i);
+      wait until rising_edge(clk_i);
+      wait until rising_edge(clk_i);
     end loop;
-    InVld <= '0';
+    vld_i <= '0';
 
     -- end of process !DO NOT EDIT!
     ProcessDone(TbProcNr_Stimuli_c) <= '1';

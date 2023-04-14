@@ -33,9 +33,9 @@ architecture sim of psi_common_axi_multi_pl_stage_tb is
 	-- *** Fixed Generics ***
 	
 	-- *** Not Assigned Generics (default values) ***
-	constant AddrWidth_g : positive := 16 ;
-	constant DataWidth_g : positive := 32 ;
-	constant Stages_g : positive := 3;
+	constant addr_width_g : positive := 16 ;
+	constant data_width_g : positive := 32 ;
+	constant stages_g : positive := 3;
 	
 	-- *** TB Control ***
 	signal TbRunning : boolean := True;
@@ -46,8 +46,8 @@ architecture sim of psi_common_axi_multi_pl_stage_tb is
 	constant TbProcNr_slave_c : integer := 1;
 	
 	-- *** DUT Signals ***
-	signal Clk : std_logic := '1';
-	signal Rst : std_logic := '1';
+	signal clk_i : std_logic := '1';
+	signal rst_i : std_logic := '1';
 	
 	-------------------------------------------------------------------------
 	-- AXI Definition
@@ -80,75 +80,75 @@ begin
 	------------------------------------------------------------
 	i_dut : entity work.psi_common_axi_multi_pl_stage
 		generic map (
-			AddrWidth_g => AddrWidth_g,
-			DataWidth_g => DataWidth_g,
-			Stages_g => Stages_g
+			addr_width_g => addr_width_g,
+			data_width_g => data_width_g,
+			stages_g => stages_g
 		)
 		port map (
-			Clk => Clk,
-			Rst => Rst,
-			InAwAddr => axi_ms_m.awaddr,
-			InAwValid => axi_ms_m.awvalid,
-			InAwReady => axi_sm_m.awready,
-			InAwLen => axi_ms_m.awlen,
-			InAwSize => axi_ms_m.awsize,
-			InAwBurst => axi_ms_m.awburst,
-			InAwLock => axi_ms_m.awlock,
-			InAwCache => axi_ms_m.awcache,
-			InAwProt => axi_ms_m.awprot,
-			InWData => axi_ms_m.wdata,
-			InWStrb => axi_ms_m.wstrb,
-			InWValid => axi_ms_m.wvalid,
-			InWReady => axi_sm_m.wready,
-			InWLast => axi_ms_m.wlast,
-			InBResp => axi_sm_m.bresp,
-			InBValid => axi_sm_m.bvalid,
-			InBReady => axi_ms_m.bready,
-			InArAddr => axi_ms_m.araddr,
-			InArValid => axi_ms_m.arvalid,
-			InArReady => axi_sm_m.arready,
-			InArLen => axi_ms_m.arlen,
-			InArSize => axi_ms_m.arsize,
-			InArBurst => axi_ms_m.arburst,
-			InArLock => axi_ms_m.arlock,
-			InArCache => axi_ms_m.arcache,
-			InArProt => axi_ms_m.arprot,
-			InRData => axi_sm_m.rdata,
-			InRValid => axi_sm_m.rvalid,
-			InRReady => axi_ms_m.rready,
-			InRResp => axi_sm_m.rresp,
-			InRLast => axi_sm_m.rlast,
-			OutAwAddr => axi_ms_s.awaddr,
-			OutAwValid => axi_ms_s.awvalid,
-			OutAwReady => axi_sm_s.awready,
-			OutAwLen => axi_ms_s.awlen,
-			OutAwSize => axi_ms_s.awsize,
-			OutAwBurst => axi_ms_s.awburst,
-			OutAwLock => axi_ms_s.awlock,
-			OutAwCache => axi_ms_s.awcache,
-			OutAwProt => axi_ms_s.awprot,
-			OutWData => axi_ms_s.wdata,
-			OutWStrb => axi_ms_s.wstrb,
-			OutWValid => axi_ms_s.wvalid,
-			OutWReady => axi_sm_s.wready,
-			OutWLast => axi_ms_s.wlast,
-			OutBResp => axi_sm_s.bresp,
-			OutBValid => axi_sm_s.bvalid,
-			OutBReady => axi_ms_s.bready,
-			OutArAddr => axi_ms_s.araddr,
-			OutArValid => axi_ms_s.arvalid,
-			OutArReady => axi_sm_s.arready,
-			OutArLen => axi_ms_s.arlen,
-			OutArSize => axi_ms_s.arsize,
-			OutArBurst => axi_ms_s.arburst,
-			OutArLock => axi_ms_s.arlock,
-			OutArCache => axi_ms_s.arcache,
-			OutArProt => axi_ms_s.arprot,
-			OutRData => axi_sm_s.rdata,
-			OutRValid => axi_sm_s.rvalid,
-			OutRReady => axi_ms_s.rready,
-			OutRResp => axi_sm_s.rresp,
-			OutRLast => axi_sm_s.rlast
+			clk_i => clk_i,
+			rst_i => rst_i,
+			in_awaddr => axi_ms_m.awaddr,
+			in_awvalid => axi_ms_m.awvalid,
+			in_awready => axi_sm_m.awready,
+			in_awlen => axi_ms_m.awlen,
+			in_awsize => axi_ms_m.awsize,
+			in_awburst => axi_ms_m.awburst,
+			in_awlock => axi_ms_m.awlock,
+			in_awcache => axi_ms_m.awcache,
+			in_awprot => axi_ms_m.awprot,
+			in_wdata => axi_ms_m.wdata,
+			in_wstrb => axi_ms_m.wstrb,
+			in_wvalid => axi_ms_m.wvalid,
+			in_wready => axi_sm_m.wready,
+			in_wlast => axi_ms_m.wlast,
+			in_bresp => axi_sm_m.bresp,
+			in_bvalid => axi_sm_m.bvalid,
+			in_bready => axi_ms_m.bready,
+			in_araddr => axi_ms_m.araddr,
+			in_arvalid => axi_ms_m.arvalid,
+			in_arready => axi_sm_m.arready,
+			in_arlen => axi_ms_m.arlen,
+			in_arsize => axi_ms_m.arsize,
+			in_arburst => axi_ms_m.arburst,
+			in_arlock => axi_ms_m.arlock,
+			in_arcache => axi_ms_m.arcache,
+			in_arprot => axi_ms_m.arprot,
+			in_rdata => axi_sm_m.rdata,
+			in_rvalid => axi_sm_m.rvalid,
+			in_rready => axi_ms_m.rready,
+			in_rresp => axi_sm_m.rresp,
+			in_rlast => axi_sm_m.rlast,
+			out_awaddr => axi_ms_s.awaddr,
+			out_awvalid => axi_ms_s.awvalid,
+			out_awready => axi_sm_s.awready,
+			out_awlen => axi_ms_s.awlen,
+			out_awsize => axi_ms_s.awsize,
+			out_awburst => axi_ms_s.awburst,
+			out_awlock => axi_ms_s.awlock,
+			out_awcache => axi_ms_s.awcache,
+			out_awprot => axi_ms_s.awprot,
+			out_wdata => axi_ms_s.wdata,
+			out_wstrb => axi_ms_s.wstrb,
+			out_wvalid => axi_ms_s.wvalid,
+			out_wready => axi_sm_s.wready,
+			out_wlast => axi_ms_s.wlast,
+			out_bresp => axi_sm_s.bresp,
+			out_bvalid => axi_sm_s.bvalid,
+			out_bready => axi_ms_s.bready,
+			out_araddr => axi_ms_s.araddr,
+			out_arvalid => axi_ms_s.arvalid,
+			out_arready => axi_sm_s.arready,
+			out_arlen => axi_ms_s.arlen,
+			out_arsize => axi_ms_s.arsize,
+			out_arburst => axi_ms_s.arburst,
+			out_arlock => axi_ms_s.arlock,
+			out_arcache => axi_ms_s.arcache,
+			out_arprot => axi_ms_s.arprot,
+			out_rdata => axi_sm_s.rdata,
+			out_rvalid => axi_sm_s.rvalid,
+			out_rready => axi_ms_s.rready,
+			out_rresp => axi_sm_s.rresp,
+			out_rlast => axi_sm_s.rlast
 		);
 	
 	------------------------------------------------------------
@@ -156,7 +156,7 @@ begin
 	------------------------------------------------------------
 	p_tb_control : process
 	begin
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		wait until ProcessDone = AllProcessesDone_c;
 		TbRunning <= false;
 		wait;
@@ -170,7 +170,7 @@ begin
 	begin
 		while TbRunning loop
 			wait for 0.5*(1 sec)/Frequency_c;
-			Clk <= not Clk;
+			clk_i <= not clk_i;
 		end loop;
 		wait;
 	end process;
@@ -183,9 +183,9 @@ begin
 	begin
 		wait for 1 us;
 		-- Wait for two clk edges to ensure reset is active for at least one edge
-		wait until rising_edge(Clk);
-		wait until rising_edge(Clk);
-		Rst <= '0';
+		wait until rising_edge(clk_i);
+		wait until rising_edge(clk_i);
+		rst_i <= '0';
 		wait;
 	end process;
 	
@@ -197,11 +197,11 @@ begin
 	p_master : process
 	begin
 		-- start of process !DO NOT EDIT
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		
 		-- User Code
-		axi_single_write(16#1234#, 16#37654321#, axi_ms_m, axi_sm_m, Clk);
-		axi_single_expect(16#12AB#, 16#3456CDEF#, axi_ms_m, axi_sm_m, Clk);
+		axi_single_write(16#1234#, 16#37654321#, axi_ms_m, axi_sm_m, clk_i);
+		axi_single_expect(16#12AB#, 16#3456CDEF#, axi_ms_m, axi_sm_m, clk_i);
 		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_master_c) <= '1';
@@ -212,15 +212,15 @@ begin
 	p_slave : process
 	begin
 		-- start of process !DO NOT EDIT
-		wait until Rst = '0';
+		wait until rst_i = '0';
 		
 		-- User Code
-		axi_expect_aw(16#1234#, AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms_s, axi_sm_s, Clk);
-		axi_expect_wd_single(X"37654321", "1111", axi_ms_s, axi_sm_s, Clk);
-		axi_apply_bresp(xRESP_OKAY_c, axi_ms_s, axi_sm_s, Clk);
+		axi_expect_aw(16#1234#, AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms_s, axi_sm_s, clk_i);
+		axi_expect_wd_single(X"37654321", "1111", axi_ms_s, axi_sm_s, clk_i);
+		axi_apply_bresp(xRESP_OKAY_c, axi_ms_s, axi_sm_s, clk_i);
 
-		axi_expect_ar(16#12AB#, AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms_s, axi_sm_s, Clk);
-		axi_apply_rresp_single(X"3456CDEF", xRESP_OKAY_c, axi_ms_s, axi_sm_s, Clk);	
+		axi_expect_ar(16#12AB#, AxSIZE_4_c, 1-1, xBURST_INCR_c, axi_ms_s, axi_sm_s, clk_i);
+		axi_apply_rresp_single(X"3456CDEF", xRESP_OKAY_c, axi_ms_s, axi_sm_s, clk_i);	
 		
 		-- end of process !DO NOT EDIT!
 		ProcessDone(TbProcNr_slave_c) <= '1';

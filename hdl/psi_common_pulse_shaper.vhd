@@ -8,65 +8,52 @@
 -- Description
 ------------------------------------------------------------------------------
 -- This is a pulse shaping block allowing to generate pulses of a fixed length
--- from pulses with an unknown length. Additionally input pulses occuring 
+-- from pulses with an unknown length. Additionally input pulses occuring
 -- during a configurable hold-off time can be ignored after one pulse was detected.
 -- A new parameter has been added in order to hold, if wanted, the pulse value
 -- when this mode is used the holdoff parameter is not releveant anymore -> 0
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
--- $$ processes=stimuli $$
-entity psi_common_pulse_shaper is
-  generic(
-    Duration_g : positive := 3;         -- Output pulse duration in clock cycles															$$ constant=3 $$
-    HoldIn_g   : boolean  := false;     -- Hold input pulse to the output																	
-    HoldOff_g  : natural  := 0          -- Minimum number of clock cycles between input pulses, if pulses arrive faster, they are ignored	$$ constant=20 $$
-  );
-  port(
-    Clk      : in  std_logic;           -- $$ type=clk; freq=100e6 $$
-    Rst      : in  std_logic;           -- $$ type=rst; clk=Clk $$
-    InPulse  : in  std_logic;
-    OutPulse : out std_logic
-  );
-end entity;
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
+-- @formatter:off
+entity psi_common_pulse_shaper is
+  generic(duration_g : positive := 3;         -- Output pulse duration in clock cycles
+          hold_in_g  : boolean  := false;     -- Hold input pulse to the output
+          hold_off_g : natural  := 0;         -- Minimum number of clock cycles between input pulses, if pulses arrive faster, they are ignored
+          rst_pol_g  : std_logic:= '1');      -- reset polarity select
+  port(   clk_i      : in  std_logic;         -- system clock $$ type=clk; freq=100e6 $$
+          rst_i      : in  std_logic;         -- system reset $$ type=rst; clk=Clk $$
+          dat_i      : in  std_logic;         -- data in
+          dat_o      : out std_logic);        -- data out
+end entity;
+-- @formatter:on
+
 architecture rtl of psi_common_pulse_shaper is
   -- Two Process Method
   type two_process_r is record
     PulseLast : std_logic;
-    OutPulse  : std_logic;
-    DurCnt    : integer range 0 to Duration_g - 1;
-    HoCnt     : integer range 0 to HoldOff_g;
+    dat_o     : std_logic;
+    DurCnt    : integer range 0 to duration_g - 1;
+    HoCnt     : integer range 0 to hold_off_g;
   end record;
   signal r, r_next : two_process_r;
 
 begin
 
-  --------------------------------------------------------------------------
-  -- Combinatorial Process
-  --------------------------------------------------------------------------
-  p_comb : process(r, InPulse)
+  p_comb : process(r, dat_i)
     variable v : two_process_r;
   begin
     -- hold variables stable
     v := r;
 
     -- *** Implementation ***
-    v.PulseLast := InPulse;
+    v.PulseLast := dat_i;
     if r.DurCnt = 0 then
-      if HoldIn_g then
-        v.OutPulse := r.OutPulse and InPulse; --keep the value of the input pulse
+      if hold_in_g then
+        v.dat_o := r.dat_o and dat_i;   --keep the value of the input pulse
       else
-        v.OutPulse := '0';
+        v.dat_o := '0';
       end if;
     else
       v.DurCnt := r.DurCnt - 1;
@@ -74,10 +61,10 @@ begin
     if r.HoCnt /= 0 then
       v.HoCnt := r.HoCnt - 1;
     end if;
-    if (InPulse = '1') and (r.PulseLast = '0') and (r.HoCnt = 0) then
-      v.OutPulse := '1';
-      v.HoCnt    := HoldOff_g;
-      v.DurCnt   := Duration_g - 1;
+    if (dat_i = '1') and (r.PulseLast = '0') and (r.HoCnt = 0) then
+      v.dat_o  := '1';
+      v.HoCnt  := hold_off_g;
+      v.DurCnt := duration_g - 1;
     end if;
 
     -- Apply to record
@@ -86,18 +73,15 @@ begin
   end process;
 
   -- *** Output ***
-  OutPulse <= r.OutPulse;
+  dat_o <= r.dat_o;
 
-  --------------------------------------------------------------------------
-  -- Sequential Process
-  --------------------------------------------------------------------------	
-  p_seq : process(Clk)
+  p_seq : process(clk_i)
   begin
-    if rising_edge(Clk) then
+    if rising_edge(clk_i) then
       r <= r_next;
-      if Rst = '1' then
-        r.OutPulse <= '0';
-        r.HoCnt    <= 0;
+      if rst_i = rst_pol_g then
+        r.dat_o <= '0';
+        r.HoCnt <= 0;
       end if;
     end if;
   end process;

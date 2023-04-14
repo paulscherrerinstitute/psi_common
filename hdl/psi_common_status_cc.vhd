@@ -14,37 +14,26 @@
 -- The main use cause of this entity is to pass status information or configuration
 -- register values between clock domains.
 
-------------------------------------------------------------------------------
--- Libraries
-------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-------------------------------------------------------------------------------
--- Entity Declaration
-------------------------------------------------------------------------------
+-- @formatter:off
 entity psi_common_status_cc is
-  generic(
-    DataWidth_g : positive := 16
-  );
-  port(
-    -- Clock Domain A
-    ClkA    : in  std_logic;
-    RstInA  : in  std_logic;
-    RstOutA : out std_logic;
-    DataA   : in  std_logic_vector(DataWidth_g - 1 downto 0);
-    -- Clock Domain B
-    ClkB    : in  std_logic;
-    RstInB  : in  std_logic;
-    RstOutB : out std_logic;
-    DataB   : out std_logic_vector(DataWidth_g - 1 downto 0)
-  );
+  generic(width_g      : positive := 16;                                -- data width in bits
+          a_rst_pol_g  : std_logic:= '1';                               -- reset pol port a, '1' active high
+          b_rst_pol_g  : std_logic:= '1');                              -- reset pol port b, '1' active high
+  port(   a_clk_i      : in  std_logic;                                 -- Clock A
+          a_rst_i      : in  std_logic;                                 -- Clock domain A sync reset
+          a_rst_o      : out std_logic;                                 -- Clock domain A reset output, active if a_rst_i or b_rst_i is asserted, de-asserted synchronously to clk A
+          a_dat_i      : in  std_logic_vector(width_g - 1 downto 0);    -- Clock domain A data input
+          b_clk_i      : in  std_logic;                                 -- Clock B
+          b_rst_i      : in  std_logic;                                 -- Clock domain B sync reset
+          b_rst_o      : out std_logic;                                 -- Clock domain A reset output, active if a_rst_i or b_rst_i is asserted, de-asserted synchronously to clk A
+          b_dat_o      : out std_logic_vector(width_g - 1 downto 0));   -- Clock domain B data output
 end entity;
+-- @formatter:on
 
-------------------------------------------------------------------------------
--- Architecture Declaration
-------------------------------------------------------------------------------
 architecture rtl of psi_common_status_cc is
   signal RstIntA       : std_logic;
   signal RstIntB       : std_logic;
@@ -56,15 +45,13 @@ architecture rtl of psi_common_status_cc is
   signal RecToggleSync : std_logic_vector(2 downto 0);
 
   attribute syn_srlstyle : string;
-  attribute syn_srlstyle of RstIntBSync : signal is "registers";
-  attribute syn_srlstyle of RecToggle : signal is "registers";
+  attribute syn_srlstyle of RstIntBSync   : signal is "registers";
+  attribute syn_srlstyle of RecToggle     : signal is "registers";
   attribute syn_srlstyle of RecToggleSync : signal is "registers";
-
   attribute shreg_extract : string;
-  attribute shreg_extract of RstIntBSync : signal is "no";
-  attribute shreg_extract of RecToggle : signal is "no";
-  attribute shreg_extract of RecToggleSync : signal is "no";
-
+  attribute shreg_extract of RstIntBSync    : signal is "no";
+  attribute shreg_extract of RecToggle      : signal is "no";
+  attribute shreg_extract of RecToggleSync  : signal is "no";
   attribute ASYNC_REG : string;
   attribute ASYNC_REG of RstIntBSync : signal is "TRUE";
   attribute ASYNC_REG of RecToggle : signal is "TRUE";
@@ -73,10 +60,10 @@ architecture rtl of psi_common_status_cc is
 begin
 
   -- Valid pulse generation
-  i_vldgen : process(ClkA)
+  p_vldgen : process(a_clk_i)
   begin
-    if rising_edge(ClkA) then
-      if RstIntA = '1' then
+    if rising_edge(a_clk_i) then
+      if RstIntA = a_rst_pol_g then
         RstIntBSync   <= (others => '1');
         Started       <= '0';
         VldA          <= '0';
@@ -101,10 +88,10 @@ begin
   end process;
 
   -- Reception detection
-  i_recdet : process(ClkB)
+  p_recdet : process(b_clk_i)
   begin
-    if rising_edge(ClkB) then
-      if RstIntB = '1' then
+    if rising_edge(b_clk_i) then
+      if RstIntB = b_rst_pol_g then
         RecToggle <= '0';
       else
         if VldB = '1' then
@@ -117,22 +104,23 @@ begin
   -- instantiation of simple CC
   i_scc : entity work.psi_common_simple_cc
     generic map(
-      DataWidth_g => DataWidth_g
+      width_g => width_g,
+      a_rst_pol_g  => a_rst_pol_g,
+      b_rst_pol_g  => b_rst_pol_g
     )
     port map(
-      ClkA    => ClkA,
-      RstInA  => RstInA,
-      RstOutA => RstIntA,
-      DataA   => DataA,
-      VldA    => VldA,
-      ClkB    => ClkB,
-      RstInB  => RstInB,
-      RstOutB => RstIntB,
-      DataB   => DataB,
-      VldB    => VldB
+      a_clk_i => a_clk_i,
+      a_rst_i => a_rst_i,
+      a_rst_o => RstIntA,
+      a_dat_i => a_dat_i,
+      a_vld_i => VldA,
+      b_clk_i => b_clk_i,
+      b_rst_i => b_rst_i,
+      b_rst_o => RstIntB,
+      b_dat_o => b_dat_o,
+      b_vld_o => VldB
     );
-  RstOutA <= RstIntA;
-  RstOutB <= RstIntB;
+  a_rst_o <= RstIntA;
+  b_rst_o <= RstIntB;
 
-end;
-
+end architecture;

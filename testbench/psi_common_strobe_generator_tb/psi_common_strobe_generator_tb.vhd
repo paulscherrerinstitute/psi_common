@@ -54,10 +54,10 @@ begin
       freq_strobe_g => real(freq_strobe_g)
     )
     port map(
-      InClk  => InClk_sti,
-      InRst  => InRst_sti,
-      OutVld => OutVld_obs,
-      InSync => InSync_sti
+      clk_i  => InClk_sti,
+      rst_i  => InRst_sti,
+      vld_o => OutVld_obs,
+      sync_i => InSync_sti
     );
 
   ------------------------------------------------------------

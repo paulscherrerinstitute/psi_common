@@ -70,7 +70,7 @@ begin
     generic map(rst_pol_g => '1',
                 msb_g     => msb_g,
                 ratio_g   => ratio_g,
-                length_g  => length_g)
+                width_g  => length_g)
     port map(clk_i => clk_sti,
              rst_i => rst_sti,
              dat_i => dat_sti,
@@ -84,7 +84,7 @@ begin
   --*** DUT 2 DESERIALIZER ***
   inst_dut2 : entity work.psi_common_ser_par
     generic map(rst_pol_g => '1',
-                length_g  => length_g,
+                width_g  => length_g,
                 msb_g     => msb_g)
     port map(clk_i => clk_sti,
              rst_i => rst_sti,

@@ -30,34 +30,34 @@ package psi_common_axi_master_full_tb_case_simple_tf is
 
   procedure user_cmd(
     signal Clk          : in std_logic;
-    signal CmdWr_Addr   : inout std_logic_vector;
-    signal CmdWr_Size   : inout std_logic_vector;
-    signal CmdWr_LowLat : inout std_logic;
-    signal CmdWr_Vld    : inout std_logic;
-    signal CmdWr_Rdy    : in std_logic;
-    signal CmdRd_Addr   : inout std_logic_vector;
-    signal CmdRd_Size   : inout std_logic_vector;
-    signal CmdRd_LowLat : inout std_logic;
-    signal CmdRd_Vld    : inout std_logic;
-    signal CmdRd_Rdy    : in std_logic;
+    signal cmd_wr_addr_i   : inout std_logic_vector;
+    signal cmd_wr_size_i   : inout std_logic_vector;
+    signal cmd_wr_low_lat_i : inout std_logic;
+    signal cmd_wr_vld_i    : inout std_logic;
+    signal cmd_wr_rdy_o    : in std_logic;
+    signal cmd_rd_addr_i   : inout std_logic_vector;
+    signal cmd_rd_size_o   : inout std_logic_vector;
+    signal cmd_rd_low_lat_i : inout std_logic;
+    signal cmd_rd_vld_i    : inout std_logic;
+    signal cmd_rd_rdy_o    : in std_logic;
     constant Generics_c : Generics_t);
 
   procedure user_data(
     signal Clk          : in std_logic;
-    signal WrDat_Data   : inout std_logic_vector;
-    signal WrDat_Vld    : inout std_logic;
-    signal WrDat_Rdy    : in std_logic;
-    signal RdDat_Data   : in std_logic_vector;
-    signal RdDat_Vld    : in std_logic;
-    signal RdDat_Rdy    : inout std_logic;
+    signal wr_dat_i   : inout std_logic_vector;
+    signal wr_vld_i    : inout std_logic;
+    signal wr_rdy_o    : in std_logic;
+    signal rd_dat_o   : in std_logic_vector;
+    signal rd_vld_o    : in std_logic;
+    signal rd_rdy_i    : inout std_logic;
     constant Generics_c : Generics_t);
 
   procedure user_resp(
     signal Clk          : in std_logic;
-    signal Wr_Done      : in std_logic;
-    signal Wr_Error     : in std_logic;
-    signal Rd_Done      : in std_logic;
-    signal Rd_Error     : in std_logic;
+    signal wr_done_o      : in std_logic;
+    signal wr_error_o     : in std_logic;
+    signal rd_done_o      : in std_logic;
+    signal rd_error_o     : in std_logic;
     constant Generics_c : Generics_t);
 
   procedure axi(
@@ -88,16 +88,16 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 
   procedure user_cmd(
     signal Clk          : in std_logic;
-    signal CmdWr_Addr   : inout std_logic_vector;
-    signal CmdWr_Size   : inout std_logic_vector;
-    signal CmdWr_LowLat : inout std_logic;
-    signal CmdWr_Vld    : inout std_logic;
-    signal CmdWr_Rdy    : in std_logic;
-    signal CmdRd_Addr   : inout std_logic_vector;
-    signal CmdRd_Size   : inout std_logic_vector;
-    signal CmdRd_LowLat : inout std_logic;
-    signal CmdRd_Vld    : inout std_logic;
-    signal CmdRd_Rdy    : in std_logic;
+    signal cmd_wr_addr_i   : inout std_logic_vector;
+    signal cmd_wr_size_i   : inout std_logic_vector;
+    signal cmd_wr_low_lat_i : inout std_logic;
+    signal cmd_wr_vld_i    : inout std_logic;
+    signal cmd_wr_rdy_o    : in std_logic;
+    signal cmd_rd_addr_i   : inout std_logic_vector;
+    signal cmd_rd_size_o   : inout std_logic_vector;
+    signal cmd_rd_low_lat_i : inout std_logic;
+    signal cmd_rd_vld_i    : inout std_logic;
+    signal cmd_rd_rdy_o    : in std_logic;
     constant Generics_c : Generics_t) is
   begin
     wait for DelayBetweenTests;
@@ -107,7 +107,7 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Write 1-8 bytes, shifted by 0-7 ***
       DbgPrint(DebugPrints, ">> Write 1-8 bytes, shifted by 0-7");
       for size in 1 to 8 loop
@@ -115,7 +115,7 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
           TestCase_v := TestCase_v + 1;
           -- Debug helper string
           -- print("Addr=" & hstr(to_unsigned(16#02000000#+offs, 32)) & ", size=" & str(size));
-          ApplyCommand(16#02000000# + offs, size, false, CmdWr_Addr, CmdWr_Size, CmdWr_LowLat, CmdWr_Vld, CmdWr_Rdy, Clk);
+          ApplyCommand(16#02000000# + offs, size, false, cmd_wr_addr_i, cmd_wr_size_i, cmd_wr_low_lat_i, cmd_wr_vld_i, cmd_wr_rdy_o, Clk);
           wait for DelayBetweenTests;
         end loop;
       end loop;
@@ -126,7 +126,7 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------		
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** Read 1-8 bytes, shifted by 0-7 ***
       DbgPrint(DebugPrints, ">> Read 1-8 bytes, shifted by 0-7");
       for size in 1 to 8 loop
@@ -134,7 +134,7 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
           TestCase_v := TestCase_v + 1;
           -- Debug helper string
           -- print("Addr=" & hstr(to_unsigned(16#02000000#+offs, 32)) & ", size=" & str(size));
-          ApplyCommand(16#02000000# + offs, size, false, CmdRd_Addr, CmdRd_Size, CmdRd_LowLat, CmdRd_Vld, CmdRd_Rdy, Clk);
+          ApplyCommand(16#02000000# + offs, size, false, cmd_rd_addr_i, cmd_rd_size_o, cmd_rd_low_lat_i, cmd_rd_vld_i, cmd_rd_rdy_o, Clk);
           wait for DelayBetweenTests;
         end loop;
       end loop;
@@ -145,25 +145,25 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 
   procedure user_data(
     signal Clk          : in std_logic;
-    signal WrDat_Data   : inout std_logic_vector;
-    signal WrDat_Vld    : inout std_logic;
-    signal WrDat_Rdy    : in std_logic;
-    signal RdDat_Data   : in std_logic_vector;
-    signal RdDat_Vld    : in std_logic;
-    signal RdDat_Rdy    : inout std_logic;
+    signal wr_dat_i   : inout std_logic_vector;
+    signal wr_vld_i    : inout std_logic;
+    signal wr_rdy_o    : in std_logic;
+    signal rd_dat_o   : in std_logic_vector;
+    signal rd_vld_o    : in std_logic;
+    signal rd_rdy_i    : inout std_logic;
     constant Generics_c : Generics_t) is
     variable LastCase_v : integer := -1;
   begin
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Write 1-8 bytes, shifted by 0-7  ***
       for size in 1 to 8 loop
         for offs in 0 to 7 loop
           WaitCase(LastCase_v + 1, Clk);
           LastCase_v := TestCase_v;
-          ApplyWrData(16#10#, size, WrDat_Data, WrDat_Vld, WrDat_Rdy, Clk);
+          ApplyWrData(16#10#, size, wr_dat_i, wr_vld_i, wr_rdy_o, Clk);
         end loop;
       end loop;
     end if;
@@ -171,13 +171,13 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------	
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** Read 1-8 bytes, shifted by 0-7  ***
       for size in 1 to 8 loop
         for offs in 0 to 7 loop
           WaitCase(LastCase_v + 1, Clk);
           LastCase_v := TestCase_v;
-          CheckRdData(16#10#, size, RdDat_Data, RdDat_Vld, RdDat_Rdy, Clk);
+          CheckRdData(16#10#, size, rd_dat_o, rd_vld_o, rd_rdy_i, Clk);
         end loop;
       end loop;
     end if;
@@ -185,23 +185,23 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
 
   procedure user_resp(
     signal Clk          : in std_logic;
-    signal Wr_Done      : in std_logic;
-    signal Wr_Error     : in std_logic;
-    signal Rd_Done      : in std_logic;
-    signal Rd_Error     : in std_logic;
+    signal wr_done_o      : in std_logic;
+    signal wr_error_o     : in std_logic;
+    signal rd_done_o      : in std_logic;
+    signal rd_error_o     : in std_logic;
     constant Generics_c : Generics_t) is
     variable LastCase_v : integer := -1;
   begin
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Write 1-8 bytes, shifted by 0-7  ***	
       for size in 1 to 8 loop
         for offs in 0 to 7 loop
           WaitCase(LastCase_v + 1, Clk);
           LastCase_v := TestCase_v;
-          WaitForCompletion(true, DelayBetweenTests + 1 us, Wr_Done, Wr_Error, Clk);
+          WaitForCompletion(true, DelayBetweenTests + 1 us, wr_done_o, wr_error_o, Clk);
         end loop;
       end loop;
     end if;
@@ -209,13 +209,13 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------	
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** Read 1-8 bytes, shifted by 0-7  ***	
       for size in 1 to 8 loop
         for offs in 0 to 7 loop
           WaitCase(LastCase_v + 1, Clk);
           LastCase_v := TestCase_v;
-          WaitForCompletion(true, DelayBetweenTests + 1 us, Rd_Done, Rd_Error, Clk);
+          WaitForCompletion(true, DelayBetweenTests + 1 us, rd_done_o, rd_error_o, Clk);
         end loop;
       end loop;
     end if;
@@ -234,7 +234,7 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
     ------------------------------------------------------------------
     -- Writes
     ------------------------------------------------------------------	
-    if Generics_c.ImplWrite_g then
+    if Generics_c.impl_write_g then
       -- *** Write 1-8 bytes, shifted by 0-7 ***
       for size in 1 to 8 loop
         for offs in 0 to 7 loop
@@ -248,7 +248,7 @@ package body psi_common_axi_master_full_tb_case_simple_tf is
     ------------------------------------------------------------------
     -- Reads
     ------------------------------------------------------------------	
-    if Generics_c.ImplRead_g then
+    if Generics_c.impl_read_g then
       -- *** Read 1-8 bytes, shifted by 0-7 ***
       for size in 1 to 8 loop
         for offs in 0 to 7 loop
