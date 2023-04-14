@@ -32,13 +32,11 @@ entity psi_common_ramp_gene is
           init_val_g : integer  := 50);                            -- init output value at start-up
   port(clk_i         : in  std_logic;                              -- system clock
        rst_i         : in  std_logic;                              -- sync reset
-       ---------------------------------------------------------
        vld_i         : in  std_logic;                              -- strobe input
        tgt_lvl_i     : in  std_logic_vector(width_g - 1 downto 0); -- Target pulse level
        ramp_inc_i    : in  std_logic_vector(width_g - 1 downto 0); -- steepness of the ramp (positive, also for ramping down)
        ramp_cmd_i    : in  std_logic;                              -- start ramping
        init_cmd_i    : in  std_logic;                              -- go to init whatever state
-       ---------------------------------------------------------
        sts_o         : out std_logic_vector(1 downto 0);           -- FSM status
        vld_o         : out std_logic;                              -- Pulse strobe output
        puls_o        : out std_logic_vector(width_g - 1 downto 0));-- Pulse value

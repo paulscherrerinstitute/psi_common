@@ -10,7 +10,20 @@
  - Testbench source: [psi_common_sync_fifo_tb.vhd](../../testbench/psi_common_sync_fifo_tb/psi_common_sync_fifo_tb.vhd)
 
 ### Description
-*INSERT YOUR TEXT*
+
+
+This component implements a synchronous FIFO (same clock for write and
+read port). The memory is described in a way that it utilizes RAM
+resources (Block-RAM or distributed RAM) available in FPGAs with
+commonly used tools.
+
+The FIFO is a fall-through FIFO and has AXI-S interfaces on read and
+write side.
+
+The RAM behavior (read-before-write or write-before-read) can be
+selected. This allows efficiently implementing FIFOs for different
+technologies (some technologies implement one, some the other behavior).
+
 
 ### Generics
 | Name              | type      | Description                                                                                        |

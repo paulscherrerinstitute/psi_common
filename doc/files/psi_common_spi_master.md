@@ -9,37 +9,52 @@
  - Testbench source: [psi_common_spi_master_tb.vhd](../../testbench/psi_common_spi_master_tb/psi_common_spi_master_tb.vhd)
 
 ### Description
-*INSERT YOUR TEXT*
+
+This entity implements a simple SPI master. All common SPI settings are
+settable to ensure the master can be configured for different
+applications.
+
+The clock and data phase is configurable according to the SPI standard
+terminology described in the picture below:
+
+<p align="center"><img src="psi_common_spi_master_fig0.png"> </p>
+<p align="center"> CPOL and CPHA meaning </p>
+
+For CPHA = 1, the sampling happens on the second edge (blue) and data is
+applied on the first edge (red). For CPHA = 0 it is the opposite way.
 
 ### Generics
 | Name              | type      | Description                                |
 |:------------------|:----------|:-------------------------------------------|
-| clk_div_g         | natural   | must be a multiple of two $$ constant=8 $$ |
-| trans_width_g     | positive; | spi transaction width $$ constant=8 $$     |
-| cs_high_cycles_g  | positive; | $$ constant=2 $$                           |
-| spi_cpol_g        | natural   | $$ export=true $$                          |
-| spi_cpha_g        | natural   | $$ export=true $$                          |
-| slave_cnt_g       | positive  | $$ constant=2 $$                           |
-| lsb_first_g       | boolean   | $$ export=true $$                          |
-| mosi_idle_state_g | std_logic | N.A                                        |
-| rst_pol_g         | std_logic | N.A                                        |
+| clk_div_g         | natural   | Ratio between *Clk* and the *SpiSck* frequency
+| trans_width_g     | positive; | SPI Transfer width (bits per transfer)
+| cs_high_cycles_g  | positive; | Minimal number of *Cs\_n* high cycles between two transfers
+| spi_cpol_g        | natural   | SPI clock polarity (see figure above)
+| spi_cpha_g        | natural   | SPI sampling edge configuration (see figure above)
+| slave_cnt_g       | positive  | Number of slaves to support (number of *Cs\_n* lines)
+| lsb_first_g       | boolean   | **False** = MSB first transmission, **True** = LSB first transmission
+| mosi_idle_state_g | std_logic | Idle state of the MOSI line
+| rst_pol_g         | std_logic | reset polarity                                      |
 
 ### Interfaces
 | Name       | In/Out   | Length        | Description                |
 |:-----------|:---------|:--------------|:---------------------------|
-| clk_i      | i        | 1             | $$ type=clk; freq=100e6 $$ |
-| rst_i      | i        | 1             | $$ type=rst; clk=clk $$    |
-| start_i    | i        | 1             | N.A                        |
-| slave_i    | i        | slave_cnt_g)  | N.A                        |
-| busy_o     | o        | 1             | N.A                        |
-| done_o     | o        | 1             | N.A                        |
-| dat_i      | i        | trans_width_g | N.A                        |
-| dat_o      | o        | trans_width_g | N.A                        |
-| spi_sck_o  | o        | 1             | N.A                        |
-| spi_mosi_o | o        | 1             | N.A                        |
-| spi_miso_i | i        | 1             | N.A                        |
-| spi_cs_n_o | o        | slave_cnt_g   | N.A                        |
-| spi_le_o   | o        | slave_cnt_g   | N.A                        |
+| clk_i      | i        | 1             | Clock           
+| rst_i      | i        | 1             | Reset (highactive)
+| start_i    | i        | 1             | A high pulse on this line starts the transfer. Note that starting a transaction is  only possible when *Busy* is low.
+| slave_i    | i        | slave_cnt_g)  | Slave number to access  
+| busy_o     | o        | 1             | High during a transaction     
+| done_o     | o        | 1             | Pulse that goes high for exactly one clock cycle after a transaction is done and *RdData* is valid        
+| dat_i      | i        | trans_width_g | Data to send to  slave. Sampled  during *Start = '1'*     
+| dat_o      | o        | trans_width_g | Data received from slave. Must be sampled during *Done = '1'* or *Busy = '0'*.          
+| spi_sck_o  | o        | 1             | SPI clock      
+| spi_mosi_o | o        | 1             | SPI master to slave data signal         
+| spi_miso_i | i        | 1             | SPI slave to master data signal          
+| spi_cs_n_o | o        | slave_cnt_g   | SPI slave select signal (low active)  
+| spi_le_o   | o        | slave_cnt_g   | SPI slave latch enable (high active)  
 
+
+<p align="center"><img src="psi_common_spi_master_fig1.png"> </p>
+<p align="center"> Parallel interface signal behavior </p>
 
 [**component list**](../README.md)

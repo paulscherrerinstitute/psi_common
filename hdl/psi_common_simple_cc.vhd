@@ -17,19 +17,19 @@ use ieee.numeric_std.all;
 
 -- @formatter:off
 entity psi_common_simple_cc is
-  generic(width_g      : positive := 16;
-          a_rst_pol_g  : std_logic:='1';
-          b_rst_pol_g  : std_logic:='1');
-  port(   a_clk_i      : in  std_logic;
-          a_rst_i      : in  std_logic;
-          a_rst_o      : out std_logic;
-          a_dat_i      : in  std_logic_vector(width_g - 1 downto 0);
-          a_vld_i      : in  std_logic;
-          b_clk_i      : in  std_logic;
-          b_rst_i      : in  std_logic;
-          b_rst_o      : out std_logic;
-          b_dat_o      : out std_logic_vector(width_g - 1 downto 0);
-          b_vld_o      : out std_logic);
+  generic(width_g      : positive := 16;                                  --  Width of the data signal to implement the clock crossing for
+          a_rst_pol_g  : std_logic:='1';                                  --  reset polarity A port
+          b_rst_pol_g  : std_logic:='1');                                 --  reset polarity B port
+  port(   a_clk_i      : in  std_logic;                                   --  Clock A
+          a_rst_i      : in  std_logic;                                   --  Clock domain A reset input (active high)
+          a_rst_o      : out std_logic;                                   --  Clock domain A reset output (active high), active if *RstInA* or *RstInB* is asserted, de-asserted synchronously to *ClkA*
+          a_dat_i      : in  std_logic_vector(width_g - 1 downto 0);      --  Data signal input
+          a_vld_i      : in  std_logic;                                   --  AXI-S handshaking signal
+          b_clk_i      : in  std_logic;                                   --  Clock B
+          b_rst_i      : in  std_logic;                                   --  Clock domain A reset input (active high)
+          b_rst_o      : out std_logic;                                   --  Clock domain B reset output (active high), active if *RstInA* or *RstInB* is asserted, de-asserted synchronously to *ClkA*
+          b_dat_o      : out std_logic_vector(width_g - 1 downto 0);      --  Data signal output
+          b_vld_o      : out std_logic);                                  --  AXI-S handshaking signal
 end entity;
 -- @formatter:on
 
@@ -91,6 +91,6 @@ begin
       end if;
     end if;
   end process;
-  
+
 end architecture;
 

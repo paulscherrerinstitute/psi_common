@@ -30,6 +30,7 @@ entity psi_common_tdm_mux is
 	        tdm_dat_o 	: out std_logic_vector(width_g - 1 downto 0));           -- selected data out
 end entity;
 -- @formatter:on
+
 architecture RTL of psi_common_tdm_mux is
   signal tdm_dat_s : std_logic_vector(width_g - 1 downto 0);
   signal tdm_str_s : std_logic;

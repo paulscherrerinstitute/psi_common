@@ -6,7 +6,7 @@
 
 # psi_common_pulse_cc
  - VHDL source: [psi_common_pulse_cc](../../hdl/psi_common_pulse_cc.vhd)
- - Testbench source: [psi_common_pulse_cc_tb.vhd](../../testbench/psi_common_pulse_cc_tb/psi_common_pulse_cc_tb.vhd)
+ - Testbench source: N.A
 
 ### Description
 

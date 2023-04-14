@@ -21,16 +21,16 @@ entity psi_common_sync_cc_n2xn is
   generic(width_g       : integer   := 8;                         -- input vector length
           in_rst_pol_g  : std_logic := '1';                       -- reset polarity for reset input
           out_rst_pol_g : std_logic := '1');                      -- reset polaraity for reset ouput
-  port(   clk_in_i  : in  std_logic;                              -- clk input
-          rst_in_i  : in  std_logic;                              -- rst input
-          vld_i     : in  std_logic;                              -- valid signal input
-          rdy_o     : out std_logic;                              -- ready signal push back
-          dat_i     : in  std_logic_vector(width_g - 1 downto 0); -- data input
-          clk_out_i : in  std_logic;                              -- clk output
-          rst_out_i : in  std_logic := '0';                       -- reset output
-          vld_o     : out std_logic;                              -- valid output
-          rdy_i     : in  std_logic := '1';                       -- ready input signal push back from next block
-          dat_o     : out std_logic_vector(width_g - 1 downto 0));-- data output
+  port(   clk_in_i      : in  std_logic;                              -- clk input
+          rst_in_i      : in  std_logic;                              -- rst input
+          vld_i         : in  std_logic;                              -- valid signal input
+          rdy_o         : out std_logic;                              -- ready signal push back
+          dat_i         : in  std_logic_vector(width_g - 1 downto 0); -- data input
+          clk_out_i     : in  std_logic;                              -- clk output
+          rst_out_i     : in  std_logic := '0';                       -- reset output
+          vld_o         : out std_logic;                              -- valid output
+          rdy_i         : in  std_logic := '1';                       -- ready input signal push back from next block
+          dat_o         : out std_logic_vector(width_g - 1 downto 0));-- data output
 end entity;
 -- @formatter:on
 

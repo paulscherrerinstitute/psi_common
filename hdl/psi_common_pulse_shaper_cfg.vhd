@@ -22,17 +22,17 @@ use work.psi_common_logic_pkg.all;
 
 -- @formatter:off
 entity psi_common_pulse_shaper_cfg is
-  generic(HoldIn_g       : boolean   := false;                                                              -- Hold input pulse to the output
-          hold_off_ena_g : boolean   := false;                                                              -- Hold off capability enable if true, if false stuck to '0' the corresponding input
-          max_hold_off_g : natural   := 256;                                                                -- Minimum number of clock cycles between input pulses, if pulses arrive faster, they are ignored
-          max_duration_g : positive  := 128;                                                                -- Maximum duratio
-          rst_pol_g      : std_logic := '1');                                                               -- polarity reset
-  port(   clk_i    : in  std_logic;                                                                         -- system clock
-           rst_i   : in  std_logic;                                                                         -- system reset
-           width_i : in  std_logic_vector(log2ceil(max_duration_g) - 1 downto 0);                           -- Output pulse duration in clock cycles
-           hold_i  : in  std_logic_vector(choose(hold_off_ena_g, log2ceil(max_hold_off_g), 1) - 1 downto 0);-- 
-           dat_i   : in  std_logic;                                                                         -- pulse/str/vld input
-           dat_o   : out std_logic);                                                                        -- pulse/str/vld input
+  generic(HoldIn_g       : boolean   := false;                                                                    -- Hold input pulse to the output
+          hold_off_ena_g : boolean   := false;                                                                    -- Hold off capability enable if true, if false stuck to '0' the corresponding input
+          max_hold_off_g : natural   := 256;                                                                      -- Minimum number of clock cycles between input pulses, if pulses arrive faster, they are ignored
+          max_duration_g : positive  := 128;                                                                      -- Maximum duratio
+          rst_pol_g      : std_logic := '1');                                                                     -- polarity reset
+  port(   clk_i          : in  std_logic;                                                                         -- system clock
+           rst_i         : in  std_logic;                                                                         -- system reset
+           width_i       : in  std_logic_vector(log2ceil(max_duration_g) - 1 downto 0);                           -- Output pulse duration in clock cycles
+           hold_i        : in  std_logic_vector(choose(hold_off_ena_g, log2ceil(max_hold_off_g), 1) - 1 downto 0);-- 
+           dat_i         : in  std_logic;                                                                         -- pulse/str/vld input
+           dat_o         : out std_logic);                                                                        -- pulse/str/vld input
 end entity;
 -- @formatter:on
 

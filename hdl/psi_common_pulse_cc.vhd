@@ -20,17 +20,17 @@ use ieee.numeric_std.all;
 
 -- @formatter:off
 entity psi_common_pulse_cc is
-  generic(num_pulses_g : positive := 1;                               -- fifo width
-          a_rst_pol_g  : std_logic:= '1';                             -- rst polarity port A
-          b_rst_pol_g  : std_logic:='1'  );                           -- rst polarity port B
-  port(   a_clk_i : in  std_logic;                                    -- clock port a input
-          a_rst_i : in  std_logic;                                    -- rst input  port a
-          a_rst_o : out std_logic;                                    -- Clock domain A reset output, active if *a_rst_i* or *b_rst_i* is asserted, de-asserted synchronously to *a_clk_i*
-          a_dat_i : in  std_logic_vector(num_pulses_g - 1 downto 0);  -- dat input port a
-          b_clk_i : in  std_logic;                                    -- clock port b input
-          b_rst_i : in  std_logic;                                    -- rst input port b
-          b_rst_o : out std_logic;                                    -- Clock domain B reset output, active if *a_rst_i* or *b_rst_i* is asserted, de-asserted synchronously to *b_clk_i*
-          b_dat_o : out std_logic_vector(num_pulses_g - 1 downto 0)); -- dat output port b
+  generic(num_pulses_g : positive := 1;                                    -- fifo width
+          a_rst_pol_g  : std_logic:= '1';                                  -- rst polarity port A
+          b_rst_pol_g  : std_logic:='1'  );                                -- rst polarity port B
+  port(   a_clk_i      : in  std_logic;                                    -- clock port a input
+          a_rst_i      : in  std_logic;                                    -- rst input  port a
+          a_rst_o      : out std_logic;                                    -- Clock domain A reset output, active if *a_rst_i* or *b_rst_i* is asserted, de-asserted synchronously to *a_clk_i*
+          a_dat_i      : in  std_logic_vector(num_pulses_g - 1 downto 0);  -- dat input port a
+          b_clk_i      : in  std_logic;                                    -- clock port b input
+          b_rst_i      : in  std_logic;                                    -- rst input port b
+          b_rst_o      : out std_logic;                                    -- Clock domain B reset output, active if *a_rst_i* or *b_rst_i* is asserted, de-asserted synchronously to *b_clk_i*
+          b_dat_o      : out std_logic_vector(num_pulses_g - 1 downto 0)); -- dat output port b
 end entity;
 -- @formatter:on
 

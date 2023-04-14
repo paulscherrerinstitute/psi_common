@@ -9,7 +9,21 @@
  - Testbench source: [psi_common_tdm_par_cfg_tb.vhd](../../testbench/psi_common_tdm_par_cfg_tb/psi_common_tdm_par_cfg_tb.vhd)
 
 ### Description
-*INSERT YOUR TEXT*
+
+
+This component changes the representation of multiple channels from time-division-multiplexed to parallel. It does not implement any flow-control.
+
+The number of enabled channels is configurable. In addition, if used with an AXI stream, TdmLast can be used to ensure the correct correspondence between the channels and their indexes in Parallel when the number of enabled channels is changed.
+
+The figures below show some waveforms of the conversion. The first input sample is interpreted as channel 0 and played out in the lowest bits of the output, the last input sample is played out in the enabled highest bits.
+
+<p align="center"> <img src="psi_common_tdm_par_cfg_fig0.png"></p>
+<p align="center"> 3 enabled channels waveform </p>
+
+<p align="center"> <img src="psi_common_tdm_par_cfg_fig1.png"></p>
+<p align="center"> 2 enabled channels waveform </p>
+
+Note that the output stays stable also after the *Vld* pulse.
 
 ### Generics
 | Name            | type      | Description      |

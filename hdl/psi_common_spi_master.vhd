@@ -19,31 +19,31 @@ use work.psi_common_logic_pkg.all;
 
 -- @formatter:off
 entity psi_common_spi_master is
-  generic(clk_div_g         : natural range 4 to 1_000_000; -- Must be a multiple of two	$$ constant=8 $$
-          trans_width_g     : positive;                     -- SPI Transaction width		$$ constant=8 $$
-          cs_high_cycles_g  : positive;                     -- 
-          spi_cpol_g        : natural range 0 to 1;         -- 
-          spi_cpha_g        : natural range 0 to 1;         -- 
-          slave_cnt_g       : positive  := 1;               -- 
-          lsb_first_g       : boolean   := false;           -- 
-          mosi_idle_state_g : std_logic := '0';
-          rst_pol_g         : std_logic:= '1');
-  port(    -- Control Signals
-          clk_i      : in  std_logic;         -- 
-          rst_i      : in  std_logic;         -- 
-          -- Parallel Interface
-          start_i    : in  std_logic;
-          slave_i    : in  std_logic_vector(log2ceil(slave_cnt_g) - 1 downto 0);
-          busy_o     : out std_logic;
-          done_o     : out std_logic;
-          dat_i      : in  std_logic_vector(trans_width_g - 1 downto 0);
-          dat_o      : out std_logic_vector(trans_width_g - 1 downto 0);
+  generic(clk_div_g         : natural range 4 to 1_000_000;                      -- Must be a multiple of two
+          trans_width_g     : positive;                                          -- SPI Transaction width
+          cs_high_cycles_g  : positive;                                          -- Minimal number of CS high cycle between 2 trans
+          spi_cpol_g        : natural range 0 to 1;                              -- SPI clock polarity
+          spi_cpha_g        : natural range 0 to 1;                              -- SPI sampling edge config
+          slave_cnt_g       : positive  := 1;                                    -- Number if slaves to support
+          lsb_first_g       : boolean   := false;                                -- False = MSB first trasnmission and True LSB
+          mosi_idle_state_g : std_logic := '0';                                  -- Idle state of the MOSI line
+          rst_pol_g         : std_logic:= '1');                                  -- reset polarity
+  port(    -- Control Signals                                                    
+          clk_i      : in  std_logic;                                            -- system clock
+          rst_i      : in  std_logic;                                            -- system reset (sync)
+          -- Parallel Interface                                                  
+          start_i    : in  std_logic;                                            -- a high pulse on this line starts the trasnfer, Note that starting a transaction is  only possible when *Busy* is low.
+          slave_i    : in  std_logic_vector(log2ceil(slave_cnt_g) - 1 downto 0); --  Slave number to access
+          busy_o     : out std_logic;                                            -- High during a transaction
+          done_o     : out std_logic;                                            -- Pulse that goes high for exactly one clock cycle after a transaction is done and *RdData* is valid
+          dat_i      : in  std_logic_vector(trans_width_g - 1 downto 0);         --  Data to send to  slave. Sampled  during *Start = '1'*
+          dat_o      : out std_logic_vector(trans_width_g - 1 downto 0);         -- Data received from slave. Must be sampled during *Done = '1'* or *Busy = '0'*.
           -- SPI
-          spi_sck_o  : out std_logic;
-          spi_mosi_o : out std_logic;
-          spi_miso_i : in  std_logic;
-          spi_cs_n_o : out std_logic_vector(slave_cnt_g - 1 downto 0);
-          spi_le_o   : out std_logic_vector(slave_cnt_g - 1 downto 0));
+          spi_sck_o  : out std_logic;                                            -- SPI clock
+          spi_mosi_o : out std_logic;                                            -- SPI master to slave data signal
+          spi_miso_i : in  std_logic;                                            -- SPI slave to master data signal
+          spi_cs_n_o : out std_logic_vector(slave_cnt_g - 1 downto 0);           -- SPI slave select signal (low active)
+          spi_le_o   : out std_logic_vector(slave_cnt_g - 1 downto 0));          -- SPI slave latch enable (high active)
 end entity;
 -- @formatter:on
 

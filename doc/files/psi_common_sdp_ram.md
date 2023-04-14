@@ -7,7 +7,7 @@
 
 # psi_common_sdp_ram
  - VHDL source: [psi_common_sdp_ram](../../hdl/psi_common_sdp_ram.vhd)
- - Testbench source: [psi_common_sdp_ram_tb.vhd](../../testbench/psi_common_sdp_ram_tb/psi_common_sdp_ram_tb.vhd)
+ - Testbench source: N.A
 
 ### Description
 

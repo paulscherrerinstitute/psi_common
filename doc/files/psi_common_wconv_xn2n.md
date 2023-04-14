@@ -33,10 +33,10 @@ width conversion.
 ### Generics
 | Name        | type     | Description       |
 |:------------|:---------|:------------------|
-| in_width_g  | natural; | Input data width  |
-| out_width_g | natural  | Output data width |
+| width_in_g  | natural; | Input data width  |
+| width_out_g | natural  | Output data width |
 
-The ratio in_width_g\_g/out_width_g\_g must be an integer number and *in_width_g \_g* must be bigger or equal to *out_width_g\_g*.
+The ratio in_width_g\_g/out_width_g\_g must be an integer number and *width_in_g \_g* must be bigger or equal to *width_out_g\_g*.
 
 ### Interfaces
 Signal          | Direction | Width           | Description     
@@ -45,12 +45,12 @@ clk_i           | Input     | 1               | Clock
 rst_i           | Input     | 1               | Reset (high active)                 
 vld_i           | Input     | 1               | AXI-S handshaking signal          
 rdy_o           | Output    | 1               | AXI-S handshaking     signal          
-dat_i           | Input     | in_width_g      | Data signal input           
+dat_i           | Input     | width_in_g      | Data signal input           
 last_i          | Input     | 1               | AXI-S handshaking signal
-we_i            | Input     | in_width_gg/out_width_g  | Input word-enable. Works like byte-enable but with one bit per input-word. At least one word must be enabled together with the assertion of InLast   
+we_i            | Input     | width_ing/width_out_g  | Input word-enable. Works like byte-enable but with one bit per input-word. At least one word must be enabled together with the assertion of InLast   
 vld_o           | Output    | 1               | AXI-S handshaking signal          
 rdy_i           | Input     | 1               | AXI-S handshaking signal          
-dat_o           | Output    | out_width_g     | Data signal output          
+dat_o           | Output    | width_out_g     | Data signal output          
 last_o          | Output    | 1               | AXI-S handshaking signal
 
 

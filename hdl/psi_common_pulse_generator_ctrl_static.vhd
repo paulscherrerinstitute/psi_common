@@ -28,22 +28,22 @@ use work.psi_common_math_pkg.all;
 use work.psi_common_array_pkg.all;
 -- @formatter:off
 entity psi_common_pulse_generator_ctrl_static is
-  generic(rst_pol_g     : std_logic:= '1';                   -- '1' active high, '0' active low
-          width_g       : natural  :=      16;               -- Output data vector length
-          clk_freq_g    : real     := 100.0e6;               -- Clock frequency in Hz
-          str_freq_g    : real     :=  10.0e6;               -- Strobe output || increment strobe in Hz
-          nb_step_up_g  : integer  := 100;                   -- ramp up param step in str
-          nb_step_dw_g  : integer  := 50;                    -- ramp down param step in str
-          nb_step_flh_g : integer  := 4000;                  -- flat level param step in str
-          nb_step_fll_g : integer  := 4000);                 -- low level param step in str
-  port   (clk_i : in  std_logic;                             -- clock
-          rst_i : in  std_logic;                             -- reset
-          trig_i: in  std_logic;                             -- Trigger a new pulse
-          stop_i: in  std_logic;                             -- Abort pulse
-          busy_o: out std_logic;                             -- pulse in action
-          dat_o : out std_logic_vector(width_g-1 downto 0);  -- pulse output
-          vld_o : out std_logic;                             -- pulse strobe
-          dbg_o : out std_logic_vector(1 downto 0));         -- use for tb purpose and avoid using externalname GHDL
+  generic(rst_pol_g     : std_logic:= '1';                           -- '1' active high, '0' active low
+          width_g       : natural  :=      16;                       -- Output data vector length
+          clk_freq_g    : real     := 100.0e6;                       -- Clock frequency in Hz
+          str_freq_g    : real     :=  10.0e6;                       -- Strobe output || increment strobe in Hz
+          nb_step_up_g  : integer  := 100;                           -- ramp up param step in str
+          nb_step_dw_g  : integer  := 50;                            -- ramp down param step in str
+          nb_step_flh_g : integer  := 4000;                          -- flat level param step in str
+          nb_step_fll_g : integer  := 4000);                         -- low level param step in str
+  port   (clk_i         : in  std_logic;                             -- clock
+          rst_i         : in  std_logic;                             -- reset
+          trig_i        : in  std_logic;                             -- Trigger a new pulse
+          stop_i        : in  std_logic;                             -- Abort pulse
+          busy_o        : out std_logic;                             -- pulse in action
+          dat_o         : out std_logic_vector(width_g-1 downto 0);  -- pulse output
+          vld_o         : out std_logic;                             -- pulse strobe
+          dbg_o         : out std_logic_vector(1 downto 0));         -- use for tb purpose and avoid using externalname GHDL
 end entity;
 -- @formatter:on
 

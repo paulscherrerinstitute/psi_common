@@ -10,7 +10,10 @@
  - Testbench source: [psi_common_strobe_divider_tb.vhd](../../testbench/psi_common_strobe_divider_tb/psi_common_strobe_divider_tb.vhd)
 
 ### Description
-*INSERT YOUR TEXT*
+
+This component divides the rate of a strobe signal. Only every N strobe signal is forwarded to the output. If the input is not a single cycle strobe signal, a rising edge detection is done (strobe is detected on the first cycle the input is high).
+
+The division ratio is selectable at runtime.
 
 ### Generics
 | Name      | type      | Description                               |
