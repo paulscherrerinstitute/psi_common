@@ -1,6 +1,7 @@
 <img align="right" src="../psi_logo.png">
 
 ***
+[Back](../README.md)
 
 # Introduction
 
@@ -145,4 +146,4 @@ Not having an additional channel indicator for the most common TDM use-case of m
 
 ***
 
-[Index](../psi_common_index.md) **|** Next: [Packages](../ch2_packages/ch2_packages.md)
+[Back](../README.md)

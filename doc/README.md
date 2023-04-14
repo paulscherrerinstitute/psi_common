@@ -59,7 +59,7 @@ Synchronous FIFO  			| [psi_common_sync_fifo.vhd](../hdl/psi_common_sync_fifo.vh
 Component     					| Source                                                      | Description
 ------------------------|-------------------------------------------------------------|:-------------------------------------------:
 Pulse clock crossing  (asynchronous pulse/vld transfer)	| [psi_common_pulse_cc.vhd](../hdl/psi_common_pulse_cc.vhd)   	  | [link](files/psi_common_pulse_cc.md)
-Simple clock crossing (asynchronous data value transfer) | [psi_common_pulse_cc.vhd](../hdl/psi_common_simple_cc.vhd)   	  | [link](files/psi_common_simple_cc.md)
+Simple clock crossing (asynchronous data value transfer) | [psi_common_simple_cc.vhd](../hdl/psi_common_simple_cc.vhd)   	  | [link](files/psi_common_simple_cc.md)
 Status clock crossing (asynchronous slow changing value transfer) | [psi_common_status_cc.vhd](../hdl/psi_common_status_cc.vhd) | [link](files/psi_common_status_cc.md)
 Synchronous CDC with AXI-S handshaking from **Lower** clock to **Higher** multiple integer clock frequency  | [psi_common_sync_cc_n2xn.vhd](../hdl/psi_common_sync_cc_n2xn.vhd)  |  [link](files/psi_common_sync_cc_n2xn.md)
 Synchronous CDC with AXI-S handshaking from **Higher** clock to **lower** multiple integer clock frequency  | [psi_common_sync_cc_xn2n.vhd](../hdl/psi_common_sync_cc_xn2n.vhd)   |  [link](files/psi_common_sync_cc_xn2n.md)
