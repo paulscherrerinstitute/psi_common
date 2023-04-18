@@ -26,7 +26,7 @@ modelsim:
     - cd sim 
     - vsim -c -do ci.do -logfile Transcript.transcript
     - grep -Fq "SIMULATIONS COMPLETED SUCCESSFULLY" Transcript.transcript
-    - ! grep -Fq "###ERROR###" Transcript.transcript
+    - (! grep -Fq "###ERROR###" Transcript.transcript)
 
 ghdl:
   stage: simulation
