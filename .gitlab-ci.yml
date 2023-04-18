@@ -7,17 +7,13 @@ before_script:
   - git force-clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.psi.ch/GFA/Libraries/Firmware/TCL/PsiSim ../../../Firmware/TCL/PsiSim --depth=1 || true
   - git force-clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.psi.ch/GFA/Libraries/Firmware/VHDL/psi_tb ../../../Firmware/VHDL/psi_tb --depth=1 || true
 
-
 code-style:
   stage: linter
   tags: 
     - test-vm-3205
-  before_script:
-    - ''
   allow_failure: true
   script:
     - echo "...tbd..."
-
 
 modelsim:
   stage: simulation
@@ -31,7 +27,6 @@ modelsim:
     - vsim -c -do ci.do -logfile Transcript.transcript
     - grep -Fq "SIMULATIONS COMPLETED SUCCESSFULLY" Transcript.transcript
     - ! grep -Fq "###ERROR###" Transcript.transcript
-
 
 ghdl:
   stage: simulation
