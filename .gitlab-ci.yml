@@ -33,5 +33,8 @@ ghdl:
   tags: 
     - test-vm-3205
   script:
-    - ghdl --version
-    - echo "...tbd..."
+    - toolchain-load ghdl_3.0.0_gcc
+    - cd sim 
+    - tclsh runGhdl.tcl 2>&1 | tee ghdl.log
+    - grep -Fq "SIMULATIONS COMPLETED SUCCESSFULLY" ghdl.log
+    - (! grep -Fq "###ERROR###" ghdl.log)
