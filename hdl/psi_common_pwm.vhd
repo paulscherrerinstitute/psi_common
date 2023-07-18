@@ -48,6 +48,7 @@ architecture RTL of psi_common_pwm is
   signal edge_s       : std_logic;
   signal pwm_s        : unsigned(pwm_i'range);
   signal dly_s        : unsigned(dly_i'range);
+  signal pwm_plus_dly_s : unsigned(pwm_i'range);
 begin
 
   --=================================================================
@@ -72,6 +73,9 @@ begin
       else
         edge_s <= '0';
       end if;
+      
+      --*** compute pwm wit delay signal
+      pwm_plus_dly_s <= pwm_s + dly_s;
 
       --*** is sync? new ratio ***
       if is_sync_g then
@@ -94,18 +98,26 @@ begin
       end if;
       vld_o <= str_100k_s;
       if str_100k_s = '1' then
-        if cpt_period_s >= dly_s and cpt_period_s <= pwm_s    and
-            pwm_s /= to_unsigned(0,pwm_s)                     then
+        if cpt_period_s >= dly_s and cpt_period_s <= pwm_plus_dly_s  and
+            pwm_s /= to_unsigned(0,pwm_s'length)                     then
           dat_o <= '1';
         else
           dat_o <= '0';
         end if;
       end if;
+
+      -- sync
+      if (is_sync_g and edge_s = '1') then
+        cpt_period_s <= (others => '0');
+      end if;
+
       --*** reset sync ***
-      if rst_i = rst_pol_g then
+      if (rst_i = rst_pol_g) then
         cpt_period_s <= (others => '0');
         cpt_inc_s    <= (others => '0');
       end if;
+
+    
     end if;
   end process;
 
