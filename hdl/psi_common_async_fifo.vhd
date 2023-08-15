@@ -39,7 +39,7 @@ entity psi_common_async_fifo is
           in_rdy_o     : out std_logic;       -- not full                             --    AXI-S  handshaking signal
           out_dat_o    : out std_logic_vector(width_g - 1 downto 0);                  --    Read data
           out_vld_o    : out std_logic;       -- not empty                            --    AXI-S  handshaking signal
-          out_rdy_o    : in  std_logic;                                               --    AXI-S handshaking signal
+          out_rdy_i    : in  std_logic;                                               --    AXI-S handshaking signal
           -- status signal in
           in_full_o    : out std_logic;                                               --    FIFO full signal synchronous to *in_clk_i*
           in_empty_o   : out std_logic;                                               --    FIFO empty signal synchronous to *in_clk_i*
@@ -107,7 +107,7 @@ begin
 
   assert log2(depth_g) = log2ceil(depth_g) report "###ERROR###: psi_common_async_fifo: only power of two depth_g is allowed" severity error;
 
-  p_comb : process(in_vld_i, out_rdy_o, ri, ro, RstInInt)
+  p_comb : process(in_vld_i, out_rdy_i, ri, ro, RstInInt)
     variable vi        : two_process_in_r;
     variable vo        : two_process_out_r;
     variable InLevel_v : unsigned(log2ceil(depth_g) downto 0);
@@ -169,7 +169,7 @@ begin
       vo.out_lvl_o := (others => '0');
     else
       vo.out_lvl_o := ro.WrAddr - ro.RdAddr;
-      if (out_rdy_o = '1') and (ro.out_lvl_o /= 0) then
+      if (out_rdy_i = '1') and (ro.out_lvl_o /= 0) then
         vo.out_lvl_o := vo.out_lvl_o - 1;
       end if;
     end if;
@@ -181,7 +181,7 @@ begin
     else
       out_vld_o <= '1';
       -- Execute read
-      if out_rdy_o = '1' then
+      if out_rdy_i = '1' then
         vo.RdAddr := ro.RdAddr + 1;
       end if;
     end if;

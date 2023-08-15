@@ -18,10 +18,10 @@ use work.psi_common_logic_pkg.all;
 
 entity psi_common_async_fifo_tb is
   generic(
-    afull_on_g   : boolean              := true;
-    aempty_on_g  : boolean              := true;
-    depth_g       : natural              := 32;
-    ram_behavior_g : string               := "RBW";
+    afull_on_g      : boolean              := true;
+    aempty_on_g     : boolean              := true;
+    depth_g         : natural              := 32;
+    ram_behavior_g  : string               := "RBW";
     rdy_rst_state_g : integer range 0 to 1 := 1
   );
 end entity psi_common_async_fifo_tb;
@@ -49,20 +49,20 @@ architecture sim of psi_common_async_fifo_tb is
   -------------------------------------------------------------------------
   -- Interface Signals
   -------------------------------------------------------------------------
-  signal in_clk_i       : std_logic                                            := '0';
-  signal in_rst_i       : std_logic                                            := '1';
-  signal out_clk_i      : std_logic                                            := '0';
-  signal out_rst_i      : std_logic                                            := '1';
-  signal in_dat_i      : std_logic_vector(DataWidth_c - 1 downto 0)           := (others => '0');
-  signal in_vld_i       : std_logic                                            := '0';
-  signal in_rdy_o       : std_logic                                            := '0';
-  signal out_dat_o     : std_logic_vector(DataWidth_c - 1 downto 0)           := (others => '0');
-  signal out_vld_o      : std_logic                                            := '0';
-  signal out_rdy_o      : std_logic                                            := '0';
-  signal in_full_o      : std_logic                                            := '0';
-  signal out_full_o     : std_logic                                            := '0';
-  signal in_empty_o     : std_logic                                            := '0';
-  signal out_empty_o    : std_logic                                            := '0';
+  signal in_clk_i     : std_logic                                            := '0';
+  signal in_rst_i     : std_logic                                            := '1';
+  signal out_clk_i    : std_logic                                            := '0';
+  signal out_rst_i    : std_logic                                            := '1';
+  signal in_dat_i     : std_logic_vector(DataWidth_c - 1 downto 0)           := (others => '0');
+  signal in_vld_i     : std_logic                                            := '0';
+  signal in_rdy_o     : std_logic                                            := '0';
+  signal out_dat_o    : std_logic_vector(DataWidth_c - 1 downto 0)           := (others => '0');
+  signal out_vld_o    : std_logic                                            := '0';
+  signal out_rdy_i    : std_logic                                            := '0';
+  signal in_full_o    : std_logic                                            := '0';
+  signal out_full_o   : std_logic                                            := '0';
+  signal in_empty_o   : std_logic                                            := '0';
+  signal out_empty_o  : std_logic                                            := '0';
   signal in_afull_o   : std_logic                                            := '0';
   signal out_afull_o  : std_logic                                            := '0';
   signal in_aempty_o  : std_logic                                            := '0';
@@ -79,36 +79,36 @@ begin
     generic map(
       width_g         => DataWidth_c,
       depth_g         => depth_g,
-      afull_on_g     => afull_on_g,
-      afull_lvl_g  => AlmFullLevel_c,
-      aempty_on_g    => aempty_on_g,
-      aempty_level_g => AlmEmptyLevel_c,
-      ram_behavior_g   => ram_behavior_g,
-      rdy_rst_state_g   => int_to_std_logic(rdy_rst_state_g)
+      afull_on_g      => afull_on_g,
+      afull_lvl_g     => AlmFullLevel_c,
+      aempty_on_g     => aempty_on_g,
+      aempty_level_g  => AlmEmptyLevel_c,
+      ram_behavior_g  => ram_behavior_g,
+      rdy_rst_state_g => int_to_std_logic(rdy_rst_state_g)
     )
     port map(
       -- Control Ports
-      in_clk_i       => in_clk_i,
-      in_rst_i       => in_rst_i,
-      out_clk_i      => out_clk_i,
-      out_rst_i      => out_rst_i,
+      in_clk_i     => in_clk_i,
+      in_rst_i     => in_rst_i,
+      out_clk_i    => out_clk_i,
+      out_rst_i    => out_rst_i,
       -- Input Data
-      in_dat_i      => in_dat_i,
-      in_vld_i       => in_vld_i,
-      in_rdy_o       => in_rdy_o,
+      in_dat_i     => in_dat_i,
+      in_vld_i     => in_vld_i,
+      in_rdy_o     => in_rdy_o,
       -- Output Data
-      out_dat_o     => out_dat_o,
-      out_vld_o      => out_vld_o,
-      out_rdy_o      => out_rdy_o,
+      out_dat_o    => out_dat_o,
+      out_vld_o    => out_vld_o,
+      out_rdy_i    => out_rdy_i,
       -- Input Status
-      in_full_o      => in_full_o,
-      in_empty_o     => in_empty_o,
+      in_full_o    => in_full_o,
+      in_empty_o   => in_empty_o,
       in_afull_o   => in_afull_o,
       in_aempty_o  => in_aempty_o,
       in_lvl_o     => in_lvl_o,
       -- Output Status
-      out_full_o     => out_full_o,
-      out_empty_o    => out_empty_o,
+      out_full_o   => out_full_o,
+      out_empty_o  => out_empty_o,
       out_afull_o  => out_afull_o,
       out_aempty_o => out_aempty_o,
       out_lvl_o    => out_lvl_o
@@ -193,20 +193,20 @@ begin
     print(">> Two words write then read");
     -- Write 1
     wait until falling_edge(in_clk_i);
-    in_dat_i <= X"0001";
+    in_dat_i  <= X"0001";
     in_vld_i  <= '1';
     assert in_rdy_o = '1' report "###ERROR###: in_rdy_o went low unexpectedly" severity error;
     assert in_empty_o = '1' report "###ERROR###: in_empty_o not high" severity error;
     assert unsigned(in_lvl_o) = 0 report "###ERROR###: in_lvl_o not 0" severity error;
     -- Write 2
     wait until falling_edge(in_clk_i);
-    in_dat_i <= X"0002";
+    in_dat_i  <= X"0002";
     assert in_rdy_o = '1' report "###ERROR###: in_rdy_o went low unexpectedly" severity error;
     assert in_empty_o = '0' report "###ERROR###: Empty not low" severity error;
     assert unsigned(in_lvl_o) = 1 report "###ERROR###: in_lvl_o not 1" severity error;
     -- Pause 1
     wait until falling_edge(in_clk_i);
-    in_dat_i <= X"0003";
+    in_dat_i  <= X"0003";
     in_vld_i  <= '0';
     assert in_rdy_o = '1' report "###ERROR###: in_rdy_o went low unexpectedly" severity error;
     assert in_empty_o = '0' report "###ERROR###: Empty not low" severity error;
@@ -227,7 +227,7 @@ begin
     assert unsigned(out_lvl_o) = 2 report "###ERROR###: out_lvl_o not 2" severity error;
     -- Read ack 1
     wait until falling_edge(out_clk_i);
-    out_rdy_o <= '1';
+    out_rdy_i <= '1';
     assert out_vld_o = '1' report "###ERROR###: out_vld_o not high" severity error;
     assert out_dat_o = X"0001" report "###ERROR###: Illegal out_dat_o 1" severity error;
     assert out_empty_o = '0' report "###ERROR###: Empty not low" severity error;
@@ -240,7 +240,7 @@ begin
     assert unsigned(out_lvl_o) = 1 report "###ERROR###: out_lvl_o not 1" severity error;
     -- empty 1
     wait until falling_edge(out_clk_i);
-    out_rdy_o <= '0';
+    out_rdy_i <= '0';
     assert out_vld_o = '0' report "###ERROR###: out_vld_o not high" severity error;
     assert out_empty_o = '1' report "###ERROR###: Empty not high" severity error;
     assert unsigned(out_lvl_o) = 0 report "###ERROR###: out_lvl_o not 0" severity error;
@@ -263,7 +263,7 @@ begin
     print(">> Write into Full FIFO");
     -- Fill FIFO
     for i in 0 to depth_g - 1 loop
-      in_vld_i  <= '1';
+      in_vld_i <= '1';
       in_dat_i <= std_logic_vector(to_unsigned(i, in_dat_i'length));
       wait until falling_edge(in_clk_i);
     end loop;
@@ -276,9 +276,9 @@ begin
     -- Add more data (not written because full)
     wait until falling_edge(in_clk_i);
     in_vld_i  <= '1';
-    in_dat_i <= X"ABCD";
+    in_dat_i  <= X"ABCD";
     wait until falling_edge(in_clk_i);
-    in_dat_i <= X"8765";
+    in_dat_i  <= X"8765";
     wait until falling_edge(in_clk_i);
     in_vld_i  <= '0';
     wait for 1 us;
@@ -289,11 +289,11 @@ begin
     -- Check read
     wait until falling_edge(out_clk_i);
     for i in 0 to depth_g - 1 loop
-      out_rdy_o <= '1';
+      out_rdy_i <= '1';
       assert unsigned(out_dat_o) = i report "###ERROR: Read wrong data in word " & integer'image(i) severity error;
       wait until falling_edge(out_clk_i);
     end loop;
-    out_rdy_o <= '0';
+    out_rdy_i <= '0';
     wait for 1 us;
     assert in_empty_o = '1' report "###ERROR###: in_empty_o not asserted" severity error;
     assert out_empty_o = '1' report "###ERROR###: out_empty_o not asserted" severity error;
@@ -307,9 +307,9 @@ begin
     assert in_empty_o = '1' report "###ERROR###: in_empty_o not asserted" severity error;
     -- read
     wait until falling_edge(out_clk_i);
-    out_rdy_o <= '1';
+    out_rdy_i <= '1';
     wait until falling_edge(out_clk_i);
-    out_rdy_o <= '0';
+    out_rdy_i <= '0';
     -- check correct functionality
     wait for 1 us;
     assert out_empty_o = '1' report "###ERROR###: out_empty_o not asserted" severity error;
@@ -318,7 +318,7 @@ begin
     assert unsigned(out_lvl_o) = 0 report "###ERROR###: out_lvl_o not empty" severity error;
     wait until falling_edge(in_clk_i);
     in_vld_i  <= '1';
-    in_dat_i <= X"8765";
+    in_dat_i  <= X"8765";
     wait until falling_edge(in_clk_i);
     in_vld_i  <= '0';
     wait for 1 us;
@@ -328,9 +328,9 @@ begin
     assert unsigned(out_lvl_o) = 1 report "###ERROR###: out_lvl_o not empty" severity error;
     wait until falling_edge(out_clk_i);
     assert out_dat_o = X"8765" report "###ERROR: Read wrong data" severity error;
-    out_rdy_o <= '1';
+    out_rdy_i <= '1';
     wait until falling_edge(out_clk_i);
-    out_rdy_o <= '0';
+    out_rdy_i <= '0';
     wait for 1 us;
     assert out_empty_o = '1' report "###ERROR###: out_empty_o not asserted" severity error;
     assert in_empty_o = '1' report "###ERROR###: in_empty_o not asserted" severity error;
@@ -342,10 +342,10 @@ begin
     -- fill
     for i in 0 to depth_g - 1 loop
       wait until falling_edge(in_clk_i);
-      in_vld_i  <= '1';
+      in_vld_i <= '1';
       in_dat_i <= std_logic_vector(to_unsigned(i, in_dat_i'length));
       wait until falling_edge(in_clk_i);
-      in_vld_i  <= '0';
+      in_vld_i <= '0';
       wait for 1 us;
       assert unsigned(in_lvl_o) = i + 1 report "###ERROR###: in_lvl_o wrong" severity error;
       assert unsigned(out_lvl_o) = i + 1 report "###ERROR###: out_lvl_o wrong" severity error;
@@ -372,9 +372,9 @@ begin
 
     for i in depth_g - 1 downto 0 loop
       wait until falling_edge(out_clk_i);
-      out_rdy_o <= '1';
+      out_rdy_i <= '1';
       wait until falling_edge(out_clk_i);
-      out_rdy_o <= '0';
+      out_rdy_i <= '0';
       wait for 1 us;
       assert unsigned(in_lvl_o) = i report "###ERROR###: in_lvl_o wrong" severity error;
       assert unsigned(out_lvl_o) = i report "###ERROR###: out_lvl_o wrong" severity error;
@@ -406,11 +406,11 @@ begin
         -- Write data
         wait until falling_edge(in_clk_i);
         for i in 0 to 4 loop
-          in_vld_i  <= '1';
+          in_vld_i <= '1';
           in_dat_i <= std_logic_vector(to_unsigned(i, in_dat_i'length));
           wait until falling_edge(in_clk_i);
           for k in 1 to wrDel loop
-            in_vld_i  <= '0';
+            in_vld_i <= '0';
             in_dat_i <= X"0000";
             wait until falling_edge(in_clk_i);
           end loop;
@@ -419,15 +419,15 @@ begin
         -- Read data
         wait until falling_edge(out_clk_i);
         for i in 0 to 4 loop
-          out_rdy_o <= '1';
+          out_rdy_i <= '1';
           assert unsigned(out_dat_o) = i report "###ERROR###: Wrong data" severity error;
           wait until falling_edge(out_clk_i);
           for k in 1 to rdDel loop
-            out_rdy_o <= '0';
+            out_rdy_i <= '0';
             wait until falling_edge(out_clk_i);
           end loop;
         end loop;
-        out_rdy_o <= '0';
+        out_rdy_i <= '0';
         assert out_empty_o = '1' report "###ERROR###: Empty not asserted" severity error;
         wait for 1 us;
       end loop;
@@ -435,15 +435,15 @@ begin
 
     -- Output Ready before data available
     print(">> Output Ready before data available");
-    out_rdy_o <= '1';
+    out_rdy_i <= '1';
     for i in 0 to 9 loop
       wait until falling_edge(out_clk_i);
       wait until falling_edge(in_clk_i);
     end loop;
-    in_dat_i <= X"ABCD";
+    in_dat_i  <= X"ABCD";
     in_vld_i  <= '1';
     wait until falling_edge(in_clk_i);
-    in_dat_i <= X"4321";
+    in_dat_i  <= X"4321";
     wait until falling_edge(in_clk_i);
     in_vld_i  <= '0';
     wait until out_vld_o = '1' and rising_edge(out_clk_i);
