@@ -22,7 +22,7 @@ entity psi_common_sum_cfg is
           rst_i         : in  std_logic;                                     -- reset
           vld_i         : in  std_logic;                                     -- input strobe/valid
           sync_i        : in  std_logic;                                     -- input to sync measurement 
-          sample_i      : in  std_logic_vector(data_width_g - 1 downto 0);   -- number of sample to make the computation 
+          sample_i      : in  std_logic_vector(log2ceil(max_avg_g) downto 0);   -- number of sample to make the computation 
           fract_i       : in  std_logic_vector(data_width_g - 1 downto 0);   -- fractional part to multiple with
           dat_i         : in  std_logic_vector(data_width_g - 1 downto 0);   -- input data
           vld_o         : out std_logic;                                     -- output strobe/valid
