@@ -22,7 +22,7 @@ entity psi_common_sum_cfg is
           rst_i         : in  std_logic;                                     -- reset
           vld_i         : in  std_logic;                                     -- input strobe/valid
           sync_i        : in  std_logic;                                     -- input to sync measurement 
-          sample_i      : in  std_logic_vector(log2ceil(max_avg_g) downto 0);   -- number of sample to make the computation 
+          sample_i      : in  std_logic_vector(log2ceil(max_avg_g)-1 downto 0);   -- number of sample to make the computation 
           fract_i       : in  std_logic_vector(data_width_g - 1 downto 0);   -- fractional part to multiple with
           dat_i         : in  std_logic_vector(data_width_g - 1 downto 0);   -- input data
           vld_o         : out std_logic;                                     -- output strobe/valid
@@ -34,7 +34,7 @@ architecture RTL of psi_common_sum_cfg is
   --internals
   constant accu_witdh_c   : natural := data_width_g+log2ceil(max_avg_g);
   constant mult_witdh_c   : natural := data_width_g+accu_witdh_c;
-  signal counter_s        : unsigned(log2ceil(max_avg_g) downto 0):=(others=>'0');
+  signal counter_s        : unsigned(sample_i'range):=(others=>'0');
   
   signal mean_dat_sign_s  : signed(accu_witdh_c-1 downto 0);
   signal mean_dat_usign_s : unsigned(accu_witdh_c-1 downto 0);
