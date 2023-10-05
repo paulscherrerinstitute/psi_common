@@ -53,6 +53,8 @@ architecture RTL of psi_common_min_max_sum_cfg is
   signal sum_s            : std_logic_vector(sum_o'range);
   signal avg_s            : std_logic_vector(sum_o'range);
   signal vld_o_s          : std_logic;
+  signal sample_s         : std_logic_vector(data_width_g - 1 downto 0);
+  signal fract_s          : std_logic_vector(data_width_g - 1 downto 0);
 begin
   
   --*** check accu output length ***
@@ -70,10 +72,12 @@ begin
         mean_dat_usign_s <= (others => '0');
       else
         --*** time window mngt ***
-        if sync_i = '1' or counter_s = unsigned(sample_i) - 1 then
+        if sync_i = '1' or counter_s = unsigned(sample_s) - 1 then
           counter_s        <= (others => '0');
           mean_dat_sign_s  <= to_signed(0,accu_width_g)  + signed(dat_i);
           mean_dat_usign_s <= to_unsigned(0,accu_width_g)+ unsigned(dat_i);
+          sample_s         <= sample_i ;
+          fract_s          <= fract_i;
           -- *** sign/unsigned for mean calc ***
           if signed_data_g then
             mean_s <= std_logic_vector(mean_dat_sign_s);
@@ -92,7 +96,7 @@ begin
           end if;
         end if;
         --*** sum vector ***
-        if (counter_s = unsigned(sample_i) - 1 and vld_i = '1') or sync_i ='1' then
+        if (counter_s = unsigned(sample_s) - 1 and vld_i = '1') or sync_i ='1' then
           raz_s <= '1';         
         else
           raz_s <= '0';
@@ -100,14 +104,14 @@ begin
         
         --*** average calculation ***
         if not signed_data_g then
-          avg0_s      <= unsigned(sum_s) * unsigned(fract_i);
+          avg0_s   <= unsigned(sum_s) * unsigned(fract_s);
           if vld_o_s = '1' then 
             avg_o  <= std_logic_vector(avg0_s(data_width_g+accu_width_g-2 downto data_width_g-1));
           end if;
         else
-          avg0_sign_s                     <= signed(sum_s) * signed(fract_i);
+          avg0_sign_s <= signed(sum_s) * signed(fract_s);
           if vld_o_s = '1' then  
-            avg_o  <= std_logic_vector(avg0_sign_s(data_width_g+accu_width_g-2 downto data_width_g-1));
+            avg_o     <= std_logic_vector(avg0_sign_s(data_width_g+accu_width_g-2 downto data_width_g-1));
           end if;
         end if;
 
@@ -122,8 +126,8 @@ begin
           vld_s <= '0';
         end if;
         vld_o_s <= vld_s;
-        if vld_o_s = '1' then
-          
+        --*** after 2 clock cycle output is delivered ***
+        if vld_o_s = '1' then  
           vld_o  <= vld_o_s ;
           min_o  <= min_s ;
           max_o  <= max_s ;
