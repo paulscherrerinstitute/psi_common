@@ -22,7 +22,7 @@ use ieee.numeric_std.all;
 entity psi_common_pulse_cc is
   generic(num_pulses_g : positive := 1;                                    -- fifo width
           a_rst_pol_g  : std_logic:= '1';                                  -- rst polarity port A
-          b_rst_pol_g  : std_logic:='1'  );                                -- rst polarity port B
+          b_rst_pol_g  : std_logic:= '1');                                 -- rst polarity port B
   port(   a_clk_i      : in  std_logic;                                    -- clock port a input
           a_rst_i      : in  std_logic;                                    -- rst input  port a
           a_rst_o      : out std_logic;                                    -- Clock domain A reset output, active if *a_rst_i* or *b_rst_i* is asserted, de-asserted synchronously to *a_clk_i*
@@ -40,32 +40,32 @@ architecture rtl of psi_common_pulse_cc is
 
   -- Domain A signals
   signal RstSyncB2A  : std_logic_vector(3 downto 0);
-  signal RstAI       : std_logic;
+  signal RstAI       : std_logic  :=  a_rst_pol_g;
   -- Domain B signals
   signal RstSyncA2B  : std_logic_vector(3 downto 0);
-  signal RstBI       : std_logic;
+  signal RstBI       : std_logic  :=  b_rst_pol_g;
   -- Data transmit side
   signal ToggleA     : std_logic_vector(num_pulses_g - 1 downto 0);
   -- Data receive side
   signal ToggleSyncB : Pulse_t(2 downto 0);
 
-  attribute syn_srlstyle : string;
-  attribute syn_srlstyle of RstSyncB2A : signal is "registers";
-  attribute syn_srlstyle of RstSyncA2B : signal is "registers";
-  attribute syn_srlstyle of ToggleA : signal is "registers";
+  attribute syn_srlstyle                : string;
+  attribute syn_srlstyle of RstSyncB2A  : signal is "registers";
+  attribute syn_srlstyle of RstSyncA2B  : signal is "registers";
+  attribute syn_srlstyle of ToggleA     : signal is "registers";
   attribute syn_srlstyle of ToggleSyncB : signal is "registers";
 
-  attribute shreg_extract : string;
+  attribute shreg_extract               : string;
   attribute shreg_extract of RstSyncB2A : signal is "no";
   attribute shreg_extract of RstSyncA2B : signal is "no";
-  attribute shreg_extract of ToggleA : signal is "no";
-  attribute shreg_extract of ToggleSyncB : signal is "no";
+  attribute shreg_extract of ToggleA    : signal is "no";
+  attribute shreg_extract of ToggleSyncB: signal is "no";
 
-  attribute ASYNC_REG : string;
-  attribute ASYNC_REG of RstSyncB2A : signal is "TRUE";
-  attribute ASYNC_REG of RstSyncA2B : signal is "TRUE";
-  attribute ASYNC_REG of ToggleA : signal is "TRUE";
-  attribute ASYNC_REG of ToggleSyncB : signal is "TRUE";
+  attribute ASYNC_REG                   : string;
+  attribute ASYNC_REG of RstSyncB2A     : signal is "TRUE";
+  attribute ASYNC_REG of RstSyncA2B     : signal is "TRUE";
+  attribute ASYNC_REG of ToggleA        : signal is "TRUE";
+  attribute ASYNC_REG of ToggleSyncB    : signal is "TRUE";
 
 begin
 
@@ -73,43 +73,72 @@ begin
   ARstSync_p : process(a_clk_i, b_rst_i)
   begin
     if b_rst_i = b_rst_pol_g then
-      RstSyncB2A <= (others => '1');
+      RstSyncB2A <= (others => b_rst_pol_g);
     elsif rising_edge(a_clk_i) then
-      RstSyncB2A <= RstSyncB2A(RstSyncB2A'left - 1 downto 0) & '0';
+      RstSyncB2A <= RstSyncB2A(RstSyncB2A'left - 1 downto 0) & not b_rst_pol_g;
     end if;
   end process;
+  
   ARst_p : process(a_clk_i)
   begin
     if rising_edge(a_clk_i) then
       if a_rst_pol_g = '1' then
-        RstAI <= RstSyncB2A(RstSyncB2A'left) or a_rst_i;
+        if b_rst_pol_g = '1' then
+          RstAI <= RstSyncA2B(RstSyncB2A'left) or a_rst_i;
+        else
+          RstAI <= RstSyncA2B(RstSyncB2A'left) and a_rst_i;
+        end if;
       else
-        RstAI <= RstSyncB2A(RstSyncB2A'left) and a_rst_i;
+       if b_rst_pol_g = '1' then
+          RstAI <= RstSyncA2B(RstSyncB2A'left) or a_rst_i;
+        else
+          RstAI <= RstSyncA2B(RstSyncB2A'left) and a_rst_i;
+        end if;
       end if;
     end if;
   end process;
-  a_rst_o <= RstAI;
+  gene_a_rst_o : if a_rst_pol_g = '1' generate
+  a_rst_o <= RstAI or a_rst_i;
+  end generate;
+  gene_a_rst_o_neg : if a_rst_pol_g = '0' generate
+  a_rst_o <= RstAI and a_rst_i;
+  end generate;
 
   -- Domain B reset sync
   BRstSync_p : process(b_clk_i, a_rst_i)
   begin
+    
     if a_rst_i = a_rst_pol_g then
-      RstSyncA2B <= (others => '1');
+      RstSyncA2B <= (others => a_rst_pol_g);
     elsif rising_edge(b_clk_i) then
-      RstSyncA2B <= RstSyncA2B(RstSyncA2B'left - 1 downto 0) & '0';
+      RstSyncA2B <= RstSyncA2B(RstSyncA2B'left - 1 downto 0) & not a_rst_pol_g;
     end if;
   end process;
+  
   BRst_p : process(b_clk_i)
   begin
     if rising_edge(b_clk_i) then
       if b_rst_pol_g = '1' then
-        RstBI <= RstSyncA2B(RstSyncA2B'left) or b_rst_i;
+        if a_rst_pol_g = '1' then
+          RstBI <= RstSyncA2B(RstSyncA2B'left) or b_rst_i;
+        else
+          RstBI <= RstSyncA2B(RstSyncA2B'left) and b_rst_i;
+        end if;
       else
-        RstBI <= RstSyncA2B(RstSyncA2B'left) and b_rst_i;
+        if a_rst_pol_g = '1' then
+          RstBI <= RstSyncA2B(RstSyncA2B'left) or b_rst_i;
+        else
+          RstBI <= RstSyncA2B(RstSyncA2B'left) and b_rst_i;
+        end if;
       end if;
     end if;
   end process;
-  b_rst_o <= RstBI;
+  gene_b_rst_o : if b_rst_pol_g = '1' generate
+  b_rst_o <= RstBI or b_rst_i;
+  end generate;
+  gene_b_rst_o_neg : if b_rst_pol_g = '0' generate
+  b_rst_o <= RstBI and b_rst_i;
+  end generate;
 
   -- Pulse transmit side (A)
   PulseA_p : process(a_clk_i)
@@ -136,5 +165,5 @@ begin
       end if;
     end if;
   end process;
+  
 end architecture;
-

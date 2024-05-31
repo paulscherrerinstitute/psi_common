@@ -157,9 +157,23 @@ add_sources "../testbench" {
   psi_common_prbs_tb/maximal_length_lfsr.vhd \
   psi_common_prbs_tb/psi_common_prbs_tb.vhd \
   psi_common_pwm_tb/psi_common_pwm_tb.vhd \
+  psi_common_pulse_cc_tb/psi_common_pulse_cc_tb.vhd \
 } -tag tb
 
 #TB Runs
+
+create_tb_run "psi_common_pulse_cc_tb"
+tb_run_add_arguments \
+ "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='1' -ga_rst_before_g=true" \
+ "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='0' -ga_rst_before_g=true" \
+ "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='0' -ga_rst_before_g=true" \
+ "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='1' -ga_rst_before_g=true" \
+ "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='1' -ga_rst_before_g=false" \
+ "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='0' -ga_rst_before_g=false" \
+ "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='0' -ga_rst_before_g=false" \
+ "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='1' -ga_rst_before_g=false" 
+add_tb_run
+
 create_tb_run "psi_common_min_max_sum_tb"
 tb_run_add_arguments \
   "-gclock_cycle_g=100 -gsigned_data_g=true -gdata_length_g=16 -gaccu_length_g=64" \
