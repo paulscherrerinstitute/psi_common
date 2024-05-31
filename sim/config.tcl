@@ -259,6 +259,7 @@ add_tb_run
 create_tb_run "psi_common_async_fifo_tb"
 tb_run_add_arguments \
 	"-gafull_on_g=true -gaempty_on_g=true -gdepth_g=32 -gram_behavior_g=RBW -grdy_rst_state_g=1" \
+  "-gafull_on_g=true -gaempty_on_g=true -gdepth_g=32 -gram_behavior_g=RBW -grdy_rst_state_g=1 -grst_pol_g='0'" \
 	"-gafull_on_g=true -gaempty_on_g=true -gdepth_g=32 -gram_behavior_g=RBW -grdy_rst_state_g=0" \
 	"-gafull_on_g=false -gaempty_on_g=false -gdepth_g=128 -gram_behavior_g=RBW" \
 	"-gafull_on_g=false -gaempty_on_g=false -gdepth_g=128 -gram_behavior_g=WBR"

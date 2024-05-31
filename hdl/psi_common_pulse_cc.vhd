@@ -84,15 +84,15 @@ begin
     if rising_edge(a_clk_i) then
       if a_rst_pol_g = '1' then
         if b_rst_pol_g = '1' then
-          RstAI <= RstSyncA2B(RstSyncB2A'left) or a_rst_i;
+          RstAI <= RstSyncB2A(RstSyncB2A'left) or a_rst_i;
         else
-          RstAI <= RstSyncA2B(RstSyncB2A'left) and a_rst_i;
+          RstAI <= RstSyncB2A(RstSyncB2A'left) and a_rst_i;
         end if;
       else
        if b_rst_pol_g = '1' then
-          RstAI <= RstSyncA2B(RstSyncB2A'left) or a_rst_i;
+          RstAI <= RstSyncB2A(RstSyncB2A'left) or a_rst_i;
         else
-          RstAI <= RstSyncA2B(RstSyncB2A'left) and a_rst_i;
+          RstAI <= RstSyncB2A(RstSyncB2A'left) and a_rst_i;
         end if;
       end if;
     end if;
@@ -107,7 +107,6 @@ begin
   -- Domain B reset sync
   BRstSync_p : process(b_clk_i, a_rst_i)
   begin
-    
     if a_rst_i = a_rst_pol_g then
       RstSyncA2B <= (others => a_rst_pol_g);
     elsif rising_edge(b_clk_i) then

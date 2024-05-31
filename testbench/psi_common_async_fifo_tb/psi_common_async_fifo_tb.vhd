@@ -22,7 +22,8 @@ entity psi_common_async_fifo_tb is
     aempty_on_g     : boolean              := true;
     depth_g         : natural              := 32;
     ram_behavior_g  : string               := "RBW";
-    rdy_rst_state_g : integer range 0 to 1 := 1
+    rdy_rst_state_g : integer range 0 to 1 := 1;
+    rst_pol_g       : std_logic            := '1'
   );
 end entity psi_common_async_fifo_tb;
 
@@ -50,9 +51,9 @@ architecture sim of psi_common_async_fifo_tb is
   -- Interface Signals
   -------------------------------------------------------------------------
   signal in_clk_i     : std_logic                                            := '0';
-  signal in_rst_i     : std_logic                                            := '1';
+  signal in_rst_i     : std_logic                                            := rst_pol_g;
   signal out_clk_i    : std_logic                                            := '0';
-  signal out_rst_i    : std_logic                                            := '1';
+  signal out_rst_i    : std_logic                                            := rst_pol_g;
   signal in_dat_i     : std_logic_vector(DataWidth_c - 1 downto 0)           := (others => '0');
   signal in_vld_i     : std_logic                                            := '0';
   signal in_rdy_o     : std_logic                                            := '0';
@@ -84,7 +85,8 @@ begin
       aempty_on_g     => aempty_on_g,
       aempty_level_g  => AlmEmptyLevel_c,
       ram_behavior_g  => ram_behavior_g,
-      rdy_rst_state_g => int_to_std_logic(rdy_rst_state_g)
+      rdy_rst_state_g => int_to_std_logic(rdy_rst_state_g),
+      rst_pol_g       => rst_pol_g
     )
     port map(
       -- Control Ports
@@ -149,8 +151,8 @@ begin
     -- *** Reset Tests ***
     print(">> Reset");
     -- Reset
-    in_rst_i  <= '1';
-    out_rst_i <= '1';
+    in_rst_i  <= rst_pol_g;
+    out_rst_i <= rst_pol_g;
     -- check if ready state during reset is correct
     wait for 20 ns;                     -- reset must be transferred to other clock domain
     wait until rising_edge(in_clk_i);
@@ -159,9 +161,9 @@ begin
 
     -- Remove reset
     wait until rising_edge(in_clk_i);
-    in_rst_i  <= '0';
+    in_rst_i  <= not rst_pol_g;
     wait until rising_edge(out_clk_i);
-    out_rst_i <= '0';
+    out_rst_i <= not rst_pol_g;
     wait for 100 ns;
 
     -- Check Reset State
