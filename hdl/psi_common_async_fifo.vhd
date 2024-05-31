@@ -141,7 +141,7 @@ begin
       end if;
     end if;
     -- Artificially keep InRdy low during reset if required
-    if (rdy_rst_state_g = '0') and (RstInInt = '1') then
+    if (rdy_rst_state_g = '0') and (RstInInt = rst_pol_g) then
       in_rdy_o <= '0';
     end if;
 
@@ -272,6 +272,10 @@ begin
 
   -- only used for reset crossing and oring
   i_rst_cc : entity work.psi_common_pulse_cc
+      generic map(
+        a_rst_pol_g => rst_pol_g,
+        b_rst_pol_g => rst_pol_g
+      )
     port map(
       -- Clock Domain A
       a_clk_i => in_clk_i,

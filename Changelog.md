@@ -1,3 +1,10 @@
+## 3.0.1
+* Bugfixes
+  * pulse_cc add testbench to check reset crossing and correct polarity handling
+  * modify simple_cc_tb to cope with bugfix in pulse_cc
+  * correct async fifo to work with reset polarity neg
+  * add few polarity check in test regression config.tcl
+  
 ## 3.0.0
 * Cleaning
   * All codes have been unified for better readibility and all tabs have been removed 
