@@ -3,6 +3,7 @@ stages:
   - simulation
 
 before_script:
+  - source build_env.sh
   - git config credential.https://git.psi.ch.password ${CI_JOB_TOKEN}
   - git force-clone https://git.psi.ch/GFA/Libraries/Firmware/TCL/PsiSim ../../../Firmware/TCL/PsiSim --depth=1 || true
   - git force-clone https://git.psi.ch/GFA/Libraries/Firmware/VHDL/psi_tb ../../../Firmware/VHDL/psi_tb --depth=1 || true
