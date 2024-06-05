@@ -3,14 +3,14 @@ stages:
   - simulation
 
 before_script:
-    # Clone dependencies in expected directory structure:
-  - git force-clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.psi.ch/GFA/Libraries/Firmware/TCL/PsiSim ../../../Firmware/TCL/PsiSim --depth=1 || true
-  - git force-clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.psi.ch/GFA/Libraries/Firmware/VHDL/psi_tb ../../../Firmware/VHDL/psi_tb --depth=1 || true
+  - git config credential.https://git.psi.ch.password ${CI_JOB_TOKEN}
+  - git force-clone https://git.psi.ch/GFA/Libraries/Firmware/TCL/PsiSim ../../../Firmware/TCL/PsiSim --depth=1 || true
+  - git force-clone https://git.psi.ch/GFA/Libraries/Firmware/VHDL/psi_tb ../../../Firmware/VHDL/psi_tb --depth=1 || true
 
 code-style:
   stage: linter
   tags: 
-    - test-vm-3205
+    - dsp
   allow_failure: true
   script:
     - echo "...tbd..."
@@ -18,11 +18,11 @@ code-style:
 modelsim:
   stage: simulation
   tags: 
-    - test-vm-3205
+    - dsp
   #rules: 
   #  - if: $CI_COMMIT_BRANCH == "master"
   script:
-    - toolchain-load modelsim_2020.4
+    - tool modelsim_2020.4
     - cd sim 
     - vsim -c -do ci.do -logfile Transcript.transcript
     - grep -Fq "SIMULATIONS COMPLETED SUCCESSFULLY" Transcript.transcript
@@ -31,10 +31,11 @@ modelsim:
 ghdl:
   stage: simulation
   tags: 
-    - test-vm-3205
+    - dsp
   script:
-    - toolchain-load ghdl_3.0.0_gcc
+    - tool ghdl_3.0.0
     - cd sim 
     - tclsh runGhdl.tcl 2>&1 | tee ghdl.log
     - grep -Fq "SIMULATIONS COMPLETED SUCCESSFULLY" ghdl.log
     - (! grep -Fq "###ERROR###" ghdl.log)
+
