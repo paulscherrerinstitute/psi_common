@@ -13,8 +13,8 @@ use work.psi_tb_txt_util.all;
 use work.psi_tb_activity_pkg.all;
 
 entity psi_common_pulse_cc_tb is
-  generic(a_freq_clk_g    : real      := 100.0E6;
-          b_freq_clk_g    : real      := 50.0E6;
+  generic(a_freq_clk_g    : integer   := 1000E6;
+          b_freq_clk_g    : integer   := 500E6;
           num_pulses_g    : positive  := 1;
           a_rst_pol_g     : std_logic := '1';
           b_rst_pol_g     : std_logic := '0';
@@ -24,15 +24,15 @@ end entity;
 
 architecture tb of psi_common_pulse_cc_tb is
 
-constant a_period_c   : time      := (1 sec)/a_freq_clk_g;
-constant b_period_c : time    := (1 sec)/b_freq_clk_g;
-signal tb_run       : boolean     := true;
-signal a_clk_sti    : std_logic  :='0';
-signal a_rst_sti    : std_logic  := a_rst_pol_g;
+constant a_period_c : time      := (1 sec)/a_freq_clk_g;
+constant b_period_c : time      := (1 sec)/b_freq_clk_g;
+signal tb_run       : boolean   := true;
+signal a_clk_sti    : std_logic :='0';
+signal a_rst_sti    : std_logic := a_rst_pol_g;
 signal a_rst_obs    : std_logic;
 signal a_dat_sti    : std_logic_vector(num_pulses_g - 1 downto 0):=(others=>'0');
-signal b_clk_sti    : std_logic  :='0';
-signal b_rst_sti    : std_logic  := b_rst_pol_g;
+signal b_clk_sti    : std_logic :='0';
+signal b_rst_sti    : std_logic := b_rst_pol_g;
 signal b_rst_obs    : std_logic;
 signal b_dat_obs    : std_logic_vector(num_pulses_g - 1 downto 0);
 

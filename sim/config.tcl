@@ -164,14 +164,14 @@ add_sources "../testbench" {
 
 create_tb_run "psi_common_pulse_cc_tb"
 tb_run_add_arguments \
- "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='1' -ga_rst_before_g=true" \
- "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='0' -ga_rst_before_g=true" \
- "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='0' -ga_rst_before_g=true" \
- "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='1' -ga_rst_before_g=true" \
- "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='1' -ga_rst_before_g=false" \
- "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='0' -ga_rst_before_g=false" \
- "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='0' -ga_rst_before_g=false" \
- "-ga_freq_clk_g=100.0E6 -gb_freq_clk_g=50.0E6 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='1' -ga_rst_before_g=false" 
+ "-ga_freq_clk_g=100000000 -gb_freq_clk_g=50000000 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='1' -ga_rst_before_g=true" \
+ "-ga_freq_clk_g=100000000 -gb_freq_clk_g=50000000 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='0' -ga_rst_before_g=true" \
+ "-ga_freq_clk_g=100000000 -gb_freq_clk_g=50000000 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='0' -ga_rst_before_g=true" \
+ "-ga_freq_clk_g=100000000 -gb_freq_clk_g=50000000 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='1' -ga_rst_before_g=true" \
+ "-ga_freq_clk_g=100000000 -gb_freq_clk_g=50000000 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='1' -ga_rst_before_g=false" \
+ "-ga_freq_clk_g=100000000 -gb_freq_clk_g=50000000 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='0' -ga_rst_before_g=false" \
+ "-ga_freq_clk_g=100000000 -gb_freq_clk_g=50000000 -gnum_pulses_g=1 -ga_rst_pol_g='1' -gb_rst_pol_g='0' -ga_rst_before_g=false" \
+ "-ga_freq_clk_g=100000000 -gb_freq_clk_g=50000000 -gnum_pulses_g=1 -ga_rst_pol_g='0' -gb_rst_pol_g='1' -ga_rst_before_g=false" 
 add_tb_run
 
 create_tb_run "psi_common_min_max_sum_tb"
