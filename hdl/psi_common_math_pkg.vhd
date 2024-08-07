@@ -116,6 +116,9 @@ package psi_common_math_pkg is
   -- function to determine if ratio clock/strobe is an integer
   function is_int_ratio(a : in real; b : in real) return boolean;
   function is_int_ratio(a : in integer; b : in integer) return boolean;
+  
+  -- function to find closest power of 2, used for RegCount finding on AXI, no synth
+  function nearest_pow2(a: integer) return integer;
 
 end package;
 
@@ -607,4 +610,23 @@ package body psi_common_math_pkg is
     end if;
 
   end function;
+  
+  --*** find the nearest power 2, used for AXI register count not synth***
+  function nearest_pow2(a: integer) return integer is
+      variable power_of_two : unsigned(31 downto 0);    -- Adjust size if needed
+      variable num_bits     : integer;
+    begin
+        num_bits     := 32;
+        power_of_two := (others => '0');
+        
+        for i in 0 to num_bits-1 loop
+            if (2**i >= val) then
+                power_of_two    := (others => '0');
+                power_of_two(i) := '1';
+                exit;
+            end if;
+        end loop;        
+        return to_integer(power_of_two);   
+    end function;
+    
 end psi_common_math_pkg;
