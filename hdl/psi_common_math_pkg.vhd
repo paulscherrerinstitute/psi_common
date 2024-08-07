@@ -620,7 +620,7 @@ package body psi_common_math_pkg is
         power_of_two := (others => '0');
         
         for i in 0 to num_bits-1 loop
-            if (2**i >= val) then
+            if (2**i >= a) then
                 power_of_two    := (others => '0');
                 power_of_two(i) := '1';
                 exit;
