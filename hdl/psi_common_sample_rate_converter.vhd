@@ -33,7 +33,7 @@ begin
   proc : process(clk_i)
   begin
     if rising_edge(clk_i) then
-      if rst_i = '1' then
+      if rst_i = rst_pol_g then
         -- Synchronous reset: reset everything on the rising edge of clk_i
         sample_count_s <= 0;
         dat_s          <= (others => '0');
@@ -42,7 +42,7 @@ begin
         vdl_dff_s      <= '0';
       else
         if mode_g = "DOWN" then
-          if vld_i = rst_pol_g then
+          if vld_i = '1'  then
             -- Downsampling logic
             if sample_count_s = (rate_g - 1) then
               dat_s          <= dat_i;
