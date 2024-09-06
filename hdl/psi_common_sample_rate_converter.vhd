@@ -30,7 +30,7 @@ architecture rtl of psi_common_sample_rate_converter is
   signal vdl_dff_s       : std_logic := '0';
 begin
 
-  comb_proc : process(clk_i)
+  proc : process(clk_i)
   begin
     if rising_edge(clk_i) then
       if rst_i = '1' then
