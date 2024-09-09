@@ -4,7 +4,7 @@
 
 [**component list**](../README.md)
 
-# psi_common_watchdog
+# psi_common_sample_rate_converter
  - VHDL source: [psi_common_sample_rate_converter.vhd](../../hdl/psi_common_sample_rate_converter.vhd)
  - Testbench source: [psi_common_sample_rate_converter_tb.vhd](../../testbench/psi_common_sample_rate_converter_tb/psi_common_sample_rate_converter_tb.vhd)
 
