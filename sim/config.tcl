@@ -87,6 +87,7 @@ add_sources "../hdl" {
   psi_common_min_max_sum.vhd \
   psi_common_prbs.vhd \
   psi_common_pwm.vhd \
+  psi_common_sample_rate_converter.vhd \
 } -tag src
 
 # testbenches
@@ -158,6 +159,7 @@ add_sources "../testbench" {
   psi_common_prbs_tb/psi_common_prbs_tb.vhd \
   psi_common_pwm_tb/psi_common_pwm_tb.vhd \
   psi_common_pulse_cc_tb/psi_common_pulse_cc_tb.vhd \
+  psi_common_sample_rate_converter_tb/psi_common_sample_rate_converter_tb.vhd \
 } -tag tb
 
 #TB Runs
