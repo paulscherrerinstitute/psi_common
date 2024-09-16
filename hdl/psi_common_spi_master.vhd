@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
---	Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
---	All rights reserved.
+--  Copyright (c) 2018 by Paul Scherrer Institute, Switzerland
+--  All rights reserved.
 --  Authors: Oliver Bruendler
 ------------------------------------------------------------------------------
 
@@ -27,8 +27,11 @@ entity psi_common_spi_master is
           slave_cnt_g       : positive  := 1;                                    -- Number if slaves to support
           lsb_first_g       : boolean   := false;                                -- False = MSB first trasnmission and True LSB
           mosi_idle_state_g : std_logic := '0';                                  -- Idle state of the MOSI line
-          rst_pol_g         : std_logic:= '1');                                  -- reset polarity
-  port(    -- Control Signals                                                    
+          rst_pol_g         : std_logic:= '1';                                   -- Reset polarity
+          read_bit_pol_g     : std_logic := '1';                                 -- Polarity of Read operation in RW bit in MOSI word (needed in 3-Wires SPI)
+          tri_state_pol_g    : std_logic := '1';                                 -- Polarity of tristate signal in case of a 3-Wires SPI
+          spi_data_pos_g     : positive := 3);                                   -- Starting bit position of Data in MOSI word (needed in 3-Wires SPI)
+  port(   -- Control Signals                                                    
           clk_i      : in  std_logic;                                            -- system clock
           rst_i      : in  std_logic;                                            -- system reset (sync)
           -- Parallel Interface                                                  
@@ -42,6 +45,7 @@ entity psi_common_spi_master is
           spi_sck_o  : out std_logic;                                            -- SPI clock
           spi_mosi_o : out std_logic;                                            -- SPI master to slave data signal
           spi_miso_i : in  std_logic;                                            -- SPI slave to master data signal
+          spi_tri_o  : out std_logic;                                            -- SPI tri-state buffer select if 3-wires SPI is used
           spi_cs_n_o : out std_logic_vector(slave_cnt_g - 1 downto 0);           -- SPI slave select signal (low active)
           spi_le_o   : out std_logic_vector(slave_cnt_g - 1 downto 0));          -- SPI slave latch enable (high active)
 end entity;
@@ -54,17 +58,20 @@ architecture rtl of psi_common_spi_master is
 
   -- *** Constants ***
   constant ClkDivThres_c : natural := clk_div_g / 2 - 1;
+  constant BitCntDataPos_c : natural := trans_width_g - spi_data_pos_g;
 
   -- *** Two Process Method ***
   type two_process_r is record
     State      : State_t;
     StateLast  : State_t;
+    IsRead    : std_logic;
     ShiftReg   : std_logic_vector(trans_width_g - 1 downto 0);
     dat_o      : std_logic_vector(trans_width_g - 1 downto 0);
     spi_cs_n_o : std_logic_vector(slave_cnt_g - 1 downto 0);
     spi_le_o   : std_logic_vector(slave_cnt_g - 1 downto 0);
     spi_sck_o  : std_logic;
     spi_mosi_o : std_logic;
+    spi_tri_o    : std_logic;
     ClkDivCnt  : integer range 0 to ClkDivThres_c;
     BitCnt     : integer range 0 to trans_width_g;
     CsHighCnt  : integer range 0 to cs_high_cycles_g - 1;
@@ -127,6 +134,7 @@ begin
         -- Start of Transfer
         if start_i = '1' then
           v.ShiftReg                                  := dat_i;
+          v.IsRead                                    := dat_i  (trans_width_g - 1);
           v.spi_cs_n_o(to_integer(unsigned(slave_i))) := '0';
           v.State                                     := SftComp_s;
           v.busy_o                                    := '1';
@@ -148,6 +156,10 @@ begin
         if r.ClkDivCnt = 0 then
           if spi_cpha_g = 0 then
             v.spi_mosi_o := r.MosiNext;
+            -- Only for 3-Wires SPI
+            if r.BitCnt = BitCntDataPos_c and r.IsRead = read_bit_pol_g then
+              v.spi_tri_o := tri_state_pol_g;
+            end if;
           else
             ShiftReg(r.ShiftReg, v.ShiftReg, spi_miso_i, v.MosiNext);
           end if;
@@ -159,6 +171,7 @@ begin
             v.spi_mosi_o := mosi_idle_state_g;
             v.State      := CsHigh_s;
             v.spi_le_o   := not r.spi_cs_n_o;
+            v.spi_tri_o := not tri_state_pol_g;
           -- Otherwise contintue
           else
             v.State := ClkAct_s;
@@ -174,6 +187,10 @@ begin
         if r.ClkDivCnt = 0 then
           if spi_cpha_g = 1 then
             v.spi_mosi_o := r.MosiNext;
+            -- Only for 3-Wires SPI
+            if r.BitCnt = BitCntDataPos_c and r.IsRead = read_bit_pol_g then
+              v.spi_tri_o := tri_state_pol_g;
+            end if;
           else
             ShiftReg(r.ShiftReg, v.ShiftReg, spi_miso_i, v.MosiNext);
           end if;
@@ -190,6 +207,7 @@ begin
       when CsHigh_s =>
         v.spi_mosi_o := '0';
         v.spi_cs_n_o := (others => '1');
+        v.spi_tri_o  := not tri_state_pol_g;
         if r.CsHighCnt = cs_high_cycles_g - 1 then
           v.State  := Idle_s;
           v.busy_o := '0';
@@ -213,6 +231,7 @@ begin
   spi_sck_o  <= r.spi_sck_o;
   spi_cs_n_o <= r.spi_cs_n_o;
   spi_mosi_o <= r.spi_mosi_o;
+  spi_tri_o  <= r.spi_tri_o;
   spi_le_o   <= r.spi_le_o;
   p_seq : process(clk_i)
   begin
@@ -226,9 +245,12 @@ begin
         r.busy_o     <= '0';
         r.done_o     <= '0';
         r.spi_mosi_o <= mosi_idle_state_g;
+        r.spi_tri_o  <= '0';
       end if;
     end if;
   end process;
 
 end architecture;
+
+
 

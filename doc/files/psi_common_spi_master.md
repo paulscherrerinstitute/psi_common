@@ -34,7 +34,10 @@ applied on the first edge (red). For CPHA = 0 it is the opposite way.
 | slave_cnt_g       | positive  | Number of slaves to support (number of *Cs\_n* lines)
 | lsb_first_g       | boolean   | **False** = MSB first transmission, **True** = LSB first transmission
 | mosi_idle_state_g | std_logic | Idle state of the MOSI line
-| rst_pol_g         | std_logic | reset polarity                                      |
+| rst_pol_g         | std_logic | Reset polarity                                      
+| read_bit_pol_g    | std_logic | Polarity of Read operation in RW bit in MOSI word (needed in 3-Wires SPI)
+| tri_state_pol_g   | std_logic | Polarity of tristate signal in case of a 3-Wires SPI 
+| spi_data_pos_g    | positive  | Starting bit position of Data in MOSI word (needed in 3-Wires SPI) 
 
 ### Interfaces
 | Name       | In/Out   | Length        | Description                |
@@ -49,7 +52,8 @@ applied on the first edge (red). For CPHA = 0 it is the opposite way.
 | dat_o      | o        | trans_width_g | Data received from slave. Must be sampled during *Done = '1'* or *Busy = '0'*.          
 | spi_sck_o  | o        | 1             | SPI clock      
 | spi_mosi_o | o        | 1             | SPI master to slave data signal         
-| spi_miso_i | i        | 1             | SPI slave to master data signal          
+| spi_miso_i | i        | 1             | SPI slave to master data signal  
+| spi_tri_o  | o        | 1             | SPI tri-state buffer select if 3-wires SPI is used        
 | spi_cs_n_o | o        | slave_cnt_g   | SPI slave select signal (low active)  
 | spi_le_o   | o        | slave_cnt_g   | SPI slave latch enable (high active)  
 

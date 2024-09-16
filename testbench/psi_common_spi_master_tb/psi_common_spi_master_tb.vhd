@@ -46,6 +46,11 @@ architecture sim of psi_common_spi_master_tb is
   constant trans_width_g   : positive := 8;
   constant cs_high_cycles_g : positive := 12;
   constant slave_cnt_g     : positive := 2;
+  constant rst_pol_g         : std_logic:= '1';
+  constant mosi_idle_state_g : std_logic := '0';                                 
+  constant read_bit_pol_g     : std_logic := '1';                                 
+  constant tri_state_pol_g    : std_logic := '1';                           
+  constant spi_data_pos_g     : positive := 3;  
 
   -- *** Not Assigned Generics (default values) ***
 
@@ -69,6 +74,7 @@ architecture sim of psi_common_spi_master_tb is
   signal spi_sck_o  : std_logic                                           := '0';
   signal spi_mosi_o : std_logic                                           := '0';
   signal spi_miso_i : std_logic                                           := '0';
+  signal spi_tri_o  : std_logic                                           := '0';
   signal spi_le_o   : std_logic_vector(slave_cnt_g-1 downto 0)             := (others => '0');
   signal spi_cs_n_o : std_logic_vector(slave_cnt_g - 1 downto 0)           := (others => '0');
 
@@ -92,7 +98,12 @@ begin
       clk_div_g => clk_div_g,
       trans_width_g   => trans_width_g,
       cs_high_cycles_g => cs_high_cycles_g,
-      slave_cnt_g     => slave_cnt_g
+      slave_cnt_g     => slave_cnt_g,
+      mosi_idle_state_g => mosi_idle_state_g,
+      rst_pol_g         => rst_pol_g,
+      read_bit_pol_g    => read_bit_pol_g,
+      tri_state_pol_g   => tri_state_pol_g,
+      spi_data_pos_g    => spi_data_pos_g
     )
     port map(
       clk_i     => clk_i,
@@ -106,6 +117,7 @@ begin
       spi_sck_o  => spi_sck_o,
       spi_mosi_o => spi_mosi_o,
       spi_miso_i => spi_miso_i,
+      spi_tri_o  => spi_tri_o,
       spi_cs_n_o => spi_cs_n_o,
       spi_le_o   => spi_le_o
     );
